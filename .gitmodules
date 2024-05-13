@@ -2,5 +2,6 @@
 path = chain-registry
 url = https://github.com/cosmos/chain-registry.git
 [submodule "initia-registry"]
-	path = initia-registry
-	url = https://github.com/initia-labs/initia-registry
+path = initia-registry
+url = https://github.com/initia-labs/initia-registry.git
+branch=main

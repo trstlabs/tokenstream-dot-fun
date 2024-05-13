@@ -1,6 +1,6 @@
 import { ArrowLeftIcon, CheckCircleIcon, InformationCircleIcon, XMarkIcon } from "@heroicons/react/20/solid";
 import * as Sentry from "@sentry/react";
-import { RouteResponse } from "@skip-router/core";
+import { RouteResponse, MsgsRequest } from "@skip-router/core";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 
@@ -20,6 +20,7 @@ import { RouteDisplay } from "../RouteDisplay";
 import { SpinnerIcon } from "../SpinnerIcon";
 import TransactionSuccessView from "../TransactionSuccessView";
 import * as AlertCollapse from "./AlertCollapse";
+import { useStreamSettingsStore } from "@/context/intento-settings";
 
 interface Props {
   route: RouteResponse;
@@ -65,39 +66,63 @@ function TransactionDialogContent({ route, onClose, isAmountError, transactionCo
     setIsExpanded(true);
     const historyId = randomId();
     try {
-      await skipClient.executeRoute({
-        route,
-        userAddresses,
-        validateGasBalance: route.txsRequired === 1,
-        slippageTolerancePercent: useSettingsStore.getState().slippage,
-        onTransactionTracked: async (txStatus) => {
-          const makeExplorerUrl = await getExplorerUrl(txStatus.chainID);
-          const explorerLink = makeExplorerUrl?.(txStatus.txHash);
+      const streamSettings = useStreamSettingsStore.getState()
+      if (streamSettings.shouldStream) {
+        const msgs = await skipClient.messages({
 
-          txHistory.addStatus(historyId, route, {
-            chainId: txStatus.chainID,
-            txHash: txStatus.txHash,
-            explorerLink: explorerLink || "#",
-          });
+          sourceAssetDenom: route.sourceAssetDenom,
+          sourceAssetChainID: route.sourceAssetChainID,
+          destAssetDenom: route.destAssetDenom,
+          destAssetChainID: route.destAssetChainID,
+          amountIn: route.amountIn,
+          amountOut: route.amountOut,
+          addressList: Object.values(userAddresses),
+          operations: route.operations,
+          estimatedAmountOut: route.estimatedAmountOut,
+          slippageTolerancePercent: useSettingsStore.getState().slippage,
+          // affiliates?: route.affiliates,
+          clientID: Object.keys(userAddresses)[0],
+        });
+        if (!msgs.txs[0]) {
+          return
+        }
+        // await skipClient.submitTransaction({ chainID: "INTENTO", tx: "encodedMsgSubmitAction" })
+        // On Host with Interchain Account ? MsgGrant
+      } else {
+        await skipClient.executeRoute({
+          route,
+          userAddresses,
+          validateGasBalance: route.txsRequired === 1,
+          slippageTolerancePercent: useSettingsStore.getState().slippage,
+          onTransactionTracked: async (txStatus) => {
+            const makeExplorerUrl = await getExplorerUrl(txStatus.chainID);
+            const explorerLink = makeExplorerUrl?.(txStatus.txHash);
 
-          setBroadcastedTxs((v) => {
-            const txs = [
-              ...v,
-              {
-                chainID: txStatus.chainID,
-                txHash: txStatus.txHash,
-                explorerLink: explorerLink || "#",
-              },
-            ];
-            if (route.txsRequired === txs.length) {
-              toast.success(<p>You can safely navigate away from this page while your transaction is pending</p>, {
-                icon: <InformationCircleIcon className="h-10 w-10 text-blue-500" />,
-              });
-            }
-            return txs;
-          });
-        },
-      });
+            txHistory.addStatus(historyId, route, {
+              chainId: txStatus.chainID,
+              txHash: txStatus.txHash,
+              explorerLink: explorerLink || "#",
+            });
+
+            setBroadcastedTxs((v) => {
+              const txs = [
+                ...v,
+                {
+                  chainID: txStatus.chainID,
+                  txHash: txStatus.txHash,
+                  explorerLink: explorerLink || "#",
+                },
+              ];
+              if (route.txsRequired === txs.length) {
+                toast.success(<p>You can safely navigate away from this page while your transaction is pending</p>, {
+                  icon: <InformationCircleIcon className="h-10 w-10 text-blue-500" />,
+                });
+              }
+              return txs;
+            });
+          },
+        });
+      }
 
       setTxComplete(true);
     } catch (err: unknown) {
@@ -215,7 +240,7 @@ function TransactionDialogContent({ route, onClose, isAmountError, transactionCo
             <div>
               {broadcastedTxs[i] && (
                 <a
-                  className="text-sm font-bold text-[#FF486E] hover:underline"
+                  className="text-sm font-bold text-[#16537e] hover:underline"
                   href={broadcastedTxs[i].explorerLink}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -305,7 +330,7 @@ function TransactionDialogContent({ route, onClose, isAmountError, transactionCo
         {isOngoing ? (
           <button
             className={cn(
-              "w-full rounded-md bg-[#FF486E] py-4 font-semibold text-white",
+              "w-full rounded-md bg-[#16537e] py-4 font-semibold text-white",
               "outline-none transition-transform",
               "enabled:hover:rotate-1 enabled:hover:scale-105",
               "disabled:cursor-not-allowed disabled:opacity-75",
@@ -341,7 +366,7 @@ function TransactionDialogContent({ route, onClose, isAmountError, transactionCo
         ) : (
           <button
             className={cn(
-              "w-full rounded-md bg-[#FF486E] py-4 font-semibold text-white",
+              "w-full rounded-md bg-[#16537e] py-4 font-semibold text-white",
               "outline-none transition-transform",
               "enabled:hover:rotate-1 enabled:hover:scale-105",
               "disabled:cursor-not-allowed disabled:opacity-75",

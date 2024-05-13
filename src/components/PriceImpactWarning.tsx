@@ -32,7 +32,7 @@ export const PriceImpactWarning = ({ onGoBack, message = "", title = "" }: Props
           Continue
         </button>
         <button
-          className="w-full rounded-lg border border-transparent bg-[#FF486E] py-4 font-semibold text-white transition-colors hover:bg-[#ed1149]"
+          className="w-full rounded-lg border border-transparent bg-[#16537e] py-4 font-semibold text-white transition-colors hover:bg-[#ed1149]"
           onClick={() => {
             control.close();
             onGoBack();

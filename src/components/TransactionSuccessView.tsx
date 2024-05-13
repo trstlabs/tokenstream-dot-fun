@@ -67,7 +67,7 @@ const TransactionSuccessView: FC<{
             <div>
               {explorerLink && txHash && (
                 <a
-                  className="text-sm font-bold text-[#FF486E] hover:underline"
+                  className="text-sm font-bold text-[#16537e] hover:underline"
                   href={explorerLink}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -87,7 +87,7 @@ const TransactionSuccessView: FC<{
       </div>
       <div className="w-full">
         <button
-          className="w-full rounded-md bg-[#FF486E] py-4 font-semibold text-white outline-none transition-transform enabled:hover:rotate-1 enabled:hover:scale-105 disabled:cursor-not-allowed disabled:opacity-75"
+          className="w-full rounded-md bg-[#16537e] py-4 font-semibold text-white outline-none transition-transform enabled:hover:rotate-1 enabled:hover:scale-105 disabled:cursor-not-allowed disabled:opacity-75"
           onClick={onClose}
         >
           Create New {route.doesSwap ? "Swap" : "Transfer"}

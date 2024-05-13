@@ -238,7 +238,7 @@ export const Item = forwardRef<HTMLDivElement, ItemProps>(function Item(props, r
             className={cn(
               "rounded-md px-2 py-1 text-xs transition-colors",
               "flex items-center justify-center space-x-1",
-              "bg-[#FF486E]/20 text-[#FF486E] hover:bg-[#FF486E]/30",
+              "bg-[#16537e]/20 text-[#16537e] hover:bg-[#16537e]/30",
             )}
             onClick={() => txHistory.remove(id)}
           >

@@ -148,7 +148,7 @@ export const TransferStep = ({ action, actions, statusData }: TransferStepProps)
           </Gap.Parent>
           {explorerLink && (
             <AdaptiveLink
-              className="text-xs font-semibold text-[#FF486E] underline"
+              className="text-xs font-semibold text-[#16537e] underline"
               href={explorerLink.link}
               data-testid={`explorer-link`}
             >
@@ -232,7 +232,7 @@ export const TransferStep = ({ action, actions, statusData }: TransferStepProps)
         </Gap.Parent>
         {explorerLink && (
           <AdaptiveLink
-            className="text-xs font-semibold text-[#FF486E] underline"
+            className="text-xs font-semibold text-[#16537e] underline"
             href={explorerLink.link}
             data-testid={`explorer-link`}
           >

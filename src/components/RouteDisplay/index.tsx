@@ -68,7 +68,7 @@ export const RouteDisplay = ({ route, isRouteExpanded, setIsRouteExpanded, broad
           />
           {isRouteExpanded && (
             <button
-              className="animate-slide-up-and-fade text-xs font-medium text-[#FF486E] hover:underline"
+              className="animate-slide-up-and-fade text-xs font-medium text-[#16537e] hover:underline"
               onClick={() => setIsRouteExpanded(false)}
             >
               Hide Details

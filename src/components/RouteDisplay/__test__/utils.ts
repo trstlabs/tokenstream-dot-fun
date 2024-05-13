@@ -4,6 +4,7 @@ import { waitFor } from "@testing-library/react";
 import { API_URL, APP_URL } from "@/constants/api";
 
 export const createRoute = async (options: RouteRequest) => {
+  console.log("TEST")
   const skipClient = new SkipRouter({
     clientID: process.env.NEXT_PUBLIC_CLIENT_ID,
     apiURL: API_URL,
@@ -17,6 +18,7 @@ export const createRoute = async (options: RouteRequest) => {
     },
   });
   const route = await skipClient.route(options);
+  console.log("TEST", route)
   await waitFor(() => expect(route).toBeTruthy(), {
     timeout: 10000,
   });

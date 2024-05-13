@@ -14,7 +14,7 @@ export function DefaultLayout({ children }: { children: ReactNode }) {
     <SkipProvider>
       <AssetsProvider>
         <main className="relative flex min-h-screen flex-col items-center sm:pt-11">
-          <SkipBanner className="inset-x-0 top-0 z-50 w-screen sm:fixed" />
+          {/* <SkipBanner className="inset-x-0 top-0 z-50 w-screen sm:fixed" /> */}
           <Header />
           {children}
           <Footer />

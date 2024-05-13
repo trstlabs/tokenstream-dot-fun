@@ -20,8 +20,8 @@ export const HistoryClearButton = ({ className, ...props }: Props) => {
     >
       <button
         className={cn(
-          "text-xs font-semibold text-[#FF486E]",
-          "bg-[#FF486E]/20 hover:bg-[#FF486E]/30",
+          "text-xs font-semibold text-[#16537e]",
+          "bg-[#16537e]/20 hover:bg-[#16537e]/30",
           "rounded-lg p-2",
           "flex items-center gap-1",
           "transition-colors focus:outline-none",

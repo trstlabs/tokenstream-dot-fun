@@ -24,7 +24,7 @@ export const Step = {
       className="rounded-full border-2 bg-white p-1"
       data-testid="state-loading"
     >
-      <Spinner className="h-4 w-4 text-[#FF486E]" />
+      <Spinner className="h-4 w-4 text-[#16537e]" />
     </div>
   ),
   DefaultState: () => (

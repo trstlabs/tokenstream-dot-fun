@@ -6,7 +6,7 @@ export default function Document() {
   return (
     <Html
       lang="en"
-      className="bg-[#ffdc61]"
+      className="bg-[#bce3f5]"
     >
       <Head>
         <meta charSet="UTF-8" />
@@ -19,8 +19,8 @@ export default function Document() {
         className={cn(
           "font-sans subpixel-antialiased",
           "relative overflow-x-hidden overflow-y-scroll",
-          "before:fixed before:inset-x-0 before:bottom-0 before:h-[80vh] before:content-['']",
-          "before:bg-[url(/site-bg-2.svg)] before:bg-cover before:bg-[center_top] before:bg-no-repeat",
+          "before:fixed before:inset-x-0 before:bottom-0 before:h-[100vh] before:content-['']",
+          "before:bg-[url(/bullseye-gradient.svg)] before:bg-cover before:bg-[center_top] before:bg-no-repeat",
         )}
       >
         <Main />

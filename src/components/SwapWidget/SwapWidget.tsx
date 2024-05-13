@@ -24,6 +24,8 @@ import { UsdDiff } from "../UsdValue";
 import { useWalletModal, WalletModal } from "../WalletModal";
 import { SwapDetails } from "./SwapDetails";
 import { useSwapWidget } from "./useSwapWidget";
+import { StreamSettingsDialog } from "../StreamSettingsDialog";
+import { StreamSettingsButton } from "../StreamSettingsButton";
 
 export function SwapWidget() {
   useEffect(() => void disclosure.rehydrate(), []);
@@ -103,6 +105,7 @@ export function SwapWidget() {
             <div className="flex-grow" />
             <HistoryButton />
             <SettingsButton />
+            <StreamSettingsButton />
             <div className="w-2" />
             {srcAccount?.address && srcAccount?.wallet ? (
               <SimpleTooltip label="Change Source Wallet">
@@ -236,7 +239,7 @@ export function SwapWidget() {
           {!isWalletConnected && (
             <button
               className={cn(
-                "w-full rounded-md bg-[#FF486E] py-4 font-semibold text-white outline-none transition-[opacity,transform]",
+                "w-full rounded-md bg-[#16537e] py-4 font-semibold text-white outline-none transition-[opacity,transform]",
                 "disabled:cursor-not-allowed disabled:opacity-75",
                 "enabled:hover:rotate-1 enabled:hover:scale-105",
               )}
@@ -282,6 +285,7 @@ export function SwapWidget() {
           )}
         </div>
         <HistoryDialog />
+        <StreamSettingsDialog />
         <SettingsDialog />
         <JsonDialog />
       </Tooltip.Provider>

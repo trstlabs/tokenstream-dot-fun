@@ -2,9 +2,10 @@ import { ChevronDownIcon, PencilSquareIcon } from "@heroicons/react/16/solid";
 import * as Collapsible from "@radix-ui/react-collapsible";
 import { BridgeType, RouteResponse } from "@skip-router/core";
 import { useMemo, useState } from "react";
-
+import { BigNumber } from "bignumber.js";
 import { disclosure } from "@/context/disclosures";
 import { useSettingsStore } from "@/context/settings";
+import { useStreamSettingsStore } from "@/context/intento-settings";
 import { formatPercent, formatUSD } from "@/utils/intl";
 import { cn } from "@/utils/ui";
 
@@ -40,6 +41,8 @@ export const SwapDetails = ({
 
   const { slippage } = useSettingsStore();
 
+  const { interval, startAt, duration } = useStreamSettingsStore();
+
   const axelarTransferOperation = useMemo(() => {
     for (const op of route.operations) {
       if ("axelarTransfer" in op) return op;
@@ -67,6 +70,7 @@ export const SwapDetails = ({
 
       return { inAsset: `${computed} ${feeAsset.symbol}`, inUSD: `${formatUSD(usdFeeAmount)}` };
     }
+
   }, [axelarTransferOperation, hyperlaneTransferOperation]);
 
   const isSmartRelay = route.estimatedFees?.some((fee) => fee.feeType === "SMART_RELAY");
@@ -156,7 +160,7 @@ export const SwapDetails = ({
               detailsOpen && "hidden",
             )}
           >
-            Slippage: {slippage}%
+            {startAt == "0" ? "Right Away " : (startAt == "86400" ? "in one day " : "In " + BigNumber(startAt).div(BigNumber(86400)).toString() + " days ")}{duration != "0" && "for " + (duration == "86400" ? "one day" : BigNumber(duration).div(BigNumber(86400)).toString() + " days")} {interval != "0" && "every " + (interval == "86400" ? "day" : BigNumber(interval).div(BigNumber(86400)).toString() + " days ")} with max slippage of {slippage}%
           </span>
           <ChevronDownIcon className={cn("h-4 w-4 transition", detailsOpen ? "rotate-180" : "rotate-0")} />
         </Collapsible.Trigger>
@@ -182,13 +186,69 @@ export const SwapDetails = ({
               <dd className={priceImpactThresholdReached ? "text-red-500" : ""}>{formatPercent(priceImpactPercent)}</dd>
             </>
           ) : null}
+          {/* sourceChain.chainName == "intento" &&  */
+            (<>
+              <dt>Start</dt>
+              <dd>
+                {startAt == "0" ? "Right Away" : (startAt == "86400" ? "in one day" : "In " + BigNumber(startAt).div(BigNumber(86400)).toString() + " days")}
+                <SimpleTooltip label="Click to change start time">
+                  <button
+                    className={cn(
+                      "mr-1 inline-flex items-center gap-1 p-1 text-xs transition-colors",
+                      "text-blue-500 hover:bg-neutral-100",
+                      "rounded",
+                    )}
+                    onClick={() => disclosure.open("streamSettingsDialog")}
+                  >
+                    <PencilSquareIcon className="h-3 w-3" />
+                  </button>
+                </SimpleTooltip>
+
+              </dd>
+              <dt>Interval</dt>
+              <dd>
+                {interval == "0" ? "One time" : "every " + (interval == "86400" ? "day" : BigNumber(interval).div(BigNumber(86400)).toString() + " days")}
+                <SimpleTooltip label="Click to change interval">
+                  <button
+                    className={cn(
+                      "mr-1 inline-flex items-center gap-1 p-1 text-xs transition-colors",
+                      "text-blue-500 hover:bg-neutral-100",
+                      "rounded",
+                    )}
+                    onClick={() => disclosure.open("streamSettingsDialog")}
+                  >
+                    <PencilSquareIcon className="h-3 w-3" />
+                  </button>
+                </SimpleTooltip>
+
+              </dd>
+              <dt>Duration after start</dt>
+              <dd>
+                {duration == "0" ? "One time" : "for " + (duration == "86400" ? "one day" : BigNumber(duration).div(BigNumber(86400)).toString() + " days")}
+                <SimpleTooltip label="Click to change duration">
+
+                  <button
+                    className={cn(
+                      "mr-1 inline-flex items-center gap-1 p-1 text-xs transition-colors",
+                      "text-blue-500 hover:bg-neutral-100",
+                      "rounded",
+                    )}
+                    onClick={() => disclosure.open("streamSettingsDialog")}
+                  >
+                    <PencilSquareIcon className="h-3 w-3" />
+                  </button>
+                </SimpleTooltip>
+
+              </dd></>)
+          }
           <dt>Slippage</dt>
           <dd>
+            {slippage}%
             <SimpleTooltip label="Click to change maximum slippage">
               <button
                 className={cn(
                   "mr-1 inline-flex items-center gap-1 p-1 text-xs transition-colors",
-                  "text-red-500 hover:bg-neutral-100",
+                  "text-blue-500 hover:bg-neutral-100",
                   "rounded",
                 )}
                 onClick={() => disclosure.open("settingsDialog")}
@@ -196,7 +256,7 @@ export const SwapDetails = ({
                 <PencilSquareIcon className="h-3 w-3" />
               </button>
             </SimpleTooltip>
-            {slippage}%
+
           </dd>
           {sourceFeeAsset && (
             <>
@@ -206,6 +266,12 @@ export const SwapDetails = ({
               </dd>
             </>
           )}
+          <>
+            <dt>Estimated Streaming Fee</dt>
+            <dd>
+              {"0.0XX INTO"}
+            </dd>
+          </>
           {/* <dt>Gas Amount</dt>
           <dd>
             <SimpleTooltip label="Click to change gas multiplier">

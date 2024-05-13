@@ -8,7 +8,7 @@ function SkipBanner({ className, ...props }: Omit<AdaptiveLinkProps, "href">) {
   return (
     <AdaptiveLink
       href="https://api-docs.skip.money"
-      className={cn("overflow-hidden bg-[#FF486E] py-2 text-sm font-semibold text-white", className)}
+      className={cn("overflow-hidden bg-[#16537e] py-2 text-sm font-semibold text-white", className)}
       {...props}
     >
       <div className="flex w-[5000px] animate-banner-rotate items-center">

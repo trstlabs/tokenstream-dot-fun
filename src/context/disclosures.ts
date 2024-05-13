@@ -6,6 +6,7 @@ const defaultValues = {
   historyDialog: false,
   priceImpactDialog: false,
   settingsDialog: false,
+  streamSettingsDialog: false,
 
   // TODO: port dialogs to new system
   // assetSelect: false,
