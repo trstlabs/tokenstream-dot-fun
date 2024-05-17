@@ -6,7 +6,7 @@ import { createContext, ReactNode } from "react";
 import { WalletClient } from "viem";
 
 import { chainIdToName } from "@/chains/types";
-import { API_URL, appUrl } from "@/constants/api";
+import { appUrl } from "@/constants/api";
 import { trackWallet } from "@/context/track-wallet";
 import { config } from "@/lib/wagmi";
 import { gracefullyConnect, isWalletClientUsingLedger } from "@/utils/wallet";
@@ -19,7 +19,7 @@ export function SkipProvider({ children }: { children: ReactNode }) {
 
   const skipClient = new SkipRouter({
     clientID: process.env.NEXT_PUBLIC_CLIENT_ID,
-    apiURL: API_URL,
+    apiURL: `${appUrl}/api/skip`,
     getCosmosSigner: async (chainID) => {
       const chainName = chainIdToName[chainID];
       if (!chainName) {
@@ -27,9 +27,8 @@ export function SkipProvider({ children }: { children: ReactNode }) {
       }
 
       const walletName = (() => {
-        const { source, destination } = trackWallet.get();
-        if (source?.chainType === "cosmos") return source.walletName;
-        if (destination?.chainType === "cosmos") return destination.walletName;
+        const { cosmos } = trackWallet.get();
+        if (cosmos?.chainType === "cosmos") return cosmos.walletName;
       })();
 
       const wallet = getWalletRepo(chainName).wallets.find((w) => {
@@ -70,9 +69,8 @@ export function SkipProvider({ children }: { children: ReactNode }) {
     },
     getSVMSigner: async () => {
       const walletName = (() => {
-        const { source, destination } = trackWallet.get();
-        if (source?.chainType === "svm") return source.walletName;
-        if (destination?.chainType === "svm") return destination.walletName;
+        const { svm } = trackWallet.get();
+        if (svm?.chainType === "svm") return svm.walletName;
       })();
       const solanaWallet = wallets.find((w) => w.adapter.name === walletName);
 

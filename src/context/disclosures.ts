@@ -7,7 +7,7 @@ const defaultValues = {
   priceImpactDialog: false,
   settingsDialog: false,
   streamSettingsDialog: false,
-
+  destinationDialog: false,
   // TODO: port dialogs to new system
   // assetSelect: false,
   // chainSelect: false,

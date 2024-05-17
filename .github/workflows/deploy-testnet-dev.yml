@@ -19,6 +19,10 @@ jobs:
         with:
           ref: testnet-dev
 
+      - id: configure
+        name: configure
+        run: git config pull.ff true
+
       - id: pull-staging
         name: Pull latest 'staging'
         run: git pull origin staging
