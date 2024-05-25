@@ -14,7 +14,7 @@ interface IntentoSettingsStore {
 export const defaultValues: IntentoSettingsStore = {
   customGasAmount: DEFAULT_GAS_AMOUNT,
   interval: (3).toString(),
-  duration: (3).toString(),
+  duration: (6).toString(),
   startAt: (3).toString(),
   shouldStream: false,
 };

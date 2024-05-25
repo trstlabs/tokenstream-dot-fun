@@ -26,12 +26,6 @@ export const PriceImpactWarning = ({ onGoBack, message = "", title = "" }: Props
       </div>
       <div className="flex items-end gap-2">
         <button
-          className="w-full rounded-lg border border-neutral-400 py-4 font-semibold text-neutral-500 transition-colors hover:bg-neutral-100"
-          onClick={() => control.close()}
-        >
-          Continue
-        </button>
-        <button
           className="w-full rounded-lg border border-transparent bg-[#16537e] py-4 font-semibold text-white transition-colors hover:bg-[#ed1149]"
           onClick={() => {
             control.close();
@@ -39,6 +33,12 @@ export const PriceImpactWarning = ({ onGoBack, message = "", title = "" }: Props
           }}
         >
           Go Back
+        </button>
+        <button
+          className="w-full rounded-lg border border-neutral-400 py-4 font-semibold text-neutral-500 transition-colors hover:bg-neutral-100"
+          onClick={() => control.close()}
+        >
+          Continue
         </button>
       </div>
     </div>

@@ -32,9 +32,15 @@ export const IntervalSetting = () => {
               latest = latest.replace(/[.]{2,}/g, "."); // Remove multiple decimals
               latest = latest.replace(/[,]{2,}/g, ","); // Remove multiple commas
 
+
               if (!latest.endsWith(".")) {
                 latest = Math.max(0, Math.min(100, +formatNumberWithoutCommas(latest))).toString();
               }
+
+              if (BigNumber(latest).times(BigNumber(86400)).isGreaterThan(useStreamSettingsStore.getState().duration)) {
+                latest = "0"
+              }
+
               useStreamSettingsStore.setState({ interval: BigNumber(latest).times(BigNumber(86400)).toString() });
             }}
             onKeyDown={(event) => {

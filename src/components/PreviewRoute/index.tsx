@@ -137,7 +137,9 @@ export const PreviewRoute = ({
       const streamSettings = useStreamSettingsStore.getState()
       //route.chainIDs[0] == process.env.NEXT_PUBLIC_CHAIN_ID_OSMO 
       if (streamSettings.shouldStream && "transfer" in route.operations[0]) {
-
+        // if (route.operations[0].transfer.toChainID == process.env.NEXT_PUBLIC_CHAIN_ID_OSMO){
+        //   toast.error("expected Osmosis in route")
+        // }
 
         const originalRouteMsgs = await skipClient.messages({
           sourceAssetDenom: route.sourceAssetDenom,

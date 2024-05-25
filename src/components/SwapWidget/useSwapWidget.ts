@@ -214,6 +214,20 @@ export function useSwapWidget() {
     return [undefined, undefined];
   }, [route]);
 
+  const [streamOptionTitle, streamOptionMessage] = useMemo(() => {
+    // if (!route?.chainIDs) {
+    //   return [undefined, undefined];
+    // }
+    if (
+      process.env.NEXT_PUBLIC_CHAIN_ID_OSMO != undefined &&
+      route?.chainIDs.shift() !== process.env.NEXT_PUBLIC_CHAIN_ID_OSMO
+    ) {
+      return ["Stream now", "Streaming  available for selected route"];
+    }
+    // alert(route?.chainIDs)
+    return [undefined, undefined];
+  }, [route]);
+
   // #endregion
 
   /////////////////////////////////////////////////////////////////////////////
@@ -708,6 +722,8 @@ export function useSwapWidget() {
     routeLoading: routeIsFetching,
     routeWarningMessage,
     routeWarningTitle,
+    streamOptionMessage,
+    streamOptionTitle,
     sourceAsset: srcAsset,
     sourceChain: srcChain,
     sourceFeeAmount: gasRequired,

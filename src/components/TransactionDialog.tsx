@@ -7,6 +7,8 @@ import { cn } from "@/utils/ui";
 
 import { PreviewRoute } from "./PreviewRoute";
 import { PriceImpactWarning } from "./PriceImpactWarning";
+import { StreamOption } from "./StreamOption";
+import { useStreamSettingsStore } from "@/context/intento-settings";
 
 export type ActionType = "NONE" | "TRANSFER" | "SWAP";
 
@@ -15,8 +17,11 @@ interface Props {
   route?: RouteResponse;
   isAmountError?: boolean | string;
   shouldShowPriceImpactWarning?: boolean;
+  shouldShowStreamOption?: boolean;
   routeWarningMessage?: string;
   routeWarningTitle?: string;
+  streamOptionMessage?: string;
+  streamOptionTitle?: string;
   onAllTransactionComplete?: () => void;
 }
 
@@ -25,15 +30,20 @@ function TransactionDialog({
   route,
   isAmountError,
   shouldShowPriceImpactWarning,
+  shouldShowStreamOption,
   routeWarningMessage,
   routeWarningTitle,
+  streamOptionMessage,
+  streamOptionTitle,
 }: Props) {
   const [hasDisplayedWarning, setHasDisplayedWarning] = useState(false);
   const confirmDisclosure = useDisclosureKey("confirmSwapDialog");
   const [isOpen, confirmControl] = confirmDisclosure;
   const [, priceImpactControl] = useDisclosureKey("priceImpactDialog");
+  const [, streamControl] = useDisclosureKey("streamDialog");
 
   useEffect(() => {
+
     if (!isOpen) {
       setHasDisplayedWarning(false);
       return;
@@ -42,15 +52,22 @@ function TransactionDialog({
     if (hasDisplayedWarning) {
       return;
     }
+    if (isLoading) {
+      useStreamSettingsStore.setState({ shouldStream: false })
+    }
 
     if (shouldShowPriceImpactWarning) {
       priceImpactControl.open();
       setHasDisplayedWarning(true);
     }
-
+    if (shouldShowStreamOption) {
+      streamControl.open()
+      setHasDisplayedWarning(true);
+    }
     if (isOpen && !route) {
       priceImpactControl.close();
       confirmControl.close();
+      streamControl.close()
       toast.error(
         <p>
           <strong>Something went wrong!</strong>
@@ -62,7 +79,7 @@ function TransactionDialog({
     }
     // reason: ignoring control handlers
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasDisplayedWarning, isOpen, route, shouldShowPriceImpactWarning]);
+  }, [hasDisplayedWarning, isOpen, route, shouldShowPriceImpactWarning, shouldShowStreamOption]);
 
   return (
     <Fragment>
@@ -90,6 +107,11 @@ function TransactionDialog({
         onGoBack={confirmControl.close}
         message={routeWarningMessage}
         title={routeWarningTitle}
+      />
+      <StreamOption
+        onGoBack={confirmControl.close}
+        message={streamOptionMessage}
+        title={streamOptionTitle}
       />
     </Fragment>
   );

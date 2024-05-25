@@ -33,7 +33,7 @@ export const DurationSetting = () => {
               latest = latest.replace(/[,]{2,}/g, ","); // Remove multiple commas
 
               if (!latest.endsWith(".")) {
-                latest = Math.max(0, Math.min(100, +formatNumberWithoutCommas(latest))).toString();
+                latest = Math.max(0, Math.min(365, +formatNumberWithoutCommas(latest))).toString();
               }
               useStreamSettingsStore.setState({ duration: BigNumber(latest).times(BigNumber(86400)).toString() });
             }}
