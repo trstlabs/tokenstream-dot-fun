@@ -1,7 +1,7 @@
 import { ArrowsUpDownIcon, FingerPrintIcon } from "@heroicons/react/20/solid";
 import * as Tooltip from "@radix-ui/react-tooltip";
 import { ElementRef, useEffect, useRef } from "react";
-import type { } from "typed-query-selector";
+import type {} from "typed-query-selector";
 
 import { disclosure } from "@/context/disclosures";
 import { useAccount } from "@/hooks/useAccount";
@@ -18,13 +18,13 @@ import { JsonDialog } from "../JsonDialog";
 import { SettingsButton } from "../SettingsButton";
 import { SettingsDialog } from "../SettingsDialog";
 import { SimpleTooltip } from "../SimpleTooltip";
+import { StreamSettingsButton } from "../StreamSettingsButton";
+import { StreamSettingsDialog } from "../StreamSettingsDialog";
 import TransactionDialog from "../TransactionDialog";
 import { UsdDiff } from "../UsdValue";
 import { useWalletModal, WalletModal } from "../WalletModal";
 import { SwapDetails } from "./SwapDetails";
 import { useSwapWidget } from "./useSwapWidget";
-import { StreamSettingsDialog } from "../StreamSettingsDialog";
-import { StreamSettingsButton } from "../StreamSettingsButton";
 
 export function SwapWidget() {
   useEffect(() => void disclosure.rehydrate(), []);
@@ -259,7 +259,13 @@ export function SwapWidget() {
                 route={route}
                 isAmountError={isAmountError}
                 shouldShowPriceImpactWarning={!!routeWarningTitle && !!routeWarningMessage}
-                shouldShowStreamOption={!!streamOptionTitle && !!streamOptionMessage && route && "transfer" in route?.operations[0] && route?.operations[0].transfer.toChainID == process.env.NEXT_PUBLIC_CHAIN_ID_OSMO}
+                shouldShowStreamOption={
+                  !!streamOptionTitle &&
+                  !!streamOptionMessage &&
+                  route &&
+                  "transfer" in route.operations[0] &&
+                  route.operations[0].transfer.toChainID == process.env.NEXT_PUBLIC_CHAIN_ID_OSMO
+                }
                 routeWarningTitle={routeWarningTitle}
                 routeWarningMessage={routeWarningMessage}
                 streamOptionTitle={streamOptionTitle}

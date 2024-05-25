@@ -8,7 +8,7 @@ interface IntentoSettingsStore {
   interval: string;
   duration: string;
   startAt: string;
-  shouldStream: boolean
+  shouldStream: boolean;
 }
 
 export const defaultValues: IntentoSettingsStore = {

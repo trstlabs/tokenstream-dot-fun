@@ -3,12 +3,11 @@ import * as Dialog from "@radix-ui/react-dialog";
 
 import { useDisclosureKey } from "@/context/disclosures";
 
-import { AdaptiveLink } from "../AdaptiveLink";
-
-import { SaveIndicator } from "./SaveIndicator";
-import { IntervalSetting } from "./IntervalSetting";
-import { StartSetting } from "./StartSetting";
+// import { AdaptiveLink } from "../AdaptiveLink";
 import { DurationSetting } from "./DurationSetting";
+import { IntervalSetting } from "./IntervalSetting";
+import { SaveIndicator } from "./SaveIndicator";
+import { StartSetting } from "./StartSetting";
 export const StreamSettingsDialog = () => {
   const [isOpen, { close }] = useDisclosureKey("streamSettingsDialog");
   return (

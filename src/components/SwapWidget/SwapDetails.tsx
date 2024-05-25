@@ -1,11 +1,12 @@
 import { ChevronDownIcon, PencilSquareIcon } from "@heroicons/react/16/solid";
 import * as Collapsible from "@radix-ui/react-collapsible";
 import { BridgeType, RouteResponse } from "@skip-router/core";
-import { useMemo, useState } from "react";
 import { BigNumber } from "bignumber.js";
+import { useMemo, useState } from "react";
+
 import { disclosure } from "@/context/disclosures";
-import { useSettingsStore } from "@/context/settings";
 import { useStreamSettingsStore } from "@/context/intento-settings";
+import { useSettingsStore } from "@/context/settings";
 import { formatPercent, formatUSD } from "@/utils/intl";
 import { cn } from "@/utils/ui";
 
@@ -70,7 +71,6 @@ export const SwapDetails = ({
 
       return { inAsset: `${computed} ${feeAsset.symbol}`, inUSD: `${formatUSD(usdFeeAmount)}` };
     }
-
   }, [axelarTransferOperation, hyperlaneTransferOperation]);
 
   const isSmartRelay = route.estimatedFees?.some((fee) => fee.feeType === "SMART_RELAY");
@@ -160,7 +160,18 @@ export const SwapDetails = ({
               detailsOpen && "hidden",
             )}
           >
-            {startAt == "0" ? "Right Away " : (startAt == "86400" ? "in one day " : "In " + BigNumber(startAt).div(BigNumber(86400)).toString() + " days ")}{duration != "0" && "for " + (duration == "86400" ? "one day" : BigNumber(duration).div(BigNumber(86400)).toString() + " days")} {interval != "0" && "every " + (interval == "86400" ? "day" : BigNumber(interval).div(BigNumber(86400)).toString() + " days ")} with max slippage of {slippage}%
+            {startAt == "0"
+              ? "Right Away "
+              : startAt == "86400"
+                ? "in one day "
+                : "In " + BigNumber(startAt).div(BigNumber(86400)).toString() + " days "}
+            {duration != "0" &&
+              "for " +
+                (duration == "86400" ? "one day" : BigNumber(duration).div(BigNumber(86400)).toString() + " days")}{" "}
+            {interval != "0" &&
+              "every " +
+                (interval == "86400" ? "day" : BigNumber(interval).div(BigNumber(86400)).toString() + " days ")}{" "}
+            with max slippage of {slippage}%
           </span>
           <ChevronDownIcon className={cn("h-4 w-4 transition", detailsOpen ? "rotate-180" : "rotate-0")} />
         </Collapsible.Trigger>
@@ -186,11 +197,16 @@ export const SwapDetails = ({
               <dd className={priceImpactThresholdReached ? "text-red-500" : ""}>{formatPercent(priceImpactPercent)}</dd>
             </>
           ) : null}
-          {/* sourceChain.chainName == "intento" &&  */
-            (<>
+          {
+            /* sourceChain.chainName == "intento" &&  */
+            <>
               <dt>Start</dt>
               <dd>
-                {startAt == "0" ? "Right Away" : (startAt == "86400" ? "in one day" : "In " + BigNumber(startAt).div(BigNumber(86400)).toString() + " days")}
+                {startAt == "0"
+                  ? "Right Away"
+                  : startAt == "86400"
+                    ? "in one day"
+                    : "In " + BigNumber(startAt).div(BigNumber(86400)).toString() + " days"}
                 <SimpleTooltip label="Click to change start time">
                   <button
                     className={cn(
@@ -203,11 +219,13 @@ export const SwapDetails = ({
                     <PencilSquareIcon className="h-3 w-3" />
                   </button>
                 </SimpleTooltip>
-
               </dd>
               <dt>Interval</dt>
               <dd>
-                {interval == "0" ? "One time" : "every " + (interval == "86400" ? "day" : BigNumber(interval).div(BigNumber(86400)).toString() + " days")}
+                {interval == "0"
+                  ? "One time"
+                  : "every " +
+                    (interval == "86400" ? "day" : BigNumber(interval).div(BigNumber(86400)).toString() + " days")}
                 <SimpleTooltip label="Click to change interval">
                   <button
                     className={cn(
@@ -220,13 +238,14 @@ export const SwapDetails = ({
                     <PencilSquareIcon className="h-3 w-3" />
                   </button>
                 </SimpleTooltip>
-
               </dd>
               <dt>Duration after start</dt>
               <dd>
-                {duration == "0" ? "One time" : "for " + (duration == "86400" ? "one day" : BigNumber(duration).div(BigNumber(86400)).toString() + " days")}
+                {duration == "0"
+                  ? "One time"
+                  : "for " +
+                    (duration == "86400" ? "one day" : BigNumber(duration).div(BigNumber(86400)).toString() + " days")}
                 <SimpleTooltip label="Click to change duration">
-
                   <button
                     className={cn(
                       "mr-1 inline-flex items-center gap-1 p-1 text-xs transition-colors",
@@ -238,8 +257,8 @@ export const SwapDetails = ({
                     <PencilSquareIcon className="h-3 w-3" />
                   </button>
                 </SimpleTooltip>
-
-              </dd></>)
+              </dd>
+            </>
           }
           <dt>Slippage</dt>
           <dd>
@@ -256,7 +275,6 @@ export const SwapDetails = ({
                 <PencilSquareIcon className="h-3 w-3" />
               </button>
             </SimpleTooltip>
-
           </dd>
           {sourceFeeAsset && (
             <>
@@ -268,9 +286,7 @@ export const SwapDetails = ({
           )}
           <>
             <dt>Estimated Streaming Fee</dt>
-            <dd>
-              {"0.0XX INTO"}
-            </dd>
+            <dd>{"0.0XX INTO"}</dd>
           </>
           {/* <dt>Gas Amount</dt>
           <dd>

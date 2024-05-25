@@ -3,11 +3,11 @@ import { BigNumber } from "bignumber.js";
 import { useStreamSettingsStore } from "@/context/intento-settings";
 import { formatNumberWithCommas, formatNumberWithoutCommas } from "@/utils/number";
 import { cn } from "@/utils/ui";
-const OPTION_VALUES = ["0", "86400", "259200" ];
+const OPTION_VALUES = ["0", "86400", "259200"];
 const OPTION_KEYS = ["Right Away", "1 day", "1 week"];
 
 export const StartSetting = () => {
-  const currentValue = useStreamSettingsStore((state) => state.startAt)
+  const currentValue = useStreamSettingsStore((state) => state.startAt);
 
   return (
     <div className="flex items-center space-x-2 p-2">
@@ -72,7 +72,7 @@ export const StartSetting = () => {
               }
             }}
           />
-          <div className="pointer-events-none absolute inset-y-0 text-xs left-2 flex items-center">days</div>
+          <div className="pointer-events-none absolute inset-y-0 left-2 flex items-center text-xs">days</div>
         </div>
         <div className="grid  gap-1">
           {OPTION_VALUES.map((value, i) => (

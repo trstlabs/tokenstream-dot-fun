@@ -1,13 +1,18 @@
+import { fromBech32, toBech32 } from "@cosmjs/encoding";
+// import { prefixToBech32Config } from "@graz-sh/types/convert";
 import { ArrowLeftIcon, CheckCircleIcon, FingerPrintIcon, InformationCircleIcon } from "@heroicons/react/20/solid";
 import * as Sentry from "@sentry/react";
 import { cosmosMsgFromJSON, RouteResponse } from "@skip-router/core";
+import { hash } from "@stablelib/sha256";
 import { useMutation } from "@tanstack/react-query";
-import { memo, useMemo, useState } from "react";
+import { MsgTransfer } from "cosmjs-types/ibc/applications/transfer/v1/tx";
+import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 
 import { useAssets } from "@/context/assets";
 import { chainAddresses, useChainAddressesStore } from "@/context/chainAddresses";
 import { useDisclosureKey } from "@/context/disclosures";
+import { useStreamSettingsStore } from "@/context/intento-settings";
 import { useSettingsStore } from "@/context/settings";
 import { trackWallet, TrackWalletCtx } from "@/context/track-wallet";
 import { txHistory } from "@/context/tx-history";
@@ -22,15 +27,9 @@ import { cn } from "@/utils/ui";
 
 import * as AlertCollapse from "./AlertCollapse";
 import { ChainStep } from "./ChainStep";
+import { memoDivideAmount } from "./interface";
 import { makeActions } from "./make-actions";
 import { makeChainIDsWithAction } from "./make-chain-ids-with-actions";
-
-import { useStreamSettingsStore } from "@/context/intento-settings";
-import { MsgTransfer } from "cosmjs-types/ibc/applications/transfer/v1/tx";
-import { fromBech32, toBech32 } from "@cosmjs/encoding";
-import { hash } from "@stablelib/sha256";
-import { prefixToBech32Config } from "@graz-sh/types/convert";
-import { memoDivideAmount, MemoJsonInput } from './interface'
 
 export interface BroadcastedTx {
   chainID: string;
@@ -74,10 +73,10 @@ export const PreviewRoute = ({
   const isSignRequired = useMemo(() => {
     return Boolean(
       enabledSetAddressIndex &&
-      chainIDsWithAction[enabledSetAddressIndex]?.transferAction?.signRequired &&
-      enabledSetAddressIndex !== 0 &&
-      chainIDsWithAction[enabledSetAddressIndex].transferAction?.id !==
-      chainIDsWithAction[enabledSetAddressIndex - 1].transferAction?.id,
+        chainIDsWithAction[enabledSetAddressIndex]?.transferAction?.signRequired &&
+        enabledSetAddressIndex !== 0 &&
+        chainIDsWithAction[enabledSetAddressIndex].transferAction?.id !==
+          chainIDsWithAction[enabledSetAddressIndex - 1].transferAction?.id,
     );
   }, [chainIDsWithAction, enabledSetAddressIndex]);
 
@@ -121,8 +120,6 @@ export const PreviewRoute = ({
     }
 
     try {
-
-
       //if route step 1 = osmosis get route from osmosis
       //total amount < balance return error
       //build route from osmosis asset -> destination
@@ -132,10 +129,9 @@ export const PreviewRoute = ({
 
       //submit transaction
 
-
       //execute first swap (if start = right away = 0)
-      const streamSettings = useStreamSettingsStore.getState()
-      //route.chainIDs[0] == process.env.NEXT_PUBLIC_CHAIN_ID_OSMO 
+      const streamSettings = useStreamSettingsStore.getState();
+      //route.chainIDs[0] == process.env.NEXT_PUBLIC_CHAIN_ID_OSMO
       if (streamSettings.shouldStream && "transfer" in route.operations[0]) {
         // if (route.operations[0].transfer.toChainID == process.env.NEXT_PUBLIC_CHAIN_ID_OSMO){
         //   toast.error("expected Osmosis in route")
@@ -155,7 +151,7 @@ export const PreviewRoute = ({
           // affiliates?: route.affiliates,
           clientID: Object.keys(userAddresses)[0],
         });
-        console.log(originalRouteMsgs)
+        console.log(originalRouteMsgs);
         const routeMsgsFromDex = await skipClient.messages({
           sourceAssetDenom: route.operations[0].transfer.denomOut,
           sourceAssetChainID: route.operations[0].transfer.toChainID,
@@ -170,22 +166,26 @@ export const PreviewRoute = ({
           // affiliates?: route.affiliates,
           clientID: Object.keys(userAddresses)[1],
         });
-        console.log(routeMsgsFromDex)
-        if ('cosmosTx' in routeMsgsFromDex.txs[0] && 'cosmosTx' in originalRouteMsgs.txs[0]) {
-          const msgsRoute = routeMsgsFromDex.txs[0].cosmosTx.msgs
+        console.log(routeMsgsFromDex);
+        if ("cosmosTx" in routeMsgsFromDex.txs[0] && "cosmosTx" in originalRouteMsgs.txs[0]) {
+          const msgsRoute = routeMsgsFromDex.txs[0].cosmosTx.msgs;
 
-          console.log(msgsRoute)
-          const ibcDenomHash = hash(new TextEncoder().encode('transfer/' + process.env.NEXT_PUBLIC_CHANNEL_ID_OSMO_INTO + route.operations[0].transfer.denomOut))
+          console.log(msgsRoute);
+          const ibcDenomHash = hash(
+            new TextEncoder().encode(
+              "transfer/" + process.env.NEXT_PUBLIC_CHANNEL_ID_OSMO_INTO + route.operations[0].transfer.denomOut,
+            ),
+          );
 
-          const recurrences = Math.floor(Number(streamSettings.duration) / Number(streamSettings.interval))
-          console.log(recurrences)
-          const streamAmount = Math.floor(Number(route.operations[0].amountOut) / recurrences)
-          console.log(streamAmount) // has it been decimal corrected?
-          console.log("OG MESSAGE")
-          console.log(originalRouteMsgs.txs[0].cosmosTx.msgs[0].msg)
-          let memoOG = JSON.parse(JSON.parse(originalRouteMsgs.txs[0].cosmosTx.msgs[0].msg)["memo"])
-          console.log("OG MESSAGE MEMO")
-          console.log(memoOG)
+          const recurrences = Math.floor(Number(streamSettings.duration) / Number(streamSettings.interval));
+          console.log(recurrences);
+          const streamAmount = Math.floor(Number(route.operations[0].amountOut) / recurrences);
+          console.log(streamAmount); // has it been decimal corrected?
+          console.log("OG MESSAGE");
+          console.log(originalRouteMsgs.txs[0].cosmosTx.msgs[0].msg);
+          const memoOG = JSON.parse(JSON.parse(originalRouteMsgs.txs[0].cosmosTx.msgs[0].msg)["memo"]);
+          console.log("OG MESSAGE MEMO");
+          console.log(memoOG);
           //from intento to osmosis with memo
           //!!in proper JSON object!!!
           // const actionMsgIntento = MsgTransfer.fromPartial(
@@ -204,69 +204,73 @@ export const PreviewRoute = ({
 
           //   }
           // )
-          const memoIntentoAction = memoDivideAmount(memoOG, recurrences)
-          console.log(memoIntentoAction)
+          const memoIntentoAction = memoDivideAmount(memoOG, recurrences);
+          console.log(memoIntentoAction);
           const actionMsgIntento = {
             "@type": "/ibc.applications.transfer.v1.MsgTransfer",
-            "value": {
+            value: {
               source_channel: process.env.NEXT_PUBLIC_CHANNEL_ID_INTO_OSMO || "",
               source_port: "transfer",
               sender: toBech32("into", fromBech32(Object.values(userAddresses)[0]).data),
-              token: { amount: String(streamAmount), denom: 'ibc/' + ibcDenomHash },
+              token: { amount: String(streamAmount), denom: "ibc/" + ibcDenomHash },
               receiver: "", //should not be too important, can be blank!//https://docs.osmosis.zone/overview/features/ibc-hooks/
               timeout_height: {
-                revision_number: '0',
-                revision_height: '0',
+                revision_number: "0",
+                revision_height: "0",
               },
-              timeout_timestamp: '0',
-              memo: memoIntentoAction,//"BUILD FROM OG routeMsg TX MEMO",
-            }
-          }
-          console.log(actionMsgIntento)
-          const actionMsgIntentoString = JSON.stringify(actionMsgIntento)
-          console.log(actionMsgIntentoString)
+              timeout_timestamp: "0",
+              memo: memoIntentoAction, //"BUILD FROM OG routeMsg TX MEMO",
+            },
+          };
+          console.log(actionMsgIntento);
+          const actionMsgIntentoString = JSON.stringify(actionMsgIntento);
+          console.log(actionMsgIntentoString);
           //memo receiver can be anything (?)
           const memoSourceChain = {
-            "forward": {
-              "receiver": "intento-submit-action",
-              "port": "transfer",
-              "channel": process.env.NEXT_PUBLIC_CHANNEL_ID_OSMO_INTO,
-              "timeout": "10m",
-              "retries": 2
+            forward: {
+              receiver: "intento-submit-action",
+              port: "transfer",
+              channel: process.env.NEXT_PUBLIC_CHANNEL_ID_OSMO_INTO,
+              timeout: "10m",
+              retries: 2,
             },
-            "action": {
-              "msgs": actionMsgIntentoString,
-              "duration": streamSettings.duration,
-              "interval": streamSettings.interval,
-              "start_at": streamSettings.startAt,
-              "stop_on_fail": true,
-              "owner": toBech32("into", fromBech32(Object.values(userAddresses)[0]).data),
-            }
-          }
+            action: {
+              msgs: actionMsgIntentoString,
+              duration: streamSettings.duration,
+              interval: streamSettings.interval,
+              start_at: streamSettings.startAt,
+              stop_on_fail: true,
+              owner: toBech32("into", fromBech32(Object.values(userAddresses)[0]).data),
+            },
+          };
 
-          console.log(memoSourceChain)
-          const memoSourceChainString = JSON.stringify(memoSourceChain)
-          console.log(memoSourceChainString)
+          console.log(memoSourceChain);
+          const memoSourceChainString = JSON.stringify(memoSourceChain);
+          console.log(memoSourceChainString);
           //from source chain to osmosis with forward to intento
-          const msgTransfer = MsgTransfer.fromPartial(
-            {
-              sourceChannel: route.operations[0].transfer.channel,
-              sourcePort: route.operations[0].transfer.port,
-              sender: Object.values(userAddresses).shift(), //check!
-              token: { amount: route.amountIn, denom: route.sourceAssetDenom, },
-              receiver: "pfm",//recommended, see https://github.com/cosmos/ibc-apps/tree/main/middleware/packet-forward-middleware
-              // timeoutHeight: 
-              // timeout:
-              memo: memoSourceChainString,
+          const msgTransfer = MsgTransfer.fromPartial({
+            sourceChannel: route.operations[0].transfer.channel,
+            sourcePort: route.operations[0].transfer.port,
+            sender: Object.values(userAddresses).shift(), //check!
+            token: { amount: route.amountIn, denom: route.sourceAssetDenom },
+            receiver: "pfm", //recommended, see https://github.com/cosmos/ibc-apps/tree/main/middleware/packet-forward-middleware
+            // timeoutHeight:
+            // timeout:
+            memo: memoSourceChainString,
+          });
+          console.log(msgTransfer);
+          const msgJSON = cosmosMsgFromJSON({
+            msg: JSON.stringify(msgTransfer),
+            msg_type_url: "/ibc.applications.transfer.v1.MsgTransfer",
+          });
+          console.log(msgJSON);
+          const result = await skipClient.executeCosmosMessage({
+            chainID: route.sourceAssetChainID,
+            signerAddress: Object.values(userAddresses).shift() || "",
+            messages: [msgJSON],
+          });
 
-            }
-          )
-          console.log(msgTransfer)
-          const msgJSON = cosmosMsgFromJSON({ msg: JSON.stringify(msgTransfer), msg_type_url: '/ibc.applications.transfer.v1.MsgTransfer' })
-          console.log(msgJSON)
-          const result = await skipClient.executeCosmosMessage({ chainID: route.sourceAssetChainID, signerAddress: Object.values(userAddresses).shift() || "", messages: [msgJSON] })
-
-          console.log(result)
+          console.log(result);
           // const msgTransferString = JSON.stringify(new TextEncoder().encode(JSON.stringify(msgTransfer)))
           // //use txs from msgs
           // await skipClient.executeCosmosMessage({ chainID: route.sourceAssetChainID, signerAddress: Object.values(userAddresses).shift() || "", messages: [{ msg: msgTransferString, msgTypeURL: '/ibc.applications.transfer.v1.MsgTransfer' }] })
@@ -274,7 +278,7 @@ export const PreviewRoute = ({
           ///Asset on Osmosis? Use ICA
           // On Host with Interchain Account ? MsgGrant
         } else {
-          toast.error("expected cosmos message")
+          toast.error("expected cosmos message");
         }
       } else {
         await skipClient.executeRoute({
@@ -523,12 +527,14 @@ export const PreviewRoute = ({
               <CheckCircleIcon className="h-8 w-8 text-green-500" />
               <p>
                 {route.doesSwap &&
-                  `Successfully swapped ${getAsset(route.sourceAssetDenom, route.sourceAssetChainID)?.recommendedSymbol ??
-                  route.sourceAssetDenom
+                  `Successfully swapped ${
+                    getAsset(route.sourceAssetDenom, route.sourceAssetChainID)?.recommendedSymbol ??
+                    route.sourceAssetDenom
                   } for ${getAsset(route.destAssetDenom, route.destAssetChainID)?.recommendedSymbol ?? route.destAssetDenom}`}
                 {!route.doesSwap &&
-                  `Successfully transfered ${getAsset(route.sourceAssetDenom, route.sourceAssetChainID)?.recommendedSymbol ??
-                  route.sourceAssetDenom
+                  `Successfully transfered ${
+                    getAsset(route.sourceAssetDenom, route.sourceAssetChainID)?.recommendedSymbol ??
+                    route.sourceAssetDenom
                   } from ${chains?.find((c) => c.chainID === route.sourceAssetChainID)?.prettyName} to ${chains?.find((c) => c.chainID === route.destAssetChainID)?.prettyName}`}
               </p>
             </div>
@@ -652,8 +658,6 @@ export const PreviewRoute = ({
             </button>
           ) : (
             <SubmitButton />
-
-
           )}
         </div>
       </div>

@@ -4,7 +4,7 @@ import { Toaster } from "react-hot-toast";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import { Help } from "@/components/Help";
-import SkipBanner from "@/components/SkipBanner";
+// import SkipBanner from "@/components/SkipBanner";
 import { VersionCheck } from "@/components/VersionCheck";
 import { AssetsProvider } from "@/context/assets";
 import { SkipProvider } from "@/solve";

@@ -3,12 +3,12 @@ import { Fragment, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 import { useDisclosureKey } from "@/context/disclosures";
+import { useStreamSettingsStore } from "@/context/intento-settings";
 import { cn } from "@/utils/ui";
 
 import { PreviewRoute } from "./PreviewRoute";
 import { PriceImpactWarning } from "./PriceImpactWarning";
 import { StreamOption } from "./StreamOption";
-import { useStreamSettingsStore } from "@/context/intento-settings";
 
 export type ActionType = "NONE" | "TRANSFER" | "SWAP";
 
@@ -43,7 +43,6 @@ function TransactionDialog({
   const [, streamControl] = useDisclosureKey("streamDialog");
 
   useEffect(() => {
-
     if (!isOpen) {
       setHasDisplayedWarning(false);
       return;
@@ -53,7 +52,7 @@ function TransactionDialog({
       return;
     }
     if (isLoading) {
-      useStreamSettingsStore.setState({ shouldStream: false })
+      useStreamSettingsStore.setState({ shouldStream: false });
     }
 
     if (shouldShowPriceImpactWarning) {
@@ -61,13 +60,13 @@ function TransactionDialog({
       setHasDisplayedWarning(true);
     }
     if (shouldShowStreamOption) {
-      streamControl.open()
+      streamControl.open();
       setHasDisplayedWarning(true);
     }
     if (isOpen && !route) {
       priceImpactControl.close();
       confirmControl.close();
-      streamControl.close()
+      streamControl.close();
       toast.error(
         <p>
           <strong>Something went wrong!</strong>

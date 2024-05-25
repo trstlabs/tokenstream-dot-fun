@@ -3,9 +3,9 @@ import Link from "next/link";
 
 function Footer() {
   return (
-    <div className="relative flex flex-row items-center justify-center space-x-0 px-4 py-8 sm:py-12">
-      <p className="text-sm text-white px-4 sm:text-base">Powered by</p>
-      
+    <div className="relative flex flex-row items-center justify-center space-x-0 px-4 py-8  sm:py-12">
+      <p className="px-4 text-sm text-white sm:text-base">Powered by</p>
+
       <Link
         href="https://skip.money/"
         target="_blank"
@@ -38,8 +38,6 @@ function Footer() {
           />
         </div>
       </Link>
-
-     
     </div>
   );
 }

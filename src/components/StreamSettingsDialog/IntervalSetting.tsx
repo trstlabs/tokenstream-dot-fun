@@ -7,7 +7,7 @@ const OPTION_VALUES = ["259200", "604800", "2628288", "0"];
 const OPTION_KEYS = ["3 days", "1 week", "1 month", "One time"];
 
 export const IntervalSetting = () => {
-  const currentValue = useStreamSettingsStore((state) => state.interval)
+  const currentValue = useStreamSettingsStore((state) => state.interval);
 
   return (
     <div className="flex items-center space-x-2 p-2">
@@ -32,13 +32,12 @@ export const IntervalSetting = () => {
               latest = latest.replace(/[.]{2,}/g, "."); // Remove multiple decimals
               latest = latest.replace(/[,]{2,}/g, ","); // Remove multiple commas
 
-
               if (!latest.endsWith(".")) {
                 latest = Math.max(0, Math.min(100, +formatNumberWithoutCommas(latest))).toString();
               }
 
               if (BigNumber(latest).times(BigNumber(86400)).isGreaterThan(useStreamSettingsStore.getState().duration)) {
-                latest = "0"
+                latest = "0";
               }
 
               useStreamSettingsStore.setState({ interval: BigNumber(latest).times(BigNumber(86400)).toString() });

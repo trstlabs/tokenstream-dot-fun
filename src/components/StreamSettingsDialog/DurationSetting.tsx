@@ -3,11 +3,11 @@ import { BigNumber } from "bignumber.js";
 import { useStreamSettingsStore } from "@/context/intento-settings";
 import { formatNumberWithCommas, formatNumberWithoutCommas } from "@/utils/number";
 import { cn } from "@/utils/ui";
-const OPTION_VALUES = [ "259200", "604800", "2628288", "31536000","0"];
-const OPTION_KEYS = ["3 days", "1 week", "1 month", "1 year","One time"];
+const OPTION_VALUES = ["259200", "604800", "2628288", "31536000", "0"];
+const OPTION_KEYS = ["3 days", "1 week", "1 month", "1 year", "One time"];
 
 export const DurationSetting = () => {
-  const currentValue = useStreamSettingsStore((state) => state.duration)
+  const currentValue = useStreamSettingsStore((state) => state.duration);
 
   return (
     <div className="flex items-center space-x-2 p-2">
