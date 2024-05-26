@@ -207,7 +207,7 @@ export const ChainStep = ({
                 label={`Require signing`}
                 type="default"
               >
-                <div className="absolute bottom-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-[#16537e]">
+                <div className="absolute bottom-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-[#FF486E]">
                   <FingerPrintIcon className="h-4 w-4 text-white" />
                 </div>
               </SimpleTooltip>
@@ -336,7 +336,7 @@ export const ChainStep = ({
             )}
             {stepState?.explorerLink && (
               <AdaptiveLink
-                className="flex flex-row items-center text-sm font-semibold text-[#16537e] underline"
+                className="flex flex-row items-center text-sm font-semibold text-[#FF486E] underline"
                 href={stepState.explorerLink.link}
                 data-testid={`explorer-link`}
               >
@@ -393,7 +393,7 @@ export const ChainStep = ({
               !mutationStatus.isPending &&
               !isSuccess && (
                 <button onClick={() => setIsAddressDialogOpen(index)}>
-                  <PencilSquareIcon className={cn("h-4 w-4", !isNotFocused ? "text-[#16537e]" : "text-neutral-400")} />
+                  <PencilSquareIcon className={cn("h-4 w-4", !isNotFocused ? "text-[#FF486E]" : "text-neutral-400")} />
                 </button>
               )}
           </div>
