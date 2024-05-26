@@ -9,6 +9,7 @@ const defaultValues = {
   streamSettingsDialog: false,
   destinationDialog: false,
   streamDialog: false,
+  embedDialog: false,
   // TODO: port dialogs to new system
   // assetSelect: false,
   // chainSelect: false,

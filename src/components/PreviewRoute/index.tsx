@@ -6,11 +6,10 @@ import { cosmosMsgFromJSON, RouteResponse } from "@skip-router/core";
 import { hash } from "@stablelib/sha256";
 import { useMutation } from "@tanstack/react-query";
 import { MsgTransfer } from "cosmjs-types/ibc/applications/transfer/v1/tx";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 
 import { useAssets } from "@/context/assets";
-import { chainAddresses, useChainAddressesStore } from "@/context/chainAddresses";
 import { useDisclosureKey } from "@/context/disclosures";
 import { useStreamSettingsStore } from "@/context/intento-settings";
 import { useSettingsStore } from "@/context/settings";
@@ -30,11 +29,21 @@ import { ChainStep } from "./ChainStep";
 import { memoDivideAmount } from "./interface";
 import { makeActions } from "./make-actions";
 import { makeChainIDsWithAction } from "./make-chain-ids-with-actions";
+import { BroadcastedTx, ChainAddress, ChainAddresses, SetChainAddressesParam } from "./types";
 
-export interface BroadcastedTx {
-  chainID: string;
-  txHash: string;
-  explorerLink: string;
+
+export interface Wallet {
+  walletName: string;
+  walletPrettyName: string;
+  walletInfo: {
+    logo?:
+    | string
+    | {
+      major: string;
+      minor: string;
+    };
+  };
+  isLedger?: boolean | null;
 }
 
 export const PreviewRoute = ({
@@ -52,37 +61,79 @@ export const PreviewRoute = ({
   const getChain = (chainID: string) => chains?.find((chain) => chain.chainID === chainID);
   const { makeWallets } = useMakeWallets();
 
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(() => (route.chainIDs.length === 2 ? true : false));
   const [isOpen, control] = disclosure;
   const [indexSetAddressDialogOpen, setIndexIsSetAddressDialogOpen] = useState<number>();
 
   const actions = makeActions({ route });
   const chainIDsWithAction = makeChainIDsWithAction({ route, actions });
 
-  const chainAddressesStore = useChainAddressesStore((state) => state);
+  const [chainAddresses, _setChainAddresses] = useState<ChainAddresses>({});
+
+  useEffect(() => {
+    _setChainAddresses(() => {
+      const newState: Record<number, ChainAddress> = {};
+      route.chainIDs.forEach((chainID) => {
+        newState[route.chainIDs.indexOf(chainID)] = {
+          chainID,
+        };
+      });
+      return newState;
+    });
+  }, [route.chainIDs]);
+
+  const setChainAddresses = ({ index, address, chainID, chainType, source }: SetChainAddressesParam) => {
+    const current = chainAddresses[index];
+    if (current) {
+      _setChainAddresses((state) => {
+        return {
+          ...state,
+          [index]: {
+            ...current,
+            chainID,
+            chainType,
+            address,
+            source,
+          },
+        };
+      });
+    } else {
+      _setChainAddresses((state) => {
+        return {
+          ...state,
+          [index]: {
+            chainID,
+            chainType,
+            address,
+            source,
+          },
+        };
+      });
+    }
+  };
 
   const enabledSetAddressIndex = useMemo(() => {
-    const values = Object.values(chainAddressesStore);
+    const values = Object.values(chainAddresses);
     if (values.length === 0) return;
     if (!values[values.length - 1]?.address) {
       return values.length - 1;
     }
     return values.findIndex((v) => !v?.address);
-  }, [chainAddressesStore]);
+  }, [chainAddresses]);
 
   const isSignRequired = useMemo(() => {
     return Boolean(
       enabledSetAddressIndex &&
-        chainIDsWithAction[enabledSetAddressIndex]?.transferAction?.signRequired &&
-        enabledSetAddressIndex !== 0 &&
-        chainIDsWithAction[enabledSetAddressIndex].transferAction?.id !==
-          chainIDsWithAction[enabledSetAddressIndex - 1].transferAction?.id,
+      chainIDsWithAction[enabledSetAddressIndex]?.transferAction?.signRequired &&
+      enabledSetAddressIndex !== 0 &&
+      chainIDsWithAction[enabledSetAddressIndex].transferAction?.id !==
+      chainIDsWithAction[enabledSetAddressIndex - 1].transferAction?.id,
     );
   }, [chainIDsWithAction, enabledSetAddressIndex]);
 
   const allAddressFilled = route.chainIDs
     .map((chainID, index) => {
-      const chainAddress = chainAddresses.get(index);
+      const chainAddress = chainAddresses[index];
 
       return (Boolean(chainAddress?.address) && chainAddress?.chainID === chainID) === true;
     })
@@ -105,15 +156,22 @@ export const PreviewRoute = ({
     if (!allAddressFilled) throw new Error("All addresses must be filled");
     const historyId = randomId();
 
-    const userAddresses: Record<string, string> = {};
+    const userAddresses: { chainID: string; address: string }[] = [];
     route.chainIDs.forEach((chainID, index) => {
-      const chainAddress = chainAddresses.get(index);
-      if (chainID === chainAddress?.chainID && chainAddress?.address) {
-        userAddresses[chainID] = chainAddress?.address;
+      if (chainID !== chainAddresses[index]?.chainID) {
+        throw new Error("chainID does not match with chainAddresses's chainID");
       }
+      const chainAddress = chainAddresses[index];
+      if (!chainAddress || !chainAddress?.address) {
+        throw new Error("Chain address not found");
+      }
+      userAddresses.push({
+        chainID: chainAddress.chainID,
+        address: chainAddress.address,
+      });
     });
 
-    const isAddressError = route.chainIDs.some((chainID) => !userAddresses[chainID]);
+    const isAddressError = route.chainIDs.some((chainID, i) => !userAddresses[i]);
 
     if (isAddressError) {
       throw new Error("All addresses must be filled");
@@ -144,12 +202,12 @@ export const PreviewRoute = ({
           destAssetChainID: route.destAssetChainID,
           amountIn: route.amountIn,
           amountOut: route.amountOut,
-          addressList: Object.values(userAddresses),
+          addressList: userAddresses.map(user => user.address),
           operations: route.operations,
           estimatedAmountOut: route.estimatedAmountOut,
           slippageTolerancePercent: useSettingsStore.getState().slippage,
           // affiliates?: route.affiliates,
-          clientID: Object.keys(userAddresses)[0],
+          //clientID: userAddresses.map(user => user.chainID[0]),
         });
         console.log(originalRouteMsgs);
         const routeMsgsFromDex = await skipClient.messages({
@@ -159,12 +217,12 @@ export const PreviewRoute = ({
           destAssetChainID: route.destAssetChainID,
           amountIn: route.operations[0].amountIn,
           amountOut: route.operations[0].amountOut,
-          addressList: Object.values(userAddresses).slice(1),
+          addressList: userAddresses.map(user => user.address).slice(1),
           operations: route.operations.slice(1),
           estimatedAmountOut: route.estimatedAmountOut,
           slippageTolerancePercent: useSettingsStore.getState().slippage,
           // affiliates?: route.affiliates,
-          clientID: Object.keys(userAddresses)[1],
+          //clientID: Object.keys(userAddresses)[1],
         });
         console.log(routeMsgsFromDex);
         if ("cosmosTx" in routeMsgsFromDex.txs[0] && "cosmosTx" in originalRouteMsgs.txs[0]) {
@@ -192,7 +250,7 @@ export const PreviewRoute = ({
           //   {
           //     sourceChannel: process.env.NEXT_PUBLIC_CHANNEL_ID_INTO_OSMO || "",
           //     sourcePort: "transfer",
-          //     sender: toBech32("into", fromBech32(Object.values(userAddresses)[0]).data),
+          //     sender: toBech32("into", fromBech32(userAddresses.map(user => user.address)[0]).data),
           //     token: { amount: String(streamAmount), denom: 'ibc/' + ibcDenomHash },
           //     receiver: "", //should not be too important, can be blank!//https://docs.osmosis.zone/overview/features/ibc-hooks/
           //     timeoutHeight: {
@@ -211,7 +269,7 @@ export const PreviewRoute = ({
             value: {
               source_channel: process.env.NEXT_PUBLIC_CHANNEL_ID_INTO_OSMO || "",
               source_port: "transfer",
-              sender: toBech32("into", fromBech32(Object.values(userAddresses)[0]).data),
+              sender: toBech32("into", fromBech32(userAddresses.map(user => user.address)[0]).data),
               token: { amount: String(streamAmount), denom: "ibc/" + ibcDenomHash },
               receiver: "", //should not be too important, can be blank!//https://docs.osmosis.zone/overview/features/ibc-hooks/
               timeout_height: {
@@ -240,7 +298,7 @@ export const PreviewRoute = ({
               interval: streamSettings.interval,
               start_at: streamSettings.startAt,
               stop_on_fail: true,
-              owner: toBech32("into", fromBech32(Object.values(userAddresses)[0]).data),
+              owner: toBech32("into", fromBech32(userAddresses.map(user => user.address)[0]).data),
             },
           };
 
@@ -251,7 +309,7 @@ export const PreviewRoute = ({
           const msgTransfer = MsgTransfer.fromPartial({
             sourceChannel: route.operations[0].transfer.channel,
             sourcePort: route.operations[0].transfer.port,
-            sender: Object.values(userAddresses).shift(), //check!
+            sender: userAddresses.map(user => user.address).shift(), //check!
             token: { amount: route.amountIn, denom: route.sourceAssetDenom },
             receiver: "pfm", //recommended, see https://github.com/cosmos/ibc-apps/tree/main/middleware/packet-forward-middleware
             // timeoutHeight:
@@ -266,14 +324,14 @@ export const PreviewRoute = ({
           console.log(msgJSON);
           const result = await skipClient.executeCosmosMessage({
             chainID: route.sourceAssetChainID,
-            signerAddress: Object.values(userAddresses).shift() || "",
+            signerAddress: userAddresses.map(user => user.address).shift() || "",
             messages: [msgJSON],
           });
 
           console.log(result);
           // const msgTransferString = JSON.stringify(new TextEncoder().encode(JSON.stringify(msgTransfer)))
           // //use txs from msgs
-          // await skipClient.executeCosmosMessage({ chainID: route.sourceAssetChainID, signerAddress: Object.values(userAddresses).shift() || "", messages: [{ msg: msgTransferString, msgTypeURL: '/ibc.applications.transfer.v1.MsgTransfer' }] })
+          // await skipClient.executeCosmosMessage({ chainID: route.sourceAssetChainID, signerAddress: userAddresses.map(user => user.address).shift() || "", messages: [{ msg: msgTransferString, msgTypeURL: '/ibc.applications.transfer.v1.MsgTransfer' }] })
 
           ///Asset on Osmosis? Use ICA
           // On Host with Interchain Account ? MsgGrant
@@ -322,7 +380,7 @@ export const PreviewRoute = ({
       }
       Sentry.withScope((scope) => {
         scope.setUser({
-          id: chainAddresses.get(0)?.address,
+          id: chainAddresses[0]?.address,
         });
         scope.setTransactionName("Swap.onSubmit");
         scope.setTags({
@@ -333,8 +391,8 @@ export const PreviewRoute = ({
           doesSwap: route.doesSwap,
         });
         scope.setExtras({
-          sourceAddress: chainAddresses.get(0)?.address,
-          destinationAddress: chainAddresses.get(route.chainIDs.length - 1)?.address,
+          sourceAddress: chainAddresses[0]?.address,
+          destinationAddress: chainAddresses[route.chainIDs.length - 1]?.address,
           sourceChain: route.sourceAssetChainID,
           destinationChain: route.destAssetChainID,
           userAddresses,
@@ -443,7 +501,7 @@ export const PreviewRoute = ({
                 if (!address) {
                   throw new Error("Address not found!");
                 }
-                chainAddresses.set({
+                setChainAddresses({
                   index: enabledSetAddressIndex,
                   chainID: chain.chainID,
                   chainType: chain.chainType as TrackWalletCtx,
@@ -462,7 +520,7 @@ export const PreviewRoute = ({
           setIsExpanded(true);
         }}
       >
-        {enabledSetAddressIndex === Object.values(chainAddressesStore).length - 1 || !isSignRequired
+        {enabledSetAddressIndex === Object.values(chainAddresses).length - 1 && !isSignRequired
           ? "Set Destination Address"
           : isSignRequired
             ? "Connect Wallet"
@@ -518,27 +576,34 @@ export const PreviewRoute = ({
               isExpanded={isExpanded}
               setIsExpanded={setIsExpanded}
               isOpen={isOpen}
+              chainAddresses={chainAddresses}
+              setChainAddresses={setChainAddresses}
             />
           ))}
         </div>
         <div className="flex-1 space-y-4">
-          {statusData?.isSuccess && submitMutation.isSuccess && (
+          {statusData?.isSuccess && submitMutation.isSuccess ? (
             <div className="flex flex-row items-center space-x-2 font-semibold">
               <CheckCircleIcon className="h-8 w-8 text-green-500" />
               <p>
                 {route.doesSwap &&
-                  `Successfully swapped ${
-                    getAsset(route.sourceAssetDenom, route.sourceAssetChainID)?.recommendedSymbol ??
-                    route.sourceAssetDenom
+                  `Successfully swapped ${getAsset(route.sourceAssetDenom, route.sourceAssetChainID)?.recommendedSymbol ??
+                  route.sourceAssetDenom
                   } for ${getAsset(route.destAssetDenom, route.destAssetChainID)?.recommendedSymbol ?? route.destAssetDenom}`}
                 {!route.doesSwap &&
-                  `Successfully transfered ${
-                    getAsset(route.sourceAssetDenom, route.sourceAssetChainID)?.recommendedSymbol ??
-                    route.sourceAssetDenom
+                  `Successfully transfered ${getAsset(route.sourceAssetDenom, route.sourceAssetChainID)?.recommendedSymbol ??
+                  route.sourceAssetDenom
                   } from ${chains?.find((c) => c.chainID === route.sourceAssetChainID)?.prettyName} to ${chains?.find((c) => c.chainID === route.destAssetChainID)?.prettyName}`}
               </p>
             </div>
-          )}
+          ) : route.txsRequired === broadcastedTxs.length ? (
+            <div className="flex w-full items-center justify-center space-x-2 text-sm font-medium">
+              <CheckCircleIcon className="h-8 w-8 text-green-500" />
+              <p className="text-sm font-semibold">
+                You can safely navigate away from this page while your transaction is pending
+              </p>
+            </div>
+          ) : null}
 
           {estimatedFinalityTime !== "" && (
             <AlertCollapse.Root type="info">
@@ -598,14 +663,7 @@ export const PreviewRoute = ({
         <div className="space-y-4">
           {!submitMutation.isError && !submitMutation.isSuccess && (
             <div className="flex w-full items-center justify-center space-x-2 text-sm font-medium">
-              {route.txsRequired === broadcastedTxs.length ? (
-                <>
-                  <CheckCircleIcon className="h-8 w-8 text-green-500" />
-                  <p className="text-sm font-semibold">
-                    You can safely navigate away from this page while your transaction is pending
-                  </p>
-                </>
-              ) : route.txsRequired > 1 ? (
+              {route.txsRequired > 1 ? (
                 <>
                   <div className="relative rounded-full bg-[#16537E] p-[4px]">
                     <div className="absolute h-6 w-6 animate-ping rounded-full bg-[#16537E]" />

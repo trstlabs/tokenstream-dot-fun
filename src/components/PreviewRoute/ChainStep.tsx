@@ -1,12 +1,10 @@
 import { ArrowRightIcon, FingerPrintIcon, PencilSquareIcon } from "@heroicons/react/20/solid";
 import { RouteResponse } from "@skip-router/core";
-import Image from "next/image";
 import { Dispatch, SetStateAction, useEffect, useMemo } from "react";
 import toast from "react-hot-toast";
 import { FaExternalLinkAlt, FaKeyboard } from "react-icons/fa";
 import { formatUnits } from "viem";
 
-import { chainAddresses } from "@/context/chainAddresses";
 import { useAccount } from "@/hooks/useAccount";
 import { useAutoSetAddress } from "@/hooks/useAutoSetAddress";
 import { useBridgeByID } from "@/hooks/useBridges";
@@ -18,11 +16,11 @@ import { cn } from "@/utils/ui";
 import { AdaptiveLink } from "../AdaptiveLink";
 import { ExpandArrow } from "../Icons/ExpandArrow";
 import { SimpleTooltip } from "../SimpleTooltip";
-import { BroadcastedTx } from ".";
 import { SwapAction, TransferAction } from "./make-actions";
 import { ChainIDWithAction } from "./make-chain-ids-with-actions";
 import { makeStepState } from "./make-step-state";
 import { SetAddressDialog } from "./SetAddressDialog";
+import { BroadcastedTx, ChainAddresses, SetChainAddressesParam } from "./types";
 
 export const ChainStep = ({
   chainID,
@@ -39,6 +37,8 @@ export const ChainStep = ({
   setIsAddressDialogOpen,
   isExpanded,
   setIsExpanded,
+  chainAddresses,
+  setChainAddresses,
 }: {
   chainID: string;
   index: number;
@@ -63,6 +63,8 @@ export const ChainStep = ({
   setIsAddressDialogOpen: (v: number | undefined) => void;
   isExpanded: boolean;
   setIsExpanded: Dispatch<SetStateAction<boolean>>;
+  chainAddresses: ChainAddresses;
+  setChainAddresses: (v: SetChainAddressesParam) => void;
 }) => {
   const { data: chain } = useChainByID(chainID);
 
@@ -76,7 +78,7 @@ export const ChainStep = ({
 
   const { data: bridge } = useBridgeByID(transferAction?.bridgeID);
 
-  const chainAddress = chainAddresses.get(index);
+  const chainAddress = chainAddresses[index];
 
   const previousChain = index !== 0 && chainIDsWithAction[index - 1];
   const signRequired = (() => {
@@ -95,6 +97,8 @@ export const ChainStep = ({
     index,
     enabled: isOpen,
     signRequired,
+    chainAddresses,
+    setChainAddresses,
   });
 
   // tx tracking
@@ -169,6 +173,8 @@ export const ChainStep = ({
         index={index}
         signRequired={Boolean(signRequired)}
         isDestination={isDestination}
+        chainAddresses={chainAddresses}
+        setChainAddresses={setChainAddresses}
       />
     );
   return (
@@ -188,7 +194,7 @@ export const ChainStep = ({
             )}
           >
             <div className="flex h-full w-full items-center justify-center rounded-full bg-white p-1">
-              <Image
+              <img
                 src={chain?.logoURI || "/logo-fallback.png"}
                 width={48}
                 height={48}
@@ -201,7 +207,7 @@ export const ChainStep = ({
                 label={`Require signing`}
                 type="default"
               >
-                <div className="absolute bottom-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-[#FF486E]">
+                <div className="absolute bottom-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-[#16537e]">
                   <FingerPrintIcon className="h-4 w-4 text-white" />
                 </div>
               </SimpleTooltip>
@@ -254,7 +260,7 @@ export const ChainStep = ({
                 className={cn(
                   "h-full w-1 transition-all",
                   isLoading
-                    ? "animate-gradient-y bg-neutral-200 bg-gradient-to-b from-green-600 from-10% via-[#FFDC61] via-50% to-neutral-200 to-65%"
+                    ? "animate-gradient-y bg-neutral-200 bg-gradient-to-b from-green-600 from-0% via-green-600 via-20% to-[#ffdc61] to-50%"
                     : isSuccess
                       ? "bg-green-600"
                       : "bg-neutral-200",
@@ -264,7 +270,7 @@ export const ChainStep = ({
           )}
         </div>
         <div className="flex flex-1 flex-col space-y-0">
-          {swapAction && signRequired && !isSource ? (
+          {swapAction && signRequired && (!isSource || (isSource && route.chainIDs.length === 1)) ? (
             <AssetSwap
               in={{
                 amount: swapAction.amountIn,
@@ -300,14 +306,17 @@ export const ChainStep = ({
               <SimpleTooltip label={chainAddress.address}>
                 <button
                   onClick={() => {
-                    navigator.clipboard.writeText(chainAddress.address || "");
-                    toast.success("Address copied to clipboard");
+                    try {
+                      navigator.clipboard.writeText(chainAddress.address || "");
+                      toast.success("Address copied to clipboard");
+                    } catch (error) {
+                      toast.error("Failed to copy address to clipboard");
+                    }
                   }}
                   className="opacity-50"
                 >
                   {chainAddress?.source !== "input" ? (
-                    <Image
-                      unoptimized
+                    <img
                       height={16}
                       width={16}
                       alt={"wallet"}
@@ -327,7 +336,7 @@ export const ChainStep = ({
             )}
             {stepState?.explorerLink && (
               <AdaptiveLink
-                className="flex flex-row items-center text-sm font-semibold text-[#FF486E] underline"
+                className="flex flex-row items-center text-sm font-semibold text-[#16537e] underline"
                 href={stepState.explorerLink.link}
                 data-testid={`explorer-link`}
               >
@@ -340,8 +349,7 @@ export const ChainStep = ({
             {chainAddress?.address && !isIntermidiaryChain && (
               <>
                 {chainAddress?.source !== "input" ? (
-                  <Image
-                    unoptimized
+                  <img
                     height={16}
                     width={16}
                     alt={"wallet"}
@@ -362,8 +370,12 @@ export const ChainStep = ({
                 >
                   <button
                     onClick={() => {
-                      navigator.clipboard.writeText(chainAddress.address || "");
-                      toast.success("Address copied to clipboard");
+                      try {
+                        navigator.clipboard.writeText(chainAddress.address || "");
+                        toast.success("Address copied to clipboard");
+                      } catch (error) {
+                        toast.error("Failed to copy address to clipboard");
+                      }
                     }}
                   >
                     <p className={cn("text-md font-semibold", isNotFocused && "font-normal text-neutral-400")}>
@@ -381,7 +393,7 @@ export const ChainStep = ({
               !mutationStatus.isPending &&
               !isSuccess && (
                 <button onClick={() => setIsAddressDialogOpen(index)}>
-                  <PencilSquareIcon className={cn("h-4 w-4", !isNotFocused ? "text-[#FF486E]" : "text-neutral-400")} />
+                  <PencilSquareIcon className={cn("h-4 w-4", !isNotFocused ? "text-[#16537e]" : "text-neutral-400")} />
                 </button>
               )}
           </div>
@@ -394,6 +406,8 @@ export const ChainStep = ({
         index={index}
         signRequired={Boolean(signRequired)}
         isDestination={isDestination}
+        chainAddresses={chainAddresses}
+        setChainAddresses={setChainAddresses}
       />
     </div>
   );
@@ -419,7 +433,21 @@ const Asset = ({
   }, [amount, decimals]);
   return (
     <div className="flex flex-row items-center space-x-1">
-      <p className="text-md font-medium">{amountDisplayed}</p>
+      <SimpleTooltip
+        enabled={amountDisplayed.length > 6}
+        label={`${amountDisplayed} ${symbol}`}
+      >
+        <div
+          className={cn(
+            amountDisplayed.length > 6 &&
+              "cursor-help tabular-nums underline decoration-neutral-400 decoration-dotted underline-offset-4",
+          )}
+        >
+          <p className="text-md font-medium">
+            {parseFloat(amountDisplayed).toLocaleString("en-US", { maximumFractionDigits: 6 })}
+          </p>
+        </div>
+      </SimpleTooltip>
       <img
         src={logoURI || "/logo-fallback.png"}
         width={16}

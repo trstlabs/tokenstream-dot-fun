@@ -8,6 +8,7 @@ import { GasSetting } from "./GasSetting";
 import { PurgeSetting } from "./PurgeSetting";
 import { SaveIndicator } from "./SaveIndicator";
 import { SlippageSetting } from "./SlippageSetting";
+import { HistoryButton } from "../HistoryButton";
 
 export const SettingsDialog = () => {
   const [isOpen, { close }] = useDisclosureKey("settingsDialog");
@@ -25,7 +26,7 @@ export const SettingsDialog = () => {
             >
               <ArrowLeftIcon className="h-6 w-6" />
             </button>
-            <h3 className="text-xl font-bold">Swap Settings</h3>
+            <h3 className="text-xl font-bold">Swap Settings</h3><HistoryButton />
             <div className="flex-grow" />
             <SaveIndicator />
           </div>

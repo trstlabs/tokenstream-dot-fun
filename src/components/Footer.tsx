@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
+
 function Footer() {
   return (
     <div className="relative flex flex-row items-center justify-center space-x-0 px-4 py-8  sm:py-12">

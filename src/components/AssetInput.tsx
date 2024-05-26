@@ -208,7 +208,7 @@ function AssetInput({
               )}
               <button
                 className={cn(
-                  "rounded-md bg-[#16537e] px-2 py-1 text-xs font-semibold uppercase text-white disabled:bg-red-200",
+                  "rounded-md bg-[#16537e] px-2 py-1 text-xs font-semibold uppercase text-white disabled:bg-blue-200",
                   "transition-[transform,background] enabled:hover:rotate-2 enabled:hover:scale-110 disabled:cursor-not-allowed",
                 )}
                 disabled={maxButtonDisabled}

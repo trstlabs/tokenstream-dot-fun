@@ -1,22 +1,26 @@
 import { ArrowsUpDownIcon, FingerPrintIcon } from "@heroicons/react/20/solid";
 import * as Tooltip from "@radix-ui/react-tooltip";
 import { ElementRef, useEffect, useRef } from "react";
-import type {} from "typed-query-selector";
+import type { } from "typed-query-selector";
 
 import { disclosure } from "@/context/disclosures";
 import { useAccount } from "@/hooks/useAccount";
 import { useChains as useSkipChains } from "@/hooks/useChains";
+import { useIsInIframe } from "@/hooks/useIsInIframe";
 import { cn } from "@/utils/ui";
 
 import { AdaptiveLink } from "../AdaptiveLink";
 import AssetInput from "../AssetInput";
 import { ConnectedWalletButton } from "../ConnectedWalletButton";
-import { HistoryButton } from "../HistoryButton";
+// import { EmbedButton } from "../EmbedButton";
+import { EmbedDialog } from "../EmbedDialog";
+// import { HistoryButton } from "../HistoryButton";
 import { HistoryDialog } from "../HistoryDialog";
 import { Spinner } from "../Icons/Spinner";
 import { JsonDialog } from "../JsonDialog";
 import { SettingsButton } from "../SettingsButton";
 import { SettingsDialog } from "../SettingsDialog";
+import { ShareButton } from "../ShareButton";
 import { SimpleTooltip } from "../SimpleTooltip";
 import { StreamSettingsButton } from "../StreamSettingsButton";
 import { StreamSettingsDialog } from "../StreamSettingsDialog";
@@ -66,6 +70,7 @@ export function SwapWidget() {
     sourceFeeAsset,
     swapPriceImpactPercent,
     usdDiffPercent,
+    shareable,
   } = useSwapWidget();
 
   const srcAccount = useAccount(sourceChain?.chainID);
@@ -90,6 +95,7 @@ export function SwapWidget() {
   }, []);
 
   const accountStateKey = `${srcAccount?.isWalletConnected ? "src" : "no-src"}`;
+  const isInIframe = useIsInIframe();
 
   return (
     <UsdDiff.Provider>
@@ -101,9 +107,12 @@ export function SwapWidget() {
           <div className="flex h-8 items-center">
             <p className="text-2xl font-semibold">From</p>
             <div className="flex-grow" />
-            <HistoryButton />
-            <SettingsButton />
+            {/*   {!isInIframe && <EmbedButton />} */}
+
+
             <StreamSettingsButton />
+            <SettingsButton />
+            <ShareButton shareableLink={shareable.link} />
             <div className="w-2" />
             {srcAccount?.address && srcAccount?.wallet ? (
               <SimpleTooltip label="Change Source Wallet">
@@ -123,6 +132,10 @@ export function SwapWidget() {
                 />
               </SimpleTooltip>
             ) : null}
+            <div className="w-2" />
+
+         {/*    <HistoryButton /> */}
+
           </div>
           <div data-testid="source">
             <AssetInput
@@ -204,8 +217,8 @@ export function SwapWidget() {
           )}
           {route && !routeLoading && numberOfTransactions > 1 && (
             <div className="flex w-full items-center justify-center space-x-2 text-sm font-medium uppercase">
-              <div className="relative rounded-full bg-[#FF486E] p-[4px]">
-                <div className="absolute h-6 w-6 animate-ping rounded-full bg-[#FF486E]" />
+              <div className="relative rounded-full bg-[#16537e] p-[4px]">
+                <div className="absolute h-6 w-6 animate-ping rounded-full bg-[#16537e]" />
                 <FingerPrintIcon className="relative h-6 w-6 text-white" />
               </div>
               <p>{numberOfTransactions} Signature Required</p>
@@ -275,6 +288,7 @@ export function SwapWidget() {
             </div>
           )}
         </div>
+        <EmbedDialog embedLink={shareable.embedLink} />
         <HistoryDialog />
         <StreamSettingsDialog />
         <SettingsDialog />

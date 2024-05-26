@@ -1,5 +1,4 @@
 import { Head, Html, Main, NextScript } from "next/document";
-
 import { cn } from "@/utils/ui";
 
 export default function Document() {

@@ -81,7 +81,7 @@ export const useMakeWallets = () => {
                 trackWallet.track("cosmos", wallet.walletName, chainType);
               }
               if (context && wallet.address) {
-                toast.success(`Successfully retrieve ${context} address from ${wallet.walletName}`);
+                toast.success(`Successfully retrieved ${context} address from ${wallet.walletName}`);
               }
               return wallet.address;
             }
@@ -93,7 +93,7 @@ export const useMakeWallets = () => {
               trackWallet.track("cosmos", wallet.walletName, chainType);
             }
             if (context && wallet.address) {
-              toast.success(`Successfully retrieve ${context} address from ${wallet.walletName}`);
+              toast.success(`Successfully retrieved ${context} address from ${wallet.walletName}`);
             }
             return wallet.address;
           } catch (error) {
@@ -143,15 +143,17 @@ export const useMakeWallets = () => {
                     trackWallet.track("evm", connector.id, chainType);
                   }
                   if (context && evmAddress) {
-                    toast.success(`Successfully retrieve ${context} address from ${connector.name}`);
+                    toast.success(`Successfully retrieved ${context} address from ${connector.name}`);
                   }
                   return evmAddress;
                 }
               } else {
+                console.log("connecting");
                 await connectAsync({ connector, chainId: Number(chainID) });
                 trackWallet.track("evm", connector.id, chainType);
-                if (context && evmAddress) {
-                  toast.success(`Successfully retrieve ${context} address from ${connector.name}`);
+
+                if (context) {
+                  toast.success(`Successfully retrieved ${context} address from ${connector.name}`);
                 }
                 return evmAddress;
               }
@@ -209,7 +211,7 @@ export const useMakeWallets = () => {
                 trackWallet.track("svm", wallet.adapter.name, chainType);
               }
               if (context && address) {
-                toast.success(`Successfully retrieve ${context} address from ${wallet.adapter.name}`);
+                toast.success(`Successfully retrieved ${context} address from ${wallet.adapter.name}`);
               }
               return address.toBase58();
             } catch (error) {

@@ -3,19 +3,18 @@ import { ArrowLeftIcon } from "@heroicons/react/20/solid";
 import * as ScrollArea from "@radix-ui/react-scroll-area";
 import { Chain } from "@skip-router/core";
 import { PublicKey } from "@solana/web3.js";
-import Image from "next/image";
 import { useMemo, useState } from "react";
 import { FaKeyboard } from "react-icons/fa";
 import { MdCheck, MdClose } from "react-icons/md";
 import { isAddress } from "viem";
 
-import { chainAddresses } from "@/context/chainAddresses";
 import { TrackWalletCtx } from "@/context/track-wallet";
 import { useMakeWallets } from "@/hooks/useMakeWallets";
 import { cn } from "@/utils/ui";
 
 import { Dialog, DialogContent } from "../Dialog";
 import { WalletListItem } from "../WalletModal/WalletListItem";
+import { ChainAddresses, SetChainAddressesParam } from "./types";
 
 export const SetAddressDialog = ({
   open,
@@ -24,6 +23,8 @@ export const SetAddressDialog = ({
   index,
   signRequired,
   isDestination,
+  chainAddresses,
+  setChainAddresses,
 }: {
   open: boolean;
   onOpen: (v: boolean) => void;
@@ -31,6 +32,8 @@ export const SetAddressDialog = ({
   index: number;
   signRequired: boolean;
   isDestination: boolean;
+  chainAddresses: ChainAddresses;
+  setChainAddresses: (v: SetChainAddressesParam) => void;
 }) => {
   const { chainType, chainID, bech32Prefix } = chain;
   const { makeWallets } = useMakeWallets();
@@ -39,7 +42,7 @@ export const SetAddressDialog = ({
   const [address, setAddress] = useState("");
   const [isEditing, setIsEditing] = useState(false);
 
-  const currentChainAddress = chainAddresses.get(index);
+  const currentChainAddress = chainAddresses[index];
 
   const validateAddress = (address: string) => {
     if (chainType === "cosmos") {
@@ -86,7 +89,7 @@ export const SetAddressDialog = ({
   const isValid = useMemo(() => validateAddress(address), [address]);
 
   const save = () => {
-    chainAddresses.set({
+    setChainAddresses({
       index,
       chainID,
       chainType: chain?.chainType as TrackWalletCtx,
@@ -98,7 +101,7 @@ export const SetAddressDialog = ({
   };
 
   const cancel = () => {
-    setAddress(chainAddresses.get(index)?.address || "");
+    setAddress(chainAddresses[index]?.address || "");
     setIsEditing(false);
   };
   return (
@@ -153,11 +156,11 @@ export const SetAddressDialog = ({
                     >
                       <button
                         className={cn(
-                          "flex w-full items-center gap-2 rounded-lg p-2 transition-colors focus:-outline-offset-2 group-hover:bg-[#FF486E]/20",
+                          "flex w-full items-center gap-2 rounded-lg p-2 transition-colors focus:-outline-offset-2 group-hover:bg-[#16537e]/20",
                           currentChainAddress &&
                             currentChainAddress.source !== "input" &&
                             currentChainAddress.source?.walletName === wallet.walletName &&
-                            "bg-[#FF486E]/20",
+                            "bg-[#16537e]/20",
                         )}
                         onClick={async () => {
                           const resAddress = await wallet.getAddress?.({
@@ -167,7 +170,7 @@ export const SetAddressDialog = ({
                           if (resAddress) {
                             setAddress(resAddress);
                             onOpen(false);
-                            chainAddresses.set({
+                            setChainAddresses({
                               index,
                               chainID,
                               chainType: chain?.chainType as TrackWalletCtx,
@@ -179,8 +182,7 @@ export const SetAddressDialog = ({
                         disabled={chainType === "svm" && wallet.isAvailable !== true}
                       >
                         {wallet.walletInfo.logo && (
-                          <Image
-                            unoptimized
+                          <img
                             height={36}
                             width={36}
                             alt={wallet.walletPrettyName}
@@ -221,7 +223,7 @@ export const SetAddressDialog = ({
                       />
                       <button
                         className={cn(
-                          "flex w-12 items-center justify-center rounded-md border-2 border-[#FF486E] bg-[#FF486E] text-sm text-white",
+                          "flex w-12 items-center justify-center rounded-md border-2 border-[#16537e] bg-[#16537e] text-sm text-white",
                           "disabled:cursor-not-allowed disabled:opacity-50",
                         )}
                         onClick={() => save()}
@@ -230,7 +232,7 @@ export const SetAddressDialog = ({
                         <MdCheck className="size-6" />
                       </button>
                       <button
-                        className="flex w-12 items-center justify-center rounded-md border-2 border-[#FF486E] text-[#FF486E]"
+                        className="flex w-12 items-center justify-center rounded-md border-2 border-[#16537e] text-[#16537e]"
                         onClick={() => cancel()}
                       >
                         <MdClose className="size-6" />
@@ -240,8 +242,8 @@ export const SetAddressDialog = ({
                     <button
                       onClick={() => setIsEditing(true)}
                       className={cn(
-                        "flex w-full items-center gap-2 rounded-lg p-2 py-3 transition-colors focus:-outline-offset-2 group-hover:bg-[#FF486E]/20",
-                        currentChainAddress && currentChainAddress.source === "input" && "bg-[#FF486E]/20",
+                        "flex w-full items-center gap-2 rounded-lg p-2 py-3 transition-colors focus:-outline-offset-2 group-hover:bg-[#16537e]/20",
+                        currentChainAddress && currentChainAddress.source === "input" && "bg-[#16537e]/20",
                       )}
                     >
                       <FaKeyboard className="mx-[6px] h-[24px] w-[24px] text-neutral-400" />
