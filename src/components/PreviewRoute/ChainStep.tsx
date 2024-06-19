@@ -21,6 +21,7 @@ import { ChainIDWithAction } from "./make-chain-ids-with-actions";
 import { makeStepState } from "./make-step-state";
 import { SetAddressDialog } from "./SetAddressDialog";
 import { BroadcastedTx, ChainAddresses, SetChainAddressesParam } from "./types";
+import { useStreamSettingsStore } from "@/context/intento-settings";
 
 export const ChainStep = ({
   chainID,
@@ -67,7 +68,7 @@ export const ChainStep = ({
   setChainAddresses: (v: SetChainAddressesParam) => void;
 }) => {
   const { data: chain } = useChainByID(chainID);
-
+  const shouldStream = useStreamSettingsStore().shouldStream
   const totalChains = chainIDsWithAction.length;
   const isDestination = index === totalChains - 1;
   const isSource = index === 0;
@@ -215,6 +216,20 @@ export const ChainStep = ({
           </div>
           {!isDestination && bridge && (
             <div className="left-- relative flex h-16 w-4 items-center justify-center">
+              {shouldStream && bridge?.name =="IBC" && (
+                <SimpleTooltip
+                  label={`Streamed with Intento`}
+                  type="default"
+                >
+                  <img
+                    src={"/into.svg"}
+                    height={16}
+                    width={16}
+                    className={cn("absolute right-4 top-[32px] bg-opacity-50 object-contain py-1")}
+                    alt={chainID}
+                  />
+                </SimpleTooltip>
+              )}
               {transferAction && isExpanded && (
                 <SimpleTooltip
                   label={`Bridged with ${bridge?.name}`}
@@ -224,7 +239,7 @@ export const ChainStep = ({
                     src={bridge?.logoURI || "/logo-fallback.png"}
                     height={16}
                     width={16}
-                    className={cn("absolute right-4 top-[22px] bg-opacity-50 object-contain py-1")}
+                    className={cn("absolute right-4 top-[10px] bg-opacity-50 object-contain py-1")}
                     alt={chainID}
                   />
                 </SimpleTooltip>

@@ -215,20 +215,10 @@ export function useSwapWidget() {
     return [undefined, undefined];
   }, [route]);
 
-  const [streamOptionTitle, streamOptionMessage] = useMemo(() => {
-    // if (!route?.chainIDs) {
-    //   return [undefined, undefined];
-    // }
-    if (
-      process.env.NEXT_PUBLIC_CHAIN_ID_OSMO != undefined &&
-      route?.chainIDs.shift() !== process.env.NEXT_PUBLIC_CHAIN_ID_OSMO
-    ) {
-      return ["Stream now", "Streaming  available for selected route"];
-    }
-    // alert(route?.chainIDs)
-    return [undefined, undefined];
-  }, [route]);
-
+  const streamOptionTitle = "Stream now";
+  const streamOptionMessage =
+    "Streaming available for selected route. Output may change during streaming." /* + route?.operations[route?.operations.length - 1].amountOut && "Minimum amount out is: " +
+    route?.operations[route?.operations.length - 1].amountOut +route?.destAssetDenom */
   // #endregion
 
   /////////////////////////////////////////////////////////////////////////////
@@ -520,7 +510,7 @@ export function useSwapWidget() {
             return denom === srcFeeAsset?.denom;
           });
 
-          if (!feeDenomPrices) {
+          if (!feeDenomPrices || !feeDenomPrices.gasPrice) {
             toast.error(`Unable to find gas prices for ${srcFeeAsset.denom} on ${srcChain.chainName}`);
             return;
           }

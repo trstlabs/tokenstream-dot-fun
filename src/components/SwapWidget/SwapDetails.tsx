@@ -93,6 +93,10 @@ export const SwapDetails = ({
     };
   }, [isSmartRelay, route.estimatedFees]);
 
+
+  const recurrences = Math.floor(Number(duration) / Number(interval));
+  const estimatedStreamingFee = recurrences * Number(process.env.NEXT_PUBLIC_ACTION_FEE) || 0
+
   const totalAmountOut = useMemo(() => {
     if (isSmartRelay) {
       return String(parseFloat(amountOut) + (smartRelayFee?.amount || 0));
@@ -167,10 +171,10 @@ export const SwapDetails = ({
                 : "In " + BigNumber(startAt).div(BigNumber(86400)).toString() + " days "}
             {duration != "0" &&
               "for " +
-                (duration == "86400" ? "one day" : BigNumber(duration).div(BigNumber(86400)).toString() + " days")}{" "}
+              (duration == "86400" ? "one day" : BigNumber(duration).div(BigNumber(86400)).toString() + " days")}{" "}
             {interval != "0" &&
               "every " +
-                (interval == "86400" ? "day" : BigNumber(interval).div(BigNumber(86400)).toString() + " days ")}{" "}
+              (interval == "86400" ? "day" : BigNumber(interval).div(BigNumber(86400)).toString() + " days ")}{" "}
             with max slippage of {slippage}%
           </span>
           <ChevronDownIcon className={cn("h-4 w-4 transition", detailsOpen ? "rotate-180" : "rotate-0")} />
@@ -225,7 +229,7 @@ export const SwapDetails = ({
                 {interval == "0"
                   ? "One time"
                   : "every " +
-                    (interval == "86400" ? "day" : BigNumber(interval).div(BigNumber(86400)).toString() + " days")}
+                  (interval == "86400" ? "day" : BigNumber(interval).div(BigNumber(86400)).toString() + " days")}
                 <SimpleTooltip label="Click to change interval">
                   <button
                     className={cn(
@@ -244,7 +248,7 @@ export const SwapDetails = ({
                 {duration == "0"
                   ? "One time"
                   : "for " +
-                    (duration == "86400" ? "one day" : BigNumber(duration).div(BigNumber(86400)).toString() + " days")}
+                  (duration == "86400" ? "one day" : BigNumber(duration).div(BigNumber(86400)).toString() + " days")}
                 <SimpleTooltip label="Click to change duration">
                   <button
                     className={cn(
@@ -286,7 +290,7 @@ export const SwapDetails = ({
           )}
           <>
             <dt>Estimated Streaming Fee</dt>
-            <dd>{"0.0XX INTO"}</dd>
+            <dd>{estimatedStreamingFee} INTO</dd>
           </>
           {/* <dt>Gas Amount</dt>
           <dd>

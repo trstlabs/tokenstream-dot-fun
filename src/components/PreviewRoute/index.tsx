@@ -30,6 +30,7 @@ import { memoDivideAmount } from "./interface";
 import { makeActions } from "./make-actions";
 import { makeChainIDsWithAction } from "./make-chain-ids-with-actions";
 import { BroadcastedTx, ChainAddress, ChainAddresses, SetChainAddressesParam } from "./types";
+import { createHash } from "crypto";
 
 
 export interface Wallet {
@@ -81,6 +82,7 @@ export const PreviewRoute = ({
       return newState;
     });
   }, [route.chainIDs]);
+
 
   const setChainAddresses = ({ index, address, chainID, chainType, source }: SetChainAddressesParam) => {
     const current = chainAddresses[index];
@@ -189,6 +191,8 @@ export const PreviewRoute = ({
 
       //execute first swap (if start = right away = 0)
       const streamSettings = useStreamSettingsStore.getState();
+      alert("transfer" in route.operations[0])
+      console.log(route);
       //route.chainIDs[0] == process.env.NEXT_PUBLIC_CHAIN_ID_OSMO
       if (streamSettings.shouldStream && "transfer" in route.operations[0]) {
         // if (route.operations[0].transfer.toChainID == process.env.NEXT_PUBLIC_CHAIN_ID_OSMO){
@@ -209,6 +213,7 @@ export const PreviewRoute = ({
           // affiliates?: route.affiliates,
           //clientID: userAddresses.map(user => user.chainID[0]),
         });
+       
         console.log(originalRouteMsgs);
         const routeMsgsFromDex = await skipClient.messages({
           sourceAssetDenom: route.operations[0].transfer.denomOut,
@@ -233,7 +238,7 @@ export const PreviewRoute = ({
             new TextEncoder().encode(
               "transfer/" + process.env.NEXT_PUBLIC_CHANNEL_ID_OSMO_INTO + route.operations[0].transfer.denomOut,
             ),
-          );
+          ).toString();
 
           const recurrences = Math.floor(Number(streamSettings.duration) / Number(streamSettings.interval));
           console.log(recurrences);
@@ -270,7 +275,7 @@ export const PreviewRoute = ({
               source_channel: process.env.NEXT_PUBLIC_CHANNEL_ID_INTO_OSMO || "",
               source_port: "transfer",
               sender: toBech32("into", fromBech32(userAddresses.map(user => user.address)[0]).data),
-              token: { amount: String(streamAmount), denom: "ibc/" + ibcDenomHash },
+              token: { amount: String(streamAmount), denom: getIBCDenomForINTOOSMO(route) },
               receiver: "", //should not be too important, can be blank!//https://docs.osmosis.zone/overview/features/ibc-hooks/
               timeout_height: {
                 revision_number: "0",
@@ -322,13 +327,13 @@ export const PreviewRoute = ({
             msg_type_url: "/ibc.applications.transfer.v1.MsgTransfer",
           });
           console.log(msgJSON);
-          const result = await skipClient.executeCosmosMessage({
-            chainID: route.sourceAssetChainID,
-            signerAddress: userAddresses.map(user => user.address).shift() || "",
-            messages: [msgJSON],
-          });
+          // const result = await skipClient.executeCosmosMessage({
+          //   chainID: route.sourceAssetChainID,
+          //   signerAddress: userAddresses.map(user => user.address).shift() || "",
+          //   messages: [msgJSON],
+          // });
 
-          console.log(result);
+          // console.log(result);
           // const msgTransferString = JSON.stringify(new TextEncoder().encode(JSON.stringify(msgTransfer)))
           // //use txs from msgs
           // await skipClient.executeCosmosMessage({ chainID: route.sourceAssetChainID, signerAddress: userAddresses.map(user => user.address).shift() || "", messages: [{ msg: msgTransferString, msgTypeURL: '/ibc.applications.transfer.v1.MsgTransfer' }] })
@@ -724,3 +729,24 @@ export const PreviewRoute = ({
 };
 
 const HREF_COMMON_FINALITY_TIMES = `https://docs.axelar.dev/learn/txduration#common-finality-time-for-interchain-transactions`;
+
+
+function getIBCDenomForINTOOSMO(route: any): string {
+  const textEncoder = new TextEncoder();
+  const denomOsmosis = route.operations[0].transfer.denomOut;
+  
+  const channelId = process.env.NEXT_PUBLIC_CHANNEL_ID_OSMO_INTO;
+  // Create the full string to hash
+  const fullStringOsmosisIntento = `transfer/${channelId}/${denomOsmosis}`;
+
+  // Encode the string into a Uint8Array
+  const encodedData = textEncoder.encode(fullStringOsmosisIntento);
+
+  // Hash the encoded data using SHA-256
+  const hash = createHash('sha256');
+  hash.update(encodedData);
+  const hashValue = hash.digest('hex').toUpperCase();
+
+  // Return the formatted IBC denom
+  return `ibc/${hashValue}`;
+}
