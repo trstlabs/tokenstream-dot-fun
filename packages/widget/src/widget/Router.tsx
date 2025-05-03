@@ -9,6 +9,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import { captureException } from "@sentry/browser";
 import { useKeepWalletStateSynced } from "@/hooks/useKeepWalletStateSynced";
 import { track } from "@amplitude/analytics-browser";
+import { StreamPage } from "@/pages/StreamPage/StreamPage";
 
 export const Router = () => {
   useKeepWalletStateSynced();
@@ -57,6 +58,19 @@ export const Router = () => {
           }}
         >
           <TransactionHistoryPage />
+        </ErrorBoundary>
+      );
+    case Routes.StreamPage:
+      return (
+        <ErrorBoundary
+          fallback={null}
+          onError={(error) => {
+            track("error page: unexpected error from stream page", { error });
+            captureException(error);
+            setError({ errorType: ErrorType.Unexpected, error });
+          }}
+        >
+          <StreamPage />
         </ErrorBoundary>
       );
   }

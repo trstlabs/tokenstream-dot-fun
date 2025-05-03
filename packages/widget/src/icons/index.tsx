@@ -12,6 +12,7 @@ import { HamburgerIcon } from "./HamburgerIcon";
 import { HorizontalLineIcon } from "./HorizontalLineIcon";
 import { ReactElement, SVGProps } from "react";
 import { GoFastIcon } from "./GoFastIcon";
+import { WaveIcon } from "./WaveIcon";
 
 export enum ICONS {
   none,
@@ -29,6 +30,7 @@ export enum ICONS {
   hamburger,
   horizontalLine,
   goFast,
+  stream,
 }
 
 type IconProps = SVGProps<SVGSVGElement> & {
@@ -55,4 +57,5 @@ export const iconMap: IconMap = {
   [ICONS.hamburger]: HamburgerIcon,
   [ICONS.horizontalLine]: HorizontalLineIcon,
   [ICONS.goFast]: GoFastIcon,
+  [ICONS.stream]: WaveIcon,
 };

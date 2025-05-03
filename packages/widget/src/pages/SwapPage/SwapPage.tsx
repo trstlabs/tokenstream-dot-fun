@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Column } from "@/components/Layout";
 import { MainButton } from "@/components/MainButton";
@@ -94,6 +94,17 @@ export const SwapPage = () => {
   const sourceAccount = getAccount(sourceAsset?.chainID);
   const txHistory = useAtomValue(transactionHistoryAtom);
   const isSwapOperation = useIsSwapOperation(route);
+  
+  const [nextPage, setNextPage] = useState(Routes.SwapExecutionPage);
+  // Check for 'transfer' in route.operations[0] and navigate to StreamPage
+  useEffect(() => {
+    if (route?.operations && 'transfer' in route.operations[0]) {
+       // Redirect to StreamPage if "transfer" is found
+       setNextPage(Routes.StreamPage);
+    }else {
+      setNextPage(Routes.SwapExecutionPage);
+    }
+  }, [route,nextPage, setNextPage]);
 
   const getClientAsset = useCallback(
     (denom?: string, chainId?: string) => {
@@ -332,7 +343,7 @@ export const SwapPage = () => {
           onClickContinue: () => {
             setError(undefined);
             setChainAddresses({});
-            setCurrentPage(Routes.SwapExecutionPage);
+            setCurrentPage(nextPage);
             setSwapExecutionState();
           },
           onClickBack: () => {
@@ -350,7 +361,7 @@ export const SwapPage = () => {
           onClickContinue: () => {
             setError(undefined);
             setChainAddresses({});
-            setCurrentPage(Routes.SwapExecutionPage);
+            setCurrentPage(nextPage);
             setSwapExecutionState();
           },
           onClickBack: () => {
@@ -368,7 +379,7 @@ export const SwapPage = () => {
           onClickContinue: () => {
             setError(undefined);
             setChainAddresses({});
-            setCurrentPage(Routes.SwapExecutionPage);
+            setCurrentPage(nextPage);
             setSwapExecutionState();
           },
           onClickBack: () => {
@@ -379,7 +390,7 @@ export const SwapPage = () => {
         return;
       }
       setChainAddresses({});
-      setCurrentPage(Routes.SwapExecutionPage);
+      setCurrentPage(nextPage);
       setUser({ username: sourceAccount?.address });
       setSwapExecutionState();
     };

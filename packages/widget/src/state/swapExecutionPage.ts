@@ -28,7 +28,7 @@ import { callbacksAtom } from "./callbacks";
 import { setUser, setTag } from "@sentry/react";
 import { track } from "@amplitude/analytics-browser";
 import { streamSettingsAtom } from "./streamSettings";
-import { createStreamingSwap } from "@/pages/SwapExecutionPage/Stream/createStreamingSwap";
+import { createStreamingSwap } from "./Stream/CreateStreamingSwap";
 
 type ValidatingGasBalanceData = {
   chainID?: string;
