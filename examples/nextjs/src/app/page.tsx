@@ -185,6 +185,7 @@ export default function Home() {
           {urlParamsLoaded && (
             <Widget
               theme={theme}
+              brandColor="#3b75c2"
               defaultRoute={defaultRoute}
               onWalletConnected={(props) =>
                 console.log("onWalletConnected", { ...props })
