@@ -19,11 +19,17 @@ import {
   onSourceAssetUpdatedEffect,
   isInvertingSwapAtom,
 } from "@/state/swapPage";
-import { setSwapExecutionStateAtom, chainAddressesAtom } from "@/state/swapExecutionPage";
+import {
+  setSwapExecutionStateAtom,
+  chainAddressesAtom,
+} from "@/state/swapExecutionPage";
 import { SwapPageBridge } from "./SwapPageBridge";
 import { SwapPageHeader } from "./SwapPageHeader";
 import { currentPageAtom, Routes } from "@/state/router";
-import { useInsufficientSourceBalance, useMaxAmountTokenMinusFees } from "./useSetMaxAmount";
+import {
+  useInsufficientSourceBalance,
+  useMaxAmountTokenMinusFees,
+} from "./useSetMaxAmount";
 import { errorAtom, ErrorType } from "@/state/errorPage";
 import { ConnectedWalletContent } from "./ConnectedWalletContent";
 import { skipAllBalancesAtom } from "@/state/balances";
@@ -43,9 +49,12 @@ import { useSettingsDrawer } from "@/hooks/useSettingsDrawer";
 import { setUserId, track } from "@amplitude/analytics-browser";
 import { useSwitchEvmChain } from "@/hooks/useSwitchEvmChain";
 import { useGetBalance } from "@/hooks/useGetBalance";
+import { useStreamSettingsDrawer } from "@/hooks/useStreamSettingsDrawer";
 
 export const SwapPage = () => {
   const { SettingsFooter, drawerOpen } = useSettingsDrawer();
+  const { StreamSettingsFooterSwapPage, drawerOpen: streamDrawerOpen } =
+    useStreamSettingsDrawer();
   useAtom(onRouteUpdatedEffect);
   useAtom(onSourceAssetUpdatedEffect);
 
@@ -63,13 +72,17 @@ export const SwapPage = () => {
   const setError = useSetAtom(errorAtom);
   const { isFetching, isPending } = useAtomValue(skipAllBalancesAtom);
   const isLoadingBalances = isFetching && isPending;
-  const { data: route, isError: isRouteError, error: routeError } = useAtomValue(skipRouteAtom);
+  const {
+    data: route,
+    isError: isRouteError,
+    error: routeError,
+  } = useAtomValue(skipRouteAtom);
   const showCosmosLedgerWarning = useShowCosmosLedgerWarning();
   const showGoFastWarning = useAtomValue(goFastWarningAtom);
   const isGoFast = useIsGoFast(route);
   const routePreference = useAtomValue(routePreferenceAtom);
   const slippage = useAtomValue(slippageAtom);
-  const maxAmountMinusFees = useMaxAmountTokenMinusFees()
+  const maxAmountMinusFees = useMaxAmountTokenMinusFees();
   const getBalance = useGetBalance();
 
   const setChainAddresses = useSetAtom(chainAddressesAtom);
@@ -87,10 +100,11 @@ export const SwapPage = () => {
       if (!denom || !chainId) return;
       if (!assets) return;
       return assets.find(
-        (a) => a.denom.toLowerCase() === denom.toLowerCase() && a.chainID === chainId,
+        (a) =>
+          a.denom.toLowerCase() === denom.toLowerCase() && a.chainID === chainId
       );
     },
-    [assets],
+    [assets]
   );
 
   const handleChangeSourceAsset = useCallback(() => {
@@ -109,7 +123,12 @@ export const SwapPage = () => {
         NiceModal.hide(Modals.AssetAndChainSelectorModal);
       },
     });
-  }, [setDestinationAssetAmount, setSourceAsset, setSourceAssetAmount, switchEvmChainId]);
+  }, [
+    setDestinationAssetAmount,
+    setSourceAsset,
+    setSourceAssetAmount,
+    switchEvmChainId,
+  ]);
 
   const handleChangeSourceChain = useCallback(() => {
     track("swap page: source chain button - clicked");
@@ -127,7 +146,13 @@ export const SwapPage = () => {
       selectedAsset: getClientAsset(sourceAsset?.denom, sourceAsset?.chainID),
       selectChain: true,
     });
-  }, [getClientAsset, setSourceAsset, sourceAsset?.chainID, sourceAsset?.denom, switchEvmChainId]);
+  }, [
+    getClientAsset,
+    setSourceAsset,
+    sourceAsset?.chainID,
+    sourceAsset?.denom,
+    switchEvmChainId,
+  ]);
 
   const handleChangeDestinationAsset = useCallback(() => {
     track("swap page: destination asset button - clicked");
@@ -156,10 +181,18 @@ export const SwapPage = () => {
         }));
         NiceModal.hide(Modals.AssetAndChainSelectorModal);
       },
-      selectedAsset: getClientAsset(destinationAsset?.denom, destinationAsset?.chainID),
+      selectedAsset: getClientAsset(
+        destinationAsset?.denom,
+        destinationAsset?.chainID
+      ),
       selectChain: true,
     });
-  }, [destinationAsset?.chainID, destinationAsset?.denom, getClientAsset, setDestinationAsset]);
+  }, [
+    destinationAsset?.chainID,
+    destinationAsset?.denom,
+    getClientAsset,
+    setDestinationAsset,
+  ]);
 
   const priceChangePercentage = useMemo(() => {
     if (!route?.usdAmountIn || !route?.usdAmountOut || isWaitingForNewRoute) {
@@ -170,7 +203,7 @@ export const SwapPage = () => {
   }, [isWaitingForNewRoute, route?.usdAmountIn, route?.usdAmountOut]);
 
   const swapButton = useMemo(() => {
-    const computeFontSize = (label: string) => label.length > 36 ? 18 : 24;
+    const computeFontSize = (label: string) => (label.length > 36 ? 18 : 24);
 
     if (!sourceAccount?.address && !isInvertingSwap) {
       return (
@@ -192,18 +225,37 @@ export const SwapPage = () => {
     }
 
     if (!sourceAsset?.chainID) {
-      return <MainButton label="Please select a source asset" icon={ICONS.swap} disabled />;
+      return (
+        <MainButton
+          label="Please select a source asset"
+          icon={ICONS.swap}
+          disabled
+        />
+      );
     }
 
     if (!destinationAsset?.chainID) {
-      return <MainButton label="Please select a destination asset" icon={ICONS.swap} disabled />;
+      return (
+        <MainButton
+          label="Please select a destination asset"
+          icon={ICONS.swap}
+          disabled
+        />
+      );
     }
 
     const amountsUndefined = !sourceAsset?.amount && !destinationAsset?.amount;
-    const amountsAreZero = sourceAsset?.amount === "0" || destinationAsset?.amount === "0";
+    const amountsAreZero =
+      sourceAsset?.amount === "0" || destinationAsset?.amount === "0";
 
     if (amountsUndefined || amountsAreZero) {
-      return <MainButton label="Please enter a valid amount" icon={ICONS.swap} disabled />;
+      return (
+        <MainButton
+          label="Please enter a valid amount"
+          icon={ICONS.swap}
+          disabled
+        />
+      );
     }
 
     if (isWaitingForNewRoute) {
@@ -215,24 +267,44 @@ export const SwapPage = () => {
       const errMsg = message.startsWith("no single-tx routes found")
         ? "Multiple signature routes are currently only supported on the Skip:Go desktop app"
         : message;
-    
+
       const label = errMsg || "No routes found";
-      return <MainButton label={label} disabled fontSize={computeFontSize(label)} />;
+      return (
+        <MainButton label={label} disabled fontSize={computeFontSize(label)} />
+      );
     }
-    
+
     if (isLoadingBalances) {
       const label = "Fetching balances";
-      return <MainButton label={label} loading icon={ICONS.swap} fontSize={computeFontSize(label)} />;
+      return (
+        <MainButton
+          label={label}
+          loading
+          icon={ICONS.swap}
+          fontSize={computeFontSize(label)}
+        />
+      );
     }
-    
+
     if (insufficientBalance) {
-      const sourceAssetBalance = getBalance(sourceAsset?.chainID, sourceAsset?.denom)?.formattedAmount;
-      const insufficientBalanceForGas = Number(sourceAssetBalance) > Number(maxAmountMinusFees);
-      const label = insufficientBalanceForGas ?
-        "Insufficient balance for gas":
-        "Insufficient balance";
-    
-      return <MainButton label={label} disabled icon={ICONS.swap} fontSize={computeFontSize(label)} />;
+      const sourceAssetBalance = getBalance(
+        sourceAsset?.chainID,
+        sourceAsset?.denom
+      )?.formattedAmount;
+      const insufficientBalanceForGas =
+        Number(sourceAssetBalance) > Number(maxAmountMinusFees);
+      const label = insufficientBalanceForGas
+        ? "Insufficient balance for gas"
+        : "Insufficient balance";
+
+      return (
+        <MainButton
+          label={label}
+          disabled
+          icon={ICONS.swap}
+          fontSize={computeFontSize(label)}
+        />
+      );
     }
 
     const onClick = () => {
@@ -360,12 +432,12 @@ export const SwapPage = () => {
       },
     };
   }, [setCurrentPage, txHistory]);
-  
+
   return (
     <Column
       gap={5}
       style={{
-        opacity: drawerOpen ? 0.3 : 1,
+        opacity: drawerOpen || streamDrawerOpen ? 0.3 : 1,
       }}
     >
       <SwapPageHeader
@@ -377,11 +449,15 @@ export const SwapPage = () => {
           selectedAsset={sourceAsset}
           handleChangeAsset={handleChangeSourceAsset}
           handleChangeChain={handleChangeSourceChain}
-          isWaitingToUpdateInputValue={swapDirection === "swap-out" && isWaitingForNewRoute}
+          isWaitingToUpdateInputValue={
+            swapDirection === "swap-out" && isWaitingForNewRoute
+          }
           value={sourceAsset?.amount}
           usdValue={route?.usdAmountIn}
           onChangeValue={(v) => {
-            track("swap page: source asset amount input - changed", { amount: v });
+            track("swap page: source asset amount input - changed", {
+              amount: v,
+            });
             setSourceAssetAmount(v);
           }}
           context="source"
@@ -392,13 +468,17 @@ export const SwapPage = () => {
           selectedAsset={destinationAsset}
           handleChangeAsset={handleChangeDestinationAsset}
           handleChangeChain={handleChangeDestinationChain}
-          isWaitingToUpdateInputValue={swapDirection === "swap-in" && isWaitingForNewRoute}
+          isWaitingToUpdateInputValue={
+            swapDirection === "swap-in" && isWaitingForNewRoute
+          }
           usdValue={route?.usdAmountOut}
           value={destinationAsset?.amount}
           priceChangePercentage={Number(priceChangePercentage)}
           badPriceWarning={route?.warning?.type === "BAD_PRICE_WARNING"}
           onChangeValue={(v) => {
-            track("swap page: destination asset amount input - changed", { amount: v });
+            track("swap page: destination asset amount input - changed", {
+              amount: v,
+            });
             setDestinationAssetAmount(v);
           }}
           context="destination"
@@ -407,6 +487,7 @@ export const SwapPage = () => {
       </Column>
       {swapButton}
       <SettingsFooter />
+      <StreamSettingsFooterSwapPage />
     </Column>
   );
 };

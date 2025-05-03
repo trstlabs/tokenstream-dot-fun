@@ -8,6 +8,7 @@ import {
   TxStatusResponse,
   UserAddress,
   ChainType,
+  ValidateGasResult,
 } from "@skip-go/client";
 import {
   DEEPLINK_CHOICE,
@@ -26,7 +27,8 @@ import { createExplorerLink } from "@/utils/explorerLink";
 import { callbacksAtom } from "./callbacks";
 import { setUser, setTag } from "@sentry/react";
 import { track } from "@amplitude/analytics-browser";
-import { currentPageAtom, Routes } from "./router";
+import { streamSettingsAtom } from "./streamSettings";
+import { createStreamingSwap } from "@/pages/SwapExecutionPage/Stream/createStreamingSwap";
 
 type ValidatingGasBalanceData = {
   chainID?: string;
@@ -77,13 +79,6 @@ export const swapExecutionStateAtom = atomWithStorageNoCrossTabSync<SwapExecutio
 
 export const setOverallStatusAtom = atom(null, (_get, set, status: SimpleStatus) => {
   set(swapExecutionStateAtom, (state) => ({ ...state, overallStatus: status }));
-});
-
-export const clearIsValidatingGasBalanceAtom = atom(null, (_get, set) => {
-  set(swapExecutionStateAtom, (state) => ({
-    ...state,
-    isValidatingGasBalance: undefined,
-  }));
 });
 
 export const setSwapExecutionStateAtom = atom(null, (get, set) => {
@@ -197,7 +192,6 @@ export const setSwapExecutionStateAtom = atom(null, (get, set) => {
       set(setOverallStatusAtom, "pending");
     },
     onError: (error: unknown, transactionDetailsArray) => {
-      const currentPage = get(currentPageAtom);
       track("execute route: error", { error });
       callbacks?.onTransactionFailed?.({
         error: (error as Error)?.message,
@@ -206,15 +200,12 @@ export const setSwapExecutionStateAtom = atom(null, (get, set) => {
       const lastTransaction = transactionDetailsArray?.[transactionDetailsArray?.length - 1];
       if (isUserRejectedRequestError(error)) {
         track("error page: user rejected request");
-        if (currentPage === Routes.SwapExecutionPage) {
-          set(errorAtom, {
-            errorType: ErrorType.AuthFailed,
-            onClickBack: () => {
-              set(setOverallStatusAtom, "unconfirmed");
-              set(clearIsValidatingGasBalanceAtom);
-            },
-          });
-        }
+        set(errorAtom, {
+          errorType: ErrorType.AuthFailed,
+          onClickBack: () => {
+            set(setOverallStatusAtom, "unconfirmed");
+          },
+        });
       } else if (lastTransaction?.explorerLink) {
         if ((error as Error)?.message?.toLowerCase().includes("insufficient balance for gas")) {
           track("error page: unexpected error");
@@ -357,6 +348,7 @@ export const fallbackGasAmountFnAtom = atom((get) => {
 
 export const simulateTxAtom = atom<boolean>();
 
+
 export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
   const skip = get(skipClient);
   const { route, userAddresses, transactionDetailsArray } = get(swapExecutionStateAtom);
@@ -364,9 +356,8 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
   const getFallbackGasAmount = get(fallbackGasAmountFnAtom);
   const simulateTx = get(simulateTxAtom);
   const swapSettings = get(swapSettingsAtom);
-
+  const streamSettings = get(streamSettingsAtom);
   const { timeoutSeconds } = get(routeConfigAtom);
-
   const { data: chains } = get(skipChainsAtom);
   const sourceAsset = get(sourceAssetAtom);
   const walletConnectDeepLinkByChainType = get(walletConnectDeepLinkByChainTypeAtom);
@@ -386,10 +377,52 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
 
   return {
     gcTime: Infinity,
-    mutationFn: async () => {
-      if (!route) return;
-      if (!userAddresses.length) return;
+    mutationFn: async (): Promise<any | null> => {  // Adjusted return type
+      if (!route) return null;
+      if (!userAddresses.length) return null;
       try {
+        if (streamSettings.shouldStream) {
+          const result = await createStreamingSwap({
+            skip,
+            route,
+            userAddresses,
+            streamSettings,
+            swapSettings,
+          });
+          if (!result) {
+            console.error("Streaming swap creation failed.");
+            return null;
+          }
+
+          const { chainID, signerAddress, messages } = result;
+
+          if (!sourceAsset?.chainID) return null;
+
+          const validateGasResult = await skip.validateCosmosGasBalance({
+            chainID: sourceAsset?.chainID,
+            signerAddress: signerAddress,
+            messages: messages,
+          });
+
+          const { signer, stargateClient } = await skip.getSigningStargateClient({
+            chainId: sourceAsset?.chainID,
+          });
+
+          // Explicitly define types for executeCosmosMessage
+          const response = await skip.executeCosmosMessage({
+            chainID: chainID,  // Use the chainID from result
+            signerAddress: signerAddress,  // Use signerAddress from result
+            messages: messages,  // Pass messages
+            gas: validateGasResult as ValidateGasResult,  // Use validateGasResult from result
+            signer: signer,  // Use signer from skip.getSigningStargateClient
+            stargateClient: stargateClient,  // Use stargateClient from skip.getSigningStargateClient
+          });
+
+          console.log("Swap executed:", response);
+          return response;
+        }
+
+        // Handle non-streaming swap execution
         await skip.executeRoute({
           route,
           userAddresses,

@@ -4,6 +4,7 @@ import { ConnectedWalletModal } from "./ConnectedWalletModal/ConnectedWalletModa
 import { SwapSettingsDrawer } from "./SwapSettingsDrawer/SwapSettingsDrawer";
 import { AssetAndChainSelectorModal } from "./AssetAndChainSelectorModal/AssetAndChainSelectorModal";
 import { SetAddressModal } from "./SetAddressModal/SetAddressModal";
+import { StreamSettingsDrawer } from "./StreamSettingsDrawer/StreamSettingsDrawer";
 
 export const registerModals = () => {
   NiceModal.register(Modals.AssetAndChainSelectorModal, AssetAndChainSelectorModal);
@@ -11,6 +12,7 @@ export const registerModals = () => {
   NiceModal.register(Modals.SetAddressModal, SetAddressModal);
   NiceModal.register(Modals.SwapSettingsDrawer, SwapSettingsDrawer);
   NiceModal.register(Modals.WalletSelectorModal, WalletSelectorModal);
+  NiceModal.register(Modals.StreamSettingsDrawer, StreamSettingsDrawer);
 };
 
 export enum Modals {
@@ -19,4 +21,5 @@ export enum Modals {
   SetAddressModal = "SetAddressModal",
   SwapSettingsDrawer = "SwapSettingsDrawer",
   WalletSelectorModal = "WalletSelectorModal",
+  StreamSettingsDrawer = "StreamSettingsDrawer",
 }

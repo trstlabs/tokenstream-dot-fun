@@ -4,7 +4,11 @@ import { styled } from "styled-components";
 import React, { ReactElement, ReactNode, useEffect } from "react";
 import { PartialTheme } from "./theme";
 import { Router } from "./Router";
-import { ChainAffiliates, MsgsRequest, SkipClientOptions } from "@skip-go/client";
+import {
+  ChainAffiliates,
+  MsgsRequest,
+  SkipClientOptions,
+} from "@skip-go/client";
 import { DefaultRouteConfig } from "./useInitDefaultRoute";
 import { RouteConfig } from "@skip-go/client";
 import { registerModals } from "@/modals/registerModals";
@@ -14,13 +18,19 @@ import { useInitWidget } from "./useInitWidget";
 import { WalletConnect } from "@/state/wallets";
 import { Callbacks } from "@/state/callbacks";
 import { createStore, Provider, useAtomValue, useSetAtom } from "jotai";
-import { settingsDrawerAtom } from "@/state/settingsDrawer";
+import {
+  settingsDrawerAtom,
+  streamSettingsDrawerAtom,
+} from "@/state/settingsDrawer";
 import { rootIdAtom } from "@/state/skipClient";
 import packageJson from "../../package.json";
 import { IbcEurekaHighlightedAssets } from "@/state/ibcEurekaHighlightedAssets";
 import { ChainFilter } from "@/state/filters";
 
-export type WidgetRouteConfig = Omit<RouteConfig, "swapVenues" | "swapVenue"> & {
+export type WidgetRouteConfig = Omit<
+  RouteConfig,
+  "swapVenues" | "swapVenue"
+> & {
   swapVenues?: NewSwapVenueRequest[];
   swapVenue?: NewSwapVenueRequest;
 } & Pick<MsgsRequest, "timeoutSeconds">;
@@ -97,7 +107,10 @@ type NewSwapVenueRequest = {
   chainId: string;
 };
 
-export type NewSkipClientOptions = Omit<SkipClientOptions, "apiURL" | "chainIDsToAffiliates"> & {
+export type NewSkipClientOptions = Omit<
+  SkipClientOptions,
+  "apiURL" | "chainIDsToAffiliates"
+> & {
   apiUrl?: string;
   chainIdsToAffiliates?: Record<string, ChainAffiliates>;
 };
@@ -140,6 +153,7 @@ export const WidgetWithinProvider = ({ props }: { props: WidgetProps }) => {
 
 const WidgetWrapper = ({ children }: { children: ReactNode }) => {
   const setSettingsDrawerContainer = useSetAtom(settingsDrawerAtom);
+  const setStreamSettingsDrawerContainer = useSetAtom(streamSettingsDrawerAtom); // Set StreamSettingsDrawer
   const rootId = useAtomValue(rootIdAtom);
 
   useEffect(() => {
@@ -152,10 +166,16 @@ const WidgetWrapper = ({ children }: { children: ReactNode }) => {
     setSettingsDrawerContainer(element);
   };
 
+  const onStreamSettingsDrawerContainerLoaded = (element: HTMLDivElement) => {
+    setStreamSettingsDrawerContainer(element);
+  };
+
   return (
     <WidgetContainer data-root-id={rootId}>
       {children}
       <div ref={onSettingsDrawerContainerLoaded}></div>
+      <div ref={onStreamSettingsDrawerContainerLoaded}></div>{" "}
+      {/* Ref for StreamSettingsDrawer */}
     </WidgetContainer>
   );
 };
