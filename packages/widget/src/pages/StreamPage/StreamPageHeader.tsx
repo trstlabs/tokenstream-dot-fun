@@ -16,10 +16,8 @@ type StreamPageHeaderProps = {
   rightContent?: React.ReactNode;
 };
 
-export const StreamPageHeader = ({ leftButton, middleButton, rightButton, rightContent }: StreamPageHeaderProps) => {
+export const StreamPageHeader = ({ leftButton }: StreamPageHeaderProps) => {
   const LeftIcon = iconMap[leftButton?.icon || ICONS.none];
-  const MiddleIcon = iconMap[middleButton?.icon || ICONS.none];
-  const RightIcon = iconMap[rightButton?.icon || ICONS.none];
 
   return (
     <StyledStreamPageHeaderContainer justify="space-between">
@@ -28,22 +26,6 @@ export const StreamPageHeader = ({ leftButton, middleButton, rightButton, rightC
           <GhostButton gap={5} align="center" onClick={leftButton.onClick}>
             <LeftIcon />
             {leftButton.label}
-          </GhostButton>
-        )}
-      </Row>
-
-      <Row align="center" gap={10}>
-        {middleButton && (
-          <GhostButton gap={5} align="center" onClick={middleButton.onClick}>
-            <MiddleIcon />
-            {middleButton.label}
-          </GhostButton>
-        )}
-        {rightContent}
-        {rightButton && (
-          <GhostButton gap={5} align="center" onClick={rightButton.onClick}>
-            {rightButton.label}
-            <RightIcon />
           </GhostButton>
         )}
       </Row>

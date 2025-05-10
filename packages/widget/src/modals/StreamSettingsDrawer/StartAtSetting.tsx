@@ -51,8 +51,6 @@ export const StartAtSetting = () => {
     }
 
     return theme.primary.text.ultraLowContrast;
-
-    return theme.error.text;
   }, [seconds, theme.primary.text, theme.primary.text.ultraLowContrast]);
 
   return (
