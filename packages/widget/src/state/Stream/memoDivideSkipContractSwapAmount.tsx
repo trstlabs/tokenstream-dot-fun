@@ -32,7 +32,7 @@ export interface MemoJsonInput {
   };
 }
 
-export function memoDivideAmount(
+export function memoDivideSkipContractSwapAmount(
   jsonInput: MemoJsonInput,
   recurrences: number
 ): MemoJsonInput {
