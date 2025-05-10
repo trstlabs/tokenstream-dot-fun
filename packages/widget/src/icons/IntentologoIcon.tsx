@@ -5,10 +5,9 @@ type IconProps = {
 export const IntentoLogoIcon = ({}: IconProps) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    width="50"
-    height="16"
-    viewBox="0 0 50 16"
-    fill="none"
+    width="30"
+    height="30"
+    viewBox="0 0 512 512"
   >
     <path
       fill="#BDE3F4"

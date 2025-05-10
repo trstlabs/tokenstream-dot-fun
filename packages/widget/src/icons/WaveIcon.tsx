@@ -4,10 +4,15 @@ type IconProps = {
   width?: number;
 };
 
-export const WaveIcon = ({ color = "currentColor", ...props }: IconProps) => (
+export const WaveIcon = ({
+  color = "currentColor",
+  height = 15,
+  width = 15,
+  ...props
+}: IconProps) => (
   <svg
-    width="15"
-    height="15"
+    width={width} // Dynamic width based on passed prop or default to 15
+    height={height} // Dynamic height based on passed prop or default to 15
     viewBox="0 0 24 24"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
