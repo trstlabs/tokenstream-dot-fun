@@ -1,4 +1,7 @@
-import { setTransactionHistoryAtom, transactionHistoryAtom } from "@/state/history";
+import {
+  setTransactionHistoryAtom,
+  transactionHistoryAtom,
+} from "@/state/history";
 import {
   setOverallStatusAtom,
   swapExecutionStateAtom,
@@ -18,8 +21,12 @@ export const useSyncTxStatus = ({
 }) => {
   const transferEvents = statusData?.transferEvents;
   const setOverallStatus = useSetAtom(setOverallStatusAtom);
-  const { route, transactionDetailsArray, overallStatus, transactionHistoryIndex } =
-    useAtomValue(swapExecutionStateAtom);
+  const {
+    route,
+    transactionDetailsArray,
+    overallStatus,
+    transactionHistoryIndex,
+  } = useAtomValue(swapExecutionStateAtom);
   const setTransactionHistory = useSetAtom(setTransactionHistoryAtom);
   const txHistory = useAtomValue(transactionHistoryAtom);
 

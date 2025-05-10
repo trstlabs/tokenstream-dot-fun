@@ -50,6 +50,7 @@ import { setUserId, track } from "@amplitude/analytics-browser";
 import { useSwitchEvmChain } from "@/hooks/useSwitchEvmChain";
 import { useGetBalance } from "@/hooks/useGetBalance";
 import { useStreamSettingsDrawer } from "@/hooks/useStreamSettingsDrawer";
+import { streamSettingsAtom } from "@/state/streamSettings";
 
 export const SwapPage = () => {
   const { SettingsFooter, drawerOpen } = useSettingsDrawer();
@@ -80,6 +81,7 @@ export const SwapPage = () => {
   const showCosmosLedgerWarning = useShowCosmosLedgerWarning();
   const showGoFastWarning = useAtomValue(goFastWarningAtom);
   const isGoFast = useIsGoFast(route);
+  const setStreamSettingsAtom = useSetAtom(streamSettingsAtom);
   const routePreference = useAtomValue(routePreferenceAtom);
   const slippage = useAtomValue(slippageAtom);
   const maxAmountMinusFees = useMaxAmountTokenMinusFees();
@@ -94,17 +96,22 @@ export const SwapPage = () => {
   const sourceAccount = getAccount(sourceAsset?.chainID);
   const txHistory = useAtomValue(transactionHistoryAtom);
   const isSwapOperation = useIsSwapOperation(route);
-  
+
   const [nextPage, setNextPage] = useState(Routes.SwapExecutionPage);
   // Check for 'transfer' in route.operations[0] and navigate to StreamPage
   useEffect(() => {
-    if (route?.operations && 'transfer' in route.operations[0]) {
-       // Redirect to StreamPage if "transfer" is found
-       setNextPage(Routes.StreamPage);
-    }else {
+    if (
+      route?.operations &&
+      "transfer" in route.operations[0] &&
+      route.operations[0].transfer.toChainID == route.swapVenues?.[0].chainID
+    ) {
+      // Redirect to StreamPage if "transfer" is found
+      setNextPage(Routes.StreamPage);
+    } else {
+      setStreamSettingsAtom((prev) => ({ ...prev, shouldStream: false }));
       setNextPage(Routes.SwapExecutionPage);
     }
-  }, [route,nextPage, setNextPage]);
+  }, [route, nextPage, setNextPage]);
 
   const getClientAsset = useCallback(
     (denom?: string, chainId?: string) => {

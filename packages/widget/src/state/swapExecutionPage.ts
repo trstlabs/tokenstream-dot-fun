@@ -1,5 +1,9 @@
 import { atomWithMutation } from "jotai-tanstack-query";
-import { skipChainsAtom, skipClient, skipSwapVenuesAtom } from "@/state/skipClient";
+import {
+  skipChainsAtom,
+  skipClient,
+  skipSwapVenuesAtom,
+} from "@/state/skipClient";
 import { routeConfigAtom, skipRouteAtom } from "@/state/route";
 import { atom } from "jotai";
 import {
@@ -22,13 +26,18 @@ import { SimpleStatus } from "@/utils/clientType";
 import { errorAtom, ErrorType } from "./errorPage";
 import { atomWithStorageNoCrossTabSync } from "@/utils/misc";
 import { isUserRejectedRequestError } from "@/utils/error";
-import { COSMOS_GAS_AMOUNT, EVM_GAS_AMOUNT, sourceAssetAtom, swapSettingsAtom } from "./swapPage";
+import {
+  COSMOS_GAS_AMOUNT,
+  EVM_GAS_AMOUNT,
+  sourceAssetAtom,
+  swapSettingsAtom,
+} from "./swapPage";
 import { createExplorerLink } from "@/utils/explorerLink";
 import { callbacksAtom } from "./callbacks";
 import { setUser, setTag } from "@sentry/react";
 import { track } from "@amplitude/analytics-browser";
 import { streamSettingsAtom } from "./streamSettings";
-import { createStreamingSwap } from "./Stream/CreateStreamingSwap";
+import { createMessagesForPfmStream } from "./Stream/createMessagesForPfmStream";
 
 type ValidatingGasBalanceData = {
   chainID?: string;
@@ -64,9 +73,8 @@ export type ChainAddress = {
  */
 export const chainAddressesAtom = atom<Record<number, ChainAddress>>({});
 
-export const swapExecutionStateAtom = atomWithStorageNoCrossTabSync<SwapExecutionState>(
-  "swapExecutionState",
-  {
+export const swapExecutionStateAtom =
+  atomWithStorageNoCrossTabSync<SwapExecutionState>("swapExecutionState", {
     route: undefined,
     userAddresses: [],
     transactionDetailsArray: [],
@@ -74,12 +82,17 @@ export const swapExecutionStateAtom = atomWithStorageNoCrossTabSync<SwapExecutio
     overallStatus: "unconfirmed",
     isValidatingGasBalance: undefined,
     transactionsSigned: 0,
-  },
-);
+  });
 
-export const setOverallStatusAtom = atom(null, (_get, set, status: SimpleStatus) => {
-  set(swapExecutionStateAtom, (state) => ({ ...state, overallStatus: status }));
-});
+export const setOverallStatusAtom = atom(
+  null,
+  (_get, set, status: SimpleStatus) => {
+    set(swapExecutionStateAtom, (state) => ({
+      ...state,
+      overallStatus: status,
+    }));
+  }
+);
 
 export const setSwapExecutionStateAtom = atom(null, (get, set) => {
   const { data: route } = get(skipRouteAtom);
@@ -87,7 +100,6 @@ export const setSwapExecutionStateAtom = atom(null, (get, set) => {
   const transactionHistory = get(transactionHistoryAtom);
   const callbacks = get(callbacksAtom);
   const transactionHistoryIndex = transactionHistory.length;
-
   if (!route) return;
 
   const {
@@ -99,7 +111,8 @@ export const setSwapExecutionStateAtom = atom(null, (get, set) => {
   } = route;
 
   const sourceAddress = requiredChainAddresses[0];
-  const destinationAddress = requiredChainAddresses[requiredChainAddresses.length - 1];
+  const destinationAddress =
+    requiredChainAddresses[requiredChainAddresses.length - 1];
 
   const initialChainAddresses: Record<number, ChainAddress> = {};
 
@@ -146,7 +159,7 @@ export const setSwapExecutionStateAtom = atom(null, (get, set) => {
       set(
         setTransactionDetailsAtom,
         { ...txInfo, explorerLink, status: undefined },
-        transactionHistoryIndex,
+        transactionHistoryIndex
       );
       callbacks?.onTransactionBroadcasted?.({
         chainId: txInfo.chainID,
@@ -161,7 +174,11 @@ export const setSwapExecutionStateAtom = atom(null, (get, set) => {
       });
     },
     onTransactionCompleted: async (chainId: string, txHash: string, status) => {
-      track("execute route: transaction completed", { chainId, txHash, status });
+      track("execute route: transaction completed", {
+        chainId,
+        txHash,
+        status,
+      });
       setTag("txCompleted", true);
       const chain = chains?.find((chain) => chain.chainID === chainId);
       const explorerLink = createExplorerLink({
@@ -197,7 +214,8 @@ export const setSwapExecutionStateAtom = atom(null, (get, set) => {
         error: (error as Error)?.message,
       });
 
-      const lastTransaction = transactionDetailsArray?.[transactionDetailsArray?.length - 1];
+      const lastTransaction =
+        transactionDetailsArray?.[transactionDetailsArray?.length - 1];
       if (isUserRejectedRequestError(error)) {
         track("error page: user rejected request");
         set(errorAtom, {
@@ -207,7 +225,11 @@ export const setSwapExecutionStateAtom = atom(null, (get, set) => {
           },
         });
       } else if (lastTransaction?.explorerLink) {
-        if ((error as Error)?.message?.toLowerCase().includes("insufficient balance for gas")) {
+        if (
+          (error as Error)?.message
+            ?.toLowerCase()
+            .includes("insufficient balance for gas")
+        ) {
           track("error page: unexpected error");
           set(errorAtom, {
             errorType: ErrorType.Unexpected,
@@ -251,20 +273,30 @@ export const setSwapExecutionStateAtom = atom(null, (get, set) => {
 export const setValidatingGasBalanceAtom = atom(
   null,
   (_get, set, isValidatingGasBalance: ValidatingGasBalanceData) => {
-    set(swapExecutionStateAtom, (state) => ({ ...state, isValidatingGasBalance }));
-  },
+    set(swapExecutionStateAtom, (state) => ({
+      ...state,
+      isValidatingGasBalance,
+    }));
+  }
 );
 
 export const setTransactionDetailsAtom = atom(
   null,
-  (get, set, transactionDetails: TransactionDetails, transactionHistoryIndex: number) => {
+  (
+    get,
+    set,
+    transactionDetails: TransactionDetails,
+    transactionHistoryIndex: number
+  ) => {
     const swapExecutionState = get(swapExecutionStateAtom);
     const { transactionDetailsArray, route } = swapExecutionState;
 
     const newTransactionDetailsArray = transactionDetailsArray;
 
     const transactionIndexFound = newTransactionDetailsArray.findIndex(
-      (transaction) => transaction.txHash.toLowerCase() === transactionDetails.txHash.toLowerCase(),
+      (transaction) =>
+        transaction.txHash.toLowerCase() ===
+        transactionDetails.txHash.toLowerCase()
     );
     if (transactionIndexFound !== -1) {
       newTransactionDetailsArray[transactionIndexFound] = {
@@ -286,13 +318,13 @@ export const setTransactionDetailsAtom = atom(
       timestamp: Date.now(),
       status: "unconfirmed",
     });
-  },
+  }
 );
 
 export const chainAddressEffectAtom = atomEffect((get, set) => {
   const chainAddresses = get(chainAddressesAtom);
   const addressesMatch = Object.values(chainAddresses).every(
-    (chainAddress) => !!chainAddress.address,
+    (chainAddress) => !!chainAddress.address
   );
   if (!addressesMatch) return;
 
@@ -318,23 +350,32 @@ export type TransactionDetails = {
 
 type SubmitSwapExecutionCallbacks = TransactionCallbacks & {
   onTransactionUpdated?: (transactionDetails: TransactionDetails) => void;
-  onError: (error: unknown, transactionDetailsArray?: TransactionDetails[]) => void;
+  onError: (
+    error: unknown,
+    transactionDetailsArray?: TransactionDetails[]
+  ) => void;
 };
 
-export const submitSwapExecutionCallbacksAtom = atom<SubmitSwapExecutionCallbacks | undefined>();
+export const submitSwapExecutionCallbacksAtom = atom<
+  SubmitSwapExecutionCallbacks | undefined
+>();
 
 export const fallbackGasAmountFnAtom = atom((get) => {
   const swapVenues = get(skipSwapVenuesAtom)?.data;
 
-  return async (chainId: string, chainType: ChainType): Promise<number | undefined> => {
+  return async (
+    chainId: string,
+    chainType: ChainType
+  ): Promise<number | undefined> => {
     if (chainType === ChainType.EVM) {
       return EVM_GAS_AMOUNT;
     }
     if (chainType !== ChainType.Cosmos) return undefined;
 
-    const isSwapChain = swapVenues?.some((venue) => venue.chainID === chainId) ?? false;
+    const isSwapChain =
+      swapVenues?.some((venue) => venue.chainID === chainId) ?? false;
     const defaultGasAmount = Math.ceil(
-      isSwapChain ? COSMOS_GAS_AMOUNT.SWAP : COSMOS_GAS_AMOUNT.DEFAULT,
+      isSwapChain ? COSMOS_GAS_AMOUNT.SWAP : COSMOS_GAS_AMOUNT.DEFAULT
     );
 
     // Special case for carbon-1
@@ -348,10 +389,11 @@ export const fallbackGasAmountFnAtom = atom((get) => {
 
 export const simulateTxAtom = atom<boolean>();
 
-
 export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
   const skip = get(skipClient);
-  const { route, userAddresses, transactionDetailsArray } = get(swapExecutionStateAtom);
+  const { route, userAddresses, transactionDetailsArray } = get(
+    swapExecutionStateAtom
+  );
   const submitSwapExecutionCallbacks = get(submitSwapExecutionCallbacksAtom);
   const getFallbackGasAmount = get(fallbackGasAmountFnAtom);
   const simulateTx = get(simulateTxAtom);
@@ -360,12 +402,17 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
   const { timeoutSeconds } = get(routeConfigAtom);
   const { data: chains } = get(skipChainsAtom);
   const sourceAsset = get(sourceAssetAtom);
-  const walletConnectDeepLinkByChainType = get(walletConnectDeepLinkByChainTypeAtom);
+  const walletConnectDeepLinkByChainType = get(
+    walletConnectDeepLinkByChainTypeAtom
+  );
 
-  const chainType = chains?.find((chain) => chain.chainID === sourceAsset?.chainID)?.chainType;
+  const chainType = chains?.find(
+    (chain) => chain.chainID === sourceAsset?.chainID
+  )?.chainType;
 
   if (chainType) {
-    const { deeplink, recentWalletData } = walletConnectDeepLinkByChainType[chainType];
+    const { deeplink, recentWalletData } =
+      walletConnectDeepLinkByChainType[chainType];
     if (chainType === ChainType.Cosmos) {
       window.localStorage.removeItem(DEEPLINK_CHOICE);
       window.localStorage.removeItem(RECENT_WALLET_DATA);
@@ -377,49 +424,91 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
 
   return {
     gcTime: Infinity,
-    mutationFn: async (): Promise<any | null> => {  // Adjusted return type
+    mutationFn: async (): Promise<any | null> => {
+      // Adjusted return type
       if (!route) return null;
       if (!userAddresses.length) return null;
       try {
         if (streamSettings.shouldStream) {
-          const result = await createStreamingSwap({
+          const result = await createMessagesForPfmStream({
             skip,
             route,
             userAddresses,
             streamSettings,
             swapSettings,
+            get,
           });
           if (!result) {
-            console.error("Streaming swap creation failed.");
-            return null;
+            const error = new Error("wasm contract not found");
+            submitSwapExecutionCallbacks?.onError?.(
+              error,
+              transactionDetailsArray
+            );
           }
 
-          const { chainID, signerAddress, messages } = result;
+          const { chainID, signerAddress, messages, intoAddress } = result;
 
+          console.log(signerAddress);
           if (!sourceAsset?.chainID) return null;
 
           const validateGasResult = await skip.validateCosmosGasBalance({
             chainID: sourceAsset?.chainID,
             signerAddress: signerAddress,
             messages: messages,
+            simulate: true,
           });
 
-          const { signer, stargateClient } = await skip.getSigningStargateClient({
-            chainId: sourceAsset?.chainID,
+          console.log(validateGasResult);
+          const { signer, stargateClient } =
+            await skip.getSigningStargateClient({
+              chainId: sourceAsset?.chainID,
+            });
+
+          // // Explicitly define types for executeCosmosMessage
+          return await skip.executeCosmosMessage({
+            chainID: chainID, // Use the chainID from result
+            signerAddress: signerAddress, // Use signerAddress from result
+            messages: messages, // Pass messages
+            gas: validateGasResult as ValidateGasResult, // Use validateGasResult from result
+            signer: signer, // Use signer from skip.getSigningStargateClient
+            stargateClient: stargateClient, // Use stargateClient from skip.getSigningStargateClient
+            ...submitSwapExecutionCallbacks,
           });
 
-          // Explicitly define types for executeCosmosMessage
-          const response = await skip.executeCosmosMessage({
-            chainID: chainID,  // Use the chainID from result
-            signerAddress: signerAddress,  // Use signerAddress from result
-            messages: messages,  // Pass messages
-            gas: validateGasResult as ValidateGasResult,  // Use validateGasResult from result
-            signer: signer,  // Use signer from skip.getSigningStargateClient
-            stargateClient: stargateClient,  // Use stargateClient from skip.getSigningStargateClient
-          });
+          // const status = await skip.waitForTransaction({
+          //   chainID: chainID,
+          //   txHash: res.transactionHash,
+          // });
 
-          console.log("Swap executed:", response);
-          return response;
+          // submitSwapExecutionCallbacks?.onTransactionCompleted?.(
+          //   chainID,
+          //   res.transactionHash,
+          //   status
+          // );
+
+          // if (res.code == 0) {
+          //   window.location.href = `https://triggerportal.zone/alert?owner=${intoAddress}&derivedAddress=true`;
+          // } else {
+          //   throw new Error("Failed to submit msg");
+          // }
+
+          // Handle non-streaming swap execution
+          // return await skip.executeRoute({
+          //   route,
+          //   userAddresses,
+          //   timeoutSeconds,
+          //   slippageTolerancePercent: swapSettings.slippage.toString(),
+          //   useUnlimitedApproval: swapSettings.useUnlimitedApproval,
+          //   simulate:
+          //     simulateTx !== undefined
+          //       ? simulateTx
+          //       : route.sourceAssetChainID !== "984122",
+          //   getFallbackGasAmount,
+          //   ...submitSwapExecutionCallbacks,
+          //   afterMsg: messages[0],
+          // });
+          // console.log("response:", res);
+          //return { skipped: true };
         }
 
         // Handle non-streaming swap execution
@@ -429,7 +518,10 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
           timeoutSeconds,
           slippageTolerancePercent: swapSettings.slippage.toString(),
           useUnlimitedApproval: swapSettings.useUnlimitedApproval,
-          simulate: simulateTx !== undefined ? simulateTx : route.sourceAssetChainID !== "984122",
+          simulate:
+            simulateTx !== undefined
+              ? simulateTx
+              : route.sourceAssetChainID !== "984122",
           getFallbackGasAmount,
           ...submitSwapExecutionCallbacks,
         });
