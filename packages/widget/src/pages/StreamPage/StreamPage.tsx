@@ -10,6 +10,14 @@ import { WaveIcon } from "@/icons/WaveIcon";
 import { currentPageAtom, Routes } from "@/state/router";
 import { useAtom, useSetAtom } from "jotai";
 import { streamSettingsAtom } from "@/state/streamSettings";
+import {
+  expectedStreamFeesAtom,
+  swapExecutionStateAtom,
+} from "@/state/swapExecutionPage";
+import { useStreamFeeParams } from "@/hooks/useStreamFeeParams";
+import { useEffect } from "react";
+import { Coin } from "@cosmjs/amino";
+import { convertTokenAmountToHumanReadableAmount } from "@/utils/crypto";
 
 export type StreamPageProps = {};
 
@@ -17,6 +25,69 @@ export const StreamPage = ({}: StreamPageProps) => {
   const theme = useTheme();
   const [streamSettings, setStreamSettings] = useAtom(streamSettingsAtom);
   const setCurrentPage = useSetAtom(currentPageAtom);
+  const [expectedStreamFees, setExpectedStreamFees] = useAtom(
+    expectedStreamFeesAtom
+  );
+
+  const streamFeeParams = useStreamFeeParams();
+
+  const [swapExecutionState, setSwapExecutionState] = useAtom(
+    swapExecutionStateAtom
+  );
+
+  useEffect(() => {
+    if (
+      streamSettings.shouldStream &&
+      swapExecutionState.overallStatus === "completed"
+    ) {
+      setSwapExecutionState((prev) => ({
+        ...prev,
+        overallStatus: "unconfirmed",
+      }));
+    }
+  }, [
+    streamSettings.shouldStream,
+    swapExecutionState.overallStatus,
+    setSwapExecutionState,
+  ]);
+
+  useEffect(() => {
+    const getExpectedStreamFees = async () => {
+      if (!streamFeeParams || streamFeeParams.gasFeeCoins.length === 0) return;
+      const gasUsed = 100_000;
+      const lenMsgs = 1;
+
+      let fees: Coin[] = [];
+
+      for (const coin of streamFeeParams.gasFeeCoins) {
+        const denom = coin.denom;
+
+        const flexFeeForPeriod =
+          (Number(streamFeeParams.flexFeeMul) / 1000) * gasUsed;
+
+        const recurrences = Math.floor(
+          Number(streamSettings.duration) / Number(streamSettings.interval)
+        );
+
+        const flowFee =
+          recurrences * flexFeeForPeriod +
+          recurrences * Number(streamFeeParams.burnFeePerMsg) * lenMsgs;
+
+        const denomCoin = streamFeeParams.gasFeeCoins.find(
+          (c) => c.denom === denom
+        );
+        if (!denomCoin) continue;
+
+        const flowFeeForDenom = flowFee * Number(denomCoin.amount);
+        fees = [...fees, { denom, amount: flowFeeForDenom.toString() }];
+        //fees[coin.denom] = Number(flowFeeNormalized.toFixed(4));
+      }
+
+      setExpectedStreamFees(fees);
+    };
+
+    getExpectedStreamFees();
+  }, [streamFeeParams, setExpectedStreamFees]);
 
   return (
     <>
@@ -52,6 +123,24 @@ export const StreamPage = ({}: StreamPageProps) => {
                 Starts in {formatDuration(streamSettings.startAt)}
               </SmallText>
             )}
+            {expectedStreamFees && (
+              <SmallText textAlign="center">
+                Expected fees are{" "}
+                {convertTokenAmountToHumanReadableAmount(
+                  expectedStreamFees?.find((fee) => fee.denom === "uinto")
+                    ?.amount ?? "0"
+                )}{" "}
+                INTO or{" "}
+                {convertTokenAmountToHumanReadableAmount(
+                  expectedStreamFees.find(
+                    (fee) =>
+                      fee.denom === import.meta.env.VITE_CHAIN_ID_ATOM ||
+                      fee.denom != "uinto"
+                  )?.amount ?? "0"
+                )}{" "}
+                ATOM
+              </SmallText>
+            )}
           </div>
         </Row>
 
@@ -61,34 +150,35 @@ export const StreamPage = ({}: StreamPageProps) => {
           </SmallText>
         </div>
       </StyledStreamPageRoute>
-      <Row
-        justify="center"
-        align="center"
-        gap={20}
-        style={{ marginTop: "10px" }}
-      >
-        {/* Button to go back to swap */}
-        <MainButton
-          label="Go Once"
-          onClick={() => {
-            track("stream page: swap button clicked");
-            setStreamSettings((prev) => ({ ...prev, shouldStream: false }));
-            setCurrentPage(Routes.SwapExecutionPage);
-          }}
-          icon={ICONS.swap}
-        />
-        {/* Button to continue */}
-        <MainButton
-          label="Stream"
-          onClick={() => {
-            track("stream page: continue button clicked");
-            setStreamSettings((prev) => ({ ...prev, shouldStream: true }));
-            setCurrentPage(Routes.SwapExecutionPage);
-          }}
-          icon={ICONS.checkmark}
-        />
-      </Row>
-
+      {expectedStreamFees && (
+        <Row
+          justify="center"
+          align="center"
+          gap={20}
+          style={{ marginTop: "10px" }}
+        >
+          {/* Button to go back to swap */}
+          <MainButton
+            label="Go Once"
+            onClick={() => {
+              track("stream page: swap button clicked");
+              setStreamSettings((prev) => ({ ...prev, shouldStream: false }));
+              setCurrentPage(Routes.SwapExecutionPage);
+            }}
+            icon={ICONS.swap}
+          />
+          {/* Button to continue */}
+          <MainButton
+            label="Stream"
+            onClick={() => {
+              track("stream page: continue button clicked");
+              setStreamSettings((prev) => ({ ...prev, shouldStream: true }));
+              setCurrentPage(Routes.SwapExecutionPage);
+            }}
+            icon={ICONS.checkmark}
+          />
+        </Row>
+      )}
       {/* <div style={{ marginTop: '20px' }}>
        <GhostButton
          gap={5}

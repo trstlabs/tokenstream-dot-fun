@@ -32,7 +32,10 @@ export const useBroadcastedTxsStatus = ({
   const [isSettled, setIsSettled] = useState(false);
   const [prevData, setPrevData] = useState<TxsStatus | undefined>(undefined);
 
-  const queryKey = useMemo(() => ["txs-status", txsRequired, txs] as const, [txs, txsRequired]);
+  const queryKey = useMemo(
+    () => ["txs-status", txsRequired, txs] as const,
+    [txs, txsRequired]
+  );
   return useQuery({
     queryKey,
     queryFn: async ({ queryKey: [, txsRequired, txs] }) => {
@@ -45,7 +48,7 @@ export const useBroadcastedTxsStatus = ({
             txHash: tx.txHash,
           });
           return _res;
-        }),
+        })
       );
       const transferEvents = getTransferEventsFromTxStatusResponse(results);
       const _isAllTxSettled = results.every((tx) => {
@@ -62,11 +65,15 @@ export const useBroadcastedTxsStatus = ({
       }
 
       const someTxFailed = results.some((tx) => {
-        return tx.state === "STATE_COMPLETED_ERROR" || tx.state === "STATE_ABANDONED";
+        return (
+          tx.state === "STATE_COMPLETED_ERROR" || tx.state === "STATE_ABANDONED"
+        );
       });
 
       const lastTxStatus =
-        results.length > 0 ? getSimpleOverallStatus(results[results.length - 1].state) : undefined;
+        results.length > 0
+          ? getSimpleOverallStatus(results[results.length - 1].state)
+          : undefined;
 
       if (lastTxStatus === "failed" && isRouteSettled) {
         captureException("TransactionFailed");
@@ -77,7 +84,8 @@ export const useBroadcastedTxsStatus = ({
         .find((tx) => tx.transferAssetRelease)?.transferAssetRelease;
 
       const resData: TxsStatus = {
-        isSuccess: isRouteSettled && !someTxFailed && lastTxStatus === "success",
+        isSuccess:
+          isRouteSettled && !someTxFailed && lastTxStatus === "success",
         lastTxStatus,
         isSettled: isRouteSettled,
         transferEvents,
@@ -86,7 +94,9 @@ export const useBroadcastedTxsStatus = ({
       setPrevData(resData);
       return resData;
     },
-    enabled: !isSettled && (!!txs && txs.length > 0 && enabled !== undefined ? enabled : true),
+    enabled:
+      !isSettled &&
+      (!!txs && txs.length > 0 && enabled !== undefined ? enabled : true),
     refetchInterval: 500,
     // to make the data persist when query key changed
     initialData: prevData,

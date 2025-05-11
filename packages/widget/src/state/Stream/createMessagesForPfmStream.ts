@@ -10,6 +10,7 @@ import { IntentoStreamSettings } from "@/state/streamSettings";
 
 import { atomWithMutation } from "jotai-tanstack-query";
 import {
+  StreamMessagesResult,
   getCounterpartyChannelId,
   getForwardAddress,
   getIntentoAddressForChannel,
@@ -31,11 +32,9 @@ export async function createMessagesForPfmStream({
     slippage: number;
   };
   get: Parameters<Parameters<typeof atomWithMutation>[0]>[0]; // to access atoms inside mutation
-}) {
+}): Promise<StreamMessagesResult | undefined> {
   console.log(userAddresses);
   const firstOp = route.operations[0];
-  // const intoAddress =
-  //   "into10s5je2xfnvlkw3956rjey40ymd73wee6xg9z55clkxhf0ngfl0ts62k6ps";
 
   // TODO: add support for other operations
 
@@ -56,20 +55,6 @@ export async function createMessagesForPfmStream({
     estimatedAmountOut: route.estimatedAmountOut,
     slippageTolerancePercent: swapSettings.slippage.toString(),
   });
-
-  console.log(originalRouteMsgs);
-  // const routeMsgsFromDex = await skip.messages({
-  //   sourceAssetDenom: firstOp.transfer.denomOut,
-  //   sourceAssetChainID: firstOp.transfer.toChainID,
-  //   destAssetDenom: route.destAssetDenom,
-  //   destAssetChainID: route.destAssetChainID,
-  //   amountIn: firstOp.amountIn,
-  //   amountOut: firstOp.amountOut,
-  //   addressList: userAddresses.map((user) => user.address).slice(1),
-  //   operations: route.operations.slice(1),
-  //   estimatedAmountOut: route.estimatedAmountOut,
-  //   slippageTolerancePercent: swapSettings.slippage.toString(),
-  // });
 
   if (!("cosmosTx" in originalRouteMsgs.txs[0])) return;
   //!("cosmosTx" in routeMsgsFromDex.txs[0])
@@ -114,24 +99,11 @@ export async function createMessagesForPfmStream({
     originalSender: userAddresses[0].address,
   });
 
-  if (fwdAddress != "osmo1h6vdwnsm0ym6648t5z6ke95vnpyspxkrmcvj32") {
-    alert(fwdAddress);
-    return;
-  }
-
   const intoAddress = getIntentoAddressForChannel({
     destPrefix: "into",
     channel: intentoChannelToDest,
     originalSender: fwdAddress,
   });
-
-  if (
-    intoAddress !=
-    "into10s5je2xfnvlkw3956rjey40ymd73wee6xg9z55clkxhf0ngfl0ts62k6ps"
-  ) {
-    alert(intoAddress);
-    return;
-  }
 
   const recurrences = Math.floor(
     Number(streamSettings.duration) / Number(streamSettings.interval)
@@ -141,7 +113,7 @@ export async function createMessagesForPfmStream({
   const memoOG = JSON.parse(
     JSON.parse(originalRouteMsgs.txs[0].cosmosTx.msgs[0].msg)["memo"]
   );
-  if (!memoOG.wasm.contract) throw new Error("wasm contract not found");
+  if (!memoOG.wasm.contract) throw new Error("skip wasm contract not found");
   const memoSkipContract = memoDivideSkipContractSwapAmount(
     memoOG,
     recurrences
@@ -222,18 +194,6 @@ export async function createMessagesForPfmStream({
     msg: JSON.stringify(msgTransfer),
     msg_type_url: "/ibc.applications.transfer.v1.MsgTransfer",
   });
-
-  // Validate gas
-  // if (
-  //   cosmosFeeUsed &&
-  //   cosmosFeeUsed.denom !== route.sourceAssetDenom &&
-  //   BigNumber(maxAmountTokenMinusFees).isGreaterThanOrEqualTo(
-  //     BigNumber(route.amountIn)
-  //   )
-  // ) {
-  //   alert("Insufficient balance for gas");
-  //   return;
-  // }
 
   return {
     chainID: route.sourceAssetChainID,

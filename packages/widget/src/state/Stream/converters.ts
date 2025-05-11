@@ -1,9 +1,10 @@
-import {  toBech32 } from "@cosmjs/encoding";
+import { toBech32 } from "@cosmjs/encoding";
 
 import { skipClientConfigAtom } from "@/state/skipClient"; // adjust import path
 import { getChainInfo } from "graz";
 import { sha256 } from "@cosmjs/crypto";
 import { atomWithMutation } from "jotai-tanstack-query";
+import { CosmosMsg } from "@skip-go/client";
 
 // Constants (this would need to be the equivalent of `types.ModuleName` in Go)
 const ModuleName = "packetfowardmiddleware";
@@ -17,23 +18,23 @@ export function getForwardAddress({
   channel: string;
   originalSender: string;
 }): string {
- // Step 1: Prepare inputs
- const senderStr = `${channel}/${originalSender}`;
+  // Step 1: Prepare inputs
+  const senderStr = `${channel}/${originalSender}`;
 
- // Step 2: Hash the module name
- const moduleHash = sha256(new TextEncoder().encode(ModuleName));
+  // Step 2: Hash the module name
+  const moduleHash = sha256(new TextEncoder().encode(ModuleName));
 
- // Step 3: Hash moduleHash || senderStr
- const combined = new Uint8Array(moduleHash.length + senderStr.length);
- combined.set(moduleHash, 0);
- combined.set(new TextEncoder().encode(senderStr), moduleHash.length);
- const finalHash = sha256(combined);
+  // Step 3: Hash moduleHash || senderStr
+  const combined = new Uint8Array(moduleHash.length + senderStr.length);
+  combined.set(moduleHash, 0);
+  combined.set(new TextEncoder().encode(senderStr), moduleHash.length);
+  const finalHash = sha256(combined);
 
- // Step 4: Take first 20 bytes
- const addressBytes = finalHash.slice(0, 20);
-  
- // Step 5: Encode as Bech32
- return toBech32(destPrefix, addressBytes);
+  // Step 4: Take first 20 bytes
+  const addressBytes = finalHash.slice(0, 20);
+
+  // Step 5: Encode as Bech32
+  return toBech32(destPrefix, addressBytes);
 }
 
 const SenderPrefix = "ibc-flow-hook-intermediary";
@@ -94,4 +95,11 @@ export const getCounterpartyChannelId = async ({
     throw new Error("counterparty.channel_id not found");
 
   return counterpartyChannelId;
+};
+
+export type StreamMessagesResult = {
+  chainID: string;
+  signerAddress: string;
+  messages: CosmosMsg[];
+  intoAddress: string;
 };

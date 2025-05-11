@@ -11,6 +11,7 @@ import { getClientOperations, ClientOperation } from "@/utils/clientType";
 import { useSetAtom, useAtomValue } from "jotai";
 import { useMemo, useEffect } from "react";
 import { TxsStatus } from "./useBroadcastedTxs";
+import { streamSettingsAtom } from "@/state/streamSettings";
 
 export const useSyncTxStatus = ({
   statusData,
@@ -29,7 +30,7 @@ export const useSyncTxStatus = ({
   } = useAtomValue(swapExecutionStateAtom);
   const setTransactionHistory = useSetAtom(setTransactionHistoryAtom);
   const txHistory = useAtomValue(transactionHistoryAtom);
-
+  const streamSettings = useAtomValue(streamSettingsAtom);
   const { isPending } = useAtomValue(skipSubmitSwapExecutionAtom);
 
   const clientOperations = useMemo(() => {
@@ -51,7 +52,13 @@ export const useSyncTxStatus = ({
       }
       return;
     }
-
+    if (
+      !isPending &&
+      streamSettings.shouldStream &&
+      overallStatus == "pending"
+    ) {
+      setOverallStatus("completed");
+    }
     if (!transferEvents) return;
 
     if (statusData.isSuccess) {
@@ -63,6 +70,10 @@ export const useSyncTxStatus = ({
     }
     if (transferEvents?.find(({ status }) => status === "pending")) {
       return "pending";
+    }
+    if (!isPending && streamSettings.shouldStream) {
+      setOverallStatus("completed");
+      return "completed";
     }
     if (transferEvents?.every(({ status }) => status === "unconfirmed")) {
       return "unconfirmed";

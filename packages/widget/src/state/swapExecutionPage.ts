@@ -13,6 +13,7 @@ import {
   UserAddress,
   ChainType,
   ValidateGasResult,
+  cosmosMsgFromJSON,
 } from "@skip-go/client";
 import {
   DEEPLINK_CHOICE,
@@ -38,6 +39,9 @@ import { setUser, setTag } from "@sentry/react";
 import { track } from "@amplitude/analytics-browser";
 import { streamSettingsAtom } from "./streamSettings";
 import { createMessagesForPfmStream } from "./Stream/createMessagesForPfmStream";
+import { Coin } from "@cosmjs/amino";
+import { fromBech32, toBech32 } from "@cosmjs/encoding";
+import { StreamMessagesResult } from "./Stream/converters";
 
 type ValidatingGasBalanceData = {
   chainID?: string;
@@ -402,6 +406,7 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
   const { timeoutSeconds } = get(routeConfigAtom);
   const { data: chains } = get(skipChainsAtom);
   const sourceAsset = get(sourceAssetAtom);
+  const streamMesages = get(streamMessagesAtom);
   const walletConnectDeepLinkByChainType = get(
     walletConnectDeepLinkByChainTypeAtom
   );
@@ -430,23 +435,8 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
       if (!userAddresses.length) return null;
       try {
         if (streamSettings.shouldStream) {
-          const result = await createMessagesForPfmStream({
-            skip,
-            route,
-            userAddresses,
-            streamSettings,
-            swapSettings,
-            get,
-          });
-          if (!result) {
-            const error = new Error("wasm contract not found");
-            submitSwapExecutionCallbacks?.onError?.(
-              error,
-              transactionDetailsArray
-            );
-          }
-
-          const { chainID, signerAddress, messages, intoAddress } = result;
+          if (!streamMesages) throw new Error("stream messages not found");
+          const { chainID, signerAddress, messages } = streamMesages;
 
           console.log(signerAddress);
           if (!sourceAsset?.chainID) return null;
@@ -465,7 +455,7 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
             });
 
           // // Explicitly define types for executeCosmosMessage
-          return await skip.executeCosmosMessage({
+          const res = await skip.executeCosmosMessage({
             chainID: chainID, // Use the chainID from result
             signerAddress: signerAddress, // Use signerAddress from result
             messages: messages, // Pass messages
@@ -474,41 +464,31 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
             stargateClient: stargateClient, // Use stargateClient from skip.getSigningStargateClient
             ...submitSwapExecutionCallbacks,
           });
+          console.log("res", res);
+          const status = await skip.waitForTransaction({
+            chainID: chainID,
+            txHash: res.transactionHash,
+          });
+          console.log("status", status);
 
-          // const status = await skip.waitForTransaction({
-          //   chainID: chainID,
-          //   txHash: res.transactionHash,
-          // });
-
-          // submitSwapExecutionCallbacks?.onTransactionCompleted?.(
-          //   chainID,
-          //   res.transactionHash,
-          //   status
-          // );
+          submitSwapExecutionCallbacks?.onTransactionCompleted?.(
+            chainID,
+            res.transactionHash,
+            status
+          );
+          console.log("returning");
 
           // if (res.code == 0) {
           //   window.location.href = `https://triggerportal.zone/alert?owner=${intoAddress}&derivedAddress=true`;
           // } else {
           //   throw new Error("Failed to submit msg");
           // }
+          if (res.code != 0) {
+            throw new Error("Failed to submit msg");
+          }
 
-          // Handle non-streaming swap execution
-          // return await skip.executeRoute({
-          //   route,
-          //   userAddresses,
-          //   timeoutSeconds,
-          //   slippageTolerancePercent: swapSettings.slippage.toString(),
-          //   useUnlimitedApproval: swapSettings.useUnlimitedApproval,
-          //   simulate:
-          //     simulateTx !== undefined
-          //       ? simulateTx
-          //       : route.sourceAssetChainID !== "984122",
-          //   getFallbackGasAmount,
-          //   ...submitSwapExecutionCallbacks,
-          //   afterMsg: messages[0],
-          // });
           // console.log("response:", res);
-          //return { skipped: true };
+          return { isPending: false, isSucces: true, isError: false };
         }
 
         // Handle non-streaming swap execution
@@ -536,4 +516,114 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
       submitSwapExecutionCallbacks?.onError?.(error, transactionDetailsArray);
     },
   };
+});
+
+export const expectedStreamFeesAtom = atom<Coin[]>();
+
+export const streamMessagesAtom = atom<StreamMessagesResult>();
+
+export const msgTransferAtomToIntentoAtom = atomWithMutation((get) => {
+  const skip = get(skipClient);
+  const { userAddresses } = get(swapExecutionStateAtom);
+
+  const expectedStreamFees = get(expectedStreamFeesAtom);
+  const streamFeesAddress = get(streamMessagesAtom)?.intoAddress;
+
+  return {
+    gcTime: Infinity,
+    mutationFn: async () => {
+      if (!userAddresses.length) return;
+      try {
+        const chainId = import.meta.env.VITE_CHAIN_ID_ATOM;
+        const cosmosAddress = toBech32(
+          "cosmos",
+          fromBech32(userAddresses[0].address).data
+        );
+
+        const msgTransfer = {
+          source_channel: import.meta.env.VITE_CHANNEL_ID_ATOM,
+          source_port: "transfer",
+          sender: cosmosAddress,
+          token: {
+            amount: expectedStreamFees?.find((fee) => fee.denom === "uatom")
+              ?.amount,
+            denom: "uatom",
+          },
+          receiver: streamFeesAddress,
+          timeout_height: {
+            revision_number: "0",
+            revision_height: "0",
+          },
+          timeout_timestamp: (
+            BigInt(Math.floor(Date.now() / 1000) + 10 * 60) * 1_000_000_000n
+          ).toString(), // 10 minutes
+          memo: "",
+        };
+        const msgJSON = cosmosMsgFromJSON({
+          msg: JSON.stringify(msgTransfer),
+          msg_type_url: "/ibc.applications.transfer.v1.MsgTransfer",
+        });
+        const validateGasResult = await skip.validateCosmosGasBalance({
+          chainID: chainId,
+          signerAddress: cosmosAddress,
+          messages: [msgJSON],
+          simulate: true,
+        });
+
+        console.log(validateGasResult);
+        const { signer, stargateClient } = await skip.getSigningStargateClient({
+          chainId,
+        });
+
+        // // Explicitly define types for executeCosmosMessage
+        const res = await skip.executeCosmosMessage({
+          chainID: chainId, // Use the chainID from result
+          signerAddress: cosmosAddress, // Use signerAddress from result
+          messages: [msgJSON], // Pass messages
+          gas: validateGasResult as ValidateGasResult, // Use validateGasResult from result
+          signer: signer, // Use signer from skip.getSigningStargateClient
+          stargateClient: stargateClient, // Use stargateClient from skip.getSigningStargateClient
+        });
+        console.log(res);
+        if (res.code != 0) {
+          throw new Error("Failed to submit msg");
+        }
+        return null;
+      } catch (error: unknown) {
+        console.error(error);
+      }
+      return null;
+    },
+    onError: (error: unknown) => {
+      console.error(error);
+    },
+  };
+});
+
+export const createStreamMessagesAtom = atom(null, async (get, set) => {
+  const skip = get(skipClient);
+  const { route, userAddresses, transactionDetailsArray } = get(
+    swapExecutionStateAtom
+  );
+  const submitSwapExecutionCallbacks = get(submitSwapExecutionCallbacksAtom);
+  const swapSettings = get(swapSettingsAtom);
+  const streamSettings = get(streamSettingsAtom);
+  if (!route) return;
+
+  const result = await createMessagesForPfmStream({
+    skip,
+    route,
+    userAddresses,
+    streamSettings,
+    swapSettings,
+    get,
+  });
+
+  if (!result) {
+    const error = new Error("wasm contract not found");
+    submitSwapExecutionCallbacks?.onError?.(error, transactionDetailsArray);
+    return;
+  }
+
+  set(streamMessagesAtom, result);
 });

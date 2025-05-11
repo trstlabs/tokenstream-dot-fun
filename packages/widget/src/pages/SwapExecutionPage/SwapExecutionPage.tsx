@@ -12,6 +12,7 @@ import {
   chainAddressesAtom,
   skipSubmitSwapExecutionAtom,
   swapExecutionStateAtom,
+  msgTransferAtomToIntentoAtom,
 } from "@/state/swapExecutionPage";
 import { useAutoSetAddress } from "@/hooks/useAutoSetAddress";
 import { useBroadcastedTxsStatus } from "./useBroadcastedTxs";
@@ -23,6 +24,8 @@ import { useSwapExecutionState } from "./useSwapExecutionState";
 import { SwapExecutionButton } from "./SwapExecutionButton";
 import { useHandleTransactionFailed } from "./useHandleTransactionFailed";
 import { track } from "@amplitude/analytics-browser";
+import { streamSettingsAtom } from "@/state/streamSettings";
+import { StreamExecutionButton } from "./StreamExecutionButton";
 
 export enum SwapExecutionState {
   recoveryAddressUnset,
@@ -49,10 +52,16 @@ export const SwapExecutionPage = () => {
   const chainAddresses = useAtomValue(chainAddressesAtom);
   const { connectRequiredChains, isLoading } = useAutoSetAddress();
   const [simpleRoute, setSimpleRoute] = useState(true);
+  const streamSettings = useAtomValue(streamSettingsAtom);
+  const { mutate: submitExecuteRouteMutation } = useAtomValue(
+    skipSubmitSwapExecutionAtom
+  );
 
-  const { mutate: submitExecuteRouteMutation } = useAtomValue(skipSubmitSwapExecutionAtom);
-
-  const shouldDisplaySignaturesRemaining = route?.txsRequired && route.txsRequired > 1;
+  const { mutate: msgTransferAtomToIntentoMutation } = useAtomValue(
+    msgTransferAtomToIntentoAtom
+  );
+  const shouldDisplaySignaturesRemaining =
+    route?.txsRequired && route.txsRequired > 1;
   const signaturesRemaining = shouldDisplaySignaturesRemaining
     ? route.txsRequired - transactionsSigned
     : 0;
@@ -131,7 +140,9 @@ export const SwapExecutionPage = () => {
     return () => {
       NiceModal.show(Modals.SetAddressModal, {
         chainId: route?.destAssetChainID,
-        chainAddressIndex: route ? route?.requiredChainAddresses.length - 1 : undefined,
+        chainAddressIndex: route
+          ? route?.requiredChainAddresses.length - 1
+          : undefined,
       });
     };
   }, [swapExecutionState, route]);
@@ -139,6 +150,10 @@ export const SwapExecutionPage = () => {
   const SwapExecutionPageRoute = simpleRoute
     ? SwapExecutionPageRouteSimple
     : SwapExecutionPageRouteDetailed;
+
+  const ExecutionButton = streamSettings.shouldStream
+    ? StreamExecutionButton
+    : SwapExecutionButton;
 
   return (
     <Column gap={5}>
@@ -159,9 +174,12 @@ export const SwapExecutionPage = () => {
           label: simpleRoute ? "Details" : "Hide details",
           icon: simpleRoute ? ICONS.hamburger : ICONS.horizontalLine,
           onClick: () => {
-            track("swap execution page: toggle route details button - clicked", {
-              shown: simpleRoute ? "simple" : "detailed",
-            });
+            track(
+              "swap execution page: toggle route details button - clicked",
+              {
+                shown: simpleRoute ? "simple" : "detailed",
+              }
+            );
             setSimpleRoute(!simpleRoute);
           },
         }}
@@ -174,13 +192,14 @@ export const SwapExecutionPage = () => {
         firstOperationStatus={firstOperationStatus}
         secondOperationStatus={secondOperationStatus}
       />
-      <SwapExecutionButton
+      <ExecutionButton
         swapExecutionState={swapExecutionState}
         route={route}
         signaturesRemaining={signaturesRemaining}
         lastOperation={lastOperation}
         connectRequiredChains={connectRequiredChains}
         submitExecuteRouteMutation={submitExecuteRouteMutation}
+        msgTransferAtomToIntentoMutation={msgTransferAtomToIntentoMutation}
       />
       <SwapPageFooter showRouteInfo={overallStatus === "unconfirmed"} />
     </Column>
