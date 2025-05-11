@@ -33,6 +33,7 @@ import {
   sourceAssetAtom,
   swapSettingsAtom,
 } from "./swapPage";
+import { currentPageAtom, Routes } from "./router";
 import { createExplorerLink } from "@/utils/explorerLink";
 import { callbacksAtom } from "./callbacks";
 import { setUser, setTag } from "@sentry/react";
@@ -97,6 +98,13 @@ export const setOverallStatusAtom = atom(
     }));
   }
 );
+
+export const clearIsValidatingGasBalanceAtom = atom(null, (_get, set) => {
+  set(swapExecutionStateAtom, (state) => ({
+    ...state,
+    isValidatingGasBalance: undefined,
+  }));
+});
 
 export const setSwapExecutionStateAtom = atom(null, (get, set) => {
   const { data: route } = get(skipRouteAtom);
