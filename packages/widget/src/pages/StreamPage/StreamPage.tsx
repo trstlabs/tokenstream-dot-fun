@@ -15,7 +15,7 @@ import {
   swapExecutionStateAtom,
 } from "@/state/swapExecutionPage";
 import { useStreamFeeParams } from "@/hooks/useStreamFeeParams";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Coin } from "@cosmjs/amino";
 import { convertTokenAmountToHumanReadableAmount } from "@/utils/crypto";
 
@@ -89,6 +89,14 @@ export const StreamPage = ({}: StreamPageProps) => {
     getExpectedStreamFees();
   }, [streamFeeParams, setExpectedStreamFees]);
 
+  const [hasTriggeredSwap, setHasTriggeredSwap] = useState(false);
+
+  useEffect(() => {
+    if (hasTriggeredSwap) {
+      setCurrentPage(Routes.SwapExecutionPage);
+      setHasTriggeredSwap(false); // reset
+    }
+  }, [streamSettings.shouldStream, hasTriggeredSwap]);
   return (
     <>
       <StreamPageHeader
@@ -123,24 +131,6 @@ export const StreamPage = ({}: StreamPageProps) => {
                 Starts in {formatDuration(streamSettings.startAt)}
               </SmallText>
             )}
-            {expectedStreamFees && (
-              <SmallText textAlign="center">
-                Expected fees are{" "}
-                {convertTokenAmountToHumanReadableAmount(
-                  expectedStreamFees?.find((fee) => fee.denom === "uinto")
-                    ?.amount ?? "0"
-                )}{" "}
-                INTO or{" "}
-                {convertTokenAmountToHumanReadableAmount(
-                  expectedStreamFees.find(
-                    (fee) =>
-                      fee.denom === import.meta.env.VITE_CHAIN_ID_ATOM ||
-                      fee.denom != "uinto"
-                  )?.amount ?? "0"
-                )}{" "}
-                ATOM
-              </SmallText>
-            )}
           </div>
         </Row>
 
@@ -148,6 +138,24 @@ export const StreamPage = ({}: StreamPageProps) => {
           <SmallText color={theme.brandColor} textAlign="center">
             Do you want to go once or stream?
           </SmallText>
+          {expectedStreamFees && (
+            <SmallText style={{ marginTop: "10px" }} textAlign="center">
+              Expected fees are{" "}
+              {convertTokenAmountToHumanReadableAmount(
+                expectedStreamFees?.find((fee) => fee.denom === "uinto")
+                  ?.amount ?? "0"
+              )}{" "}
+              INTO or{" "}
+              {convertTokenAmountToHumanReadableAmount(
+                expectedStreamFees.find(
+                  (fee) =>
+                    fee.denom === import.meta.env.VITE_CHAIN_ID_ATOM ||
+                    fee.denom != "uinto"
+                )?.amount ?? "0"
+              )}{" "}
+              ATOM
+            </SmallText>
+          )}
         </div>
       </StyledStreamPageRoute>
       {expectedStreamFees && (
@@ -160,10 +168,13 @@ export const StreamPage = ({}: StreamPageProps) => {
           {/* Button to go back to swap */}
           <MainButton
             label="Go Once"
-            onClick={() => {
+            onClick={async () => {
               track("stream page: swap button clicked");
-              setStreamSettings((prev) => ({ ...prev, shouldStream: false }));
-              setCurrentPage(Routes.SwapExecutionPage);
+              setStreamSettings((prev) => ({
+                ...prev,
+                shouldStream: false,
+              }));
+              setHasTriggeredSwap(true);
             }}
             icon={ICONS.swap}
           />
@@ -172,8 +183,11 @@ export const StreamPage = ({}: StreamPageProps) => {
             label="Stream"
             onClick={() => {
               track("stream page: continue button clicked");
-              setStreamSettings((prev) => ({ ...prev, shouldStream: true }));
-              setCurrentPage(Routes.SwapExecutionPage);
+              setStreamSettings((prev) => ({
+                ...prev,
+                shouldStream: true,
+              }));
+              setHasTriggeredSwap(true);
             }}
             icon={ICONS.checkmark}
           />

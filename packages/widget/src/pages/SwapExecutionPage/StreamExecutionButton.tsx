@@ -183,7 +183,7 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
                 setExpectedStreamFees([]);
               }}
             />
-            <MainButton
+            {/* <MainButton
               label="Fund INTO"
               icon={ICONS.rightArrow}
               onClick={() => {
@@ -191,7 +191,7 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
                 clearAssetInputAmounts();
                 setCurrentPage(Routes.SwapPage);
               }}
-            />
+            /> */}
           </Row>
         </>
       );

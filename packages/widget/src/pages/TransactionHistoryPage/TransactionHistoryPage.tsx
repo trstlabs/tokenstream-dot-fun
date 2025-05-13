@@ -15,12 +15,14 @@ import { track } from "@amplitude/analytics-browser";
 export const TransactionHistoryPage = () => {
   const theme = useTheme();
   const setCurrentPage = useSetAtom(currentPageAtom);
-  const [itemIndexToShowDetail, setItemIndexToShowDetail] = useState<number | undefined>(undefined);
+  const [itemIndexToShowDetail, setItemIndexToShowDetail] = useState<
+    number | undefined
+  >(undefined);
 
   const txHistory = useAtomValue(transactionHistoryAtom);
   const historyList = useMemo(
     () => txHistory.sort((a, b) => b.timestamp - a.timestamp),
-    [txHistory],
+    [txHistory]
   );
 
   return (
@@ -42,7 +44,13 @@ export const TransactionHistoryPage = () => {
           height={262}
           empty={{
             details: "No transactions yet",
-            icon: <HistoryIcon width={30} height={30} color={theme?.primary?.text.lowContrast} />,
+            icon: (
+              <HistoryIcon
+                width={30}
+                height={30}
+                color={theme?.primary?.text.lowContrast}
+              />
+            ),
           }}
           itemHeight={1}
           renderItem={(item, index) => (
@@ -54,7 +62,9 @@ export const TransactionHistoryPage = () => {
                 track("transaction history page: transaction row - clicked", {
                   item,
                 });
-                setItemIndexToShowDetail((prev) => (prev === index ? undefined : index));
+                setItemIndexToShowDetail((prev) =>
+                  prev === index ? undefined : index
+                );
               }}
             />
           )}

@@ -105,6 +105,11 @@ export async function createMessagesForPfmStream({
     originalSender: fwdAddress,
   });
 
+  // const intoAddress = toBech32(
+  //   "into",
+  //   fromBech32(userAddresses[0].address).data
+  // );
+
   const recurrences = Math.floor(
     Number(streamSettings.duration) / Number(streamSettings.interval)
   );

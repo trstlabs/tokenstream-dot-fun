@@ -17,7 +17,7 @@ export type TransactionHistoryItem = {
 export const transactionHistoryAtom = atomWithStorage<TransactionHistoryItem[]>(
   "transactionHistory",
   [],
-  undefined,
+  undefined
 );
 
 export const setTransactionHistoryAtom = atom(
@@ -26,23 +26,33 @@ export const setTransactionHistoryAtom = atom(
     const history = get(transactionHistoryAtom);
     const oldHistoryItem = history?.[index] ?? {};
     const newHistory = history;
+    //fix for the case where the route is not defined in case of stream transactions
+    if (
+      historyItem.route == undefined ||
+      historyItem.route.txsRequired == undefined
+    ) {
+      return;
+    }
 
     newHistory[index] = { ...oldHistoryItem, ...historyItem };
     set(transactionHistoryAtom, newHistory);
-  },
+  }
 );
 
-export const removeTransactionHistoryItemAtom = atom(null, (get, set, index: number) => {
-  const history = get(transactionHistoryAtom);
-  if (!history) return;
-  if (index < 0) return;
-  if (index >= history.length) return;
+export const removeTransactionHistoryItemAtom = atom(
+  null,
+  (get, set, index: number) => {
+    const history = get(transactionHistoryAtom);
+    if (!history) return;
+    if (index < 0) return;
+    if (index >= history.length) return;
 
-  // Create a new array without mutating the original
-  const newHistory = history.filter((_, i) => i !== index);
+    // Create a new array without mutating the original
+    const newHistory = history.filter((_, i) => i !== index);
 
-  set(transactionHistoryAtom, newHistory);
-});
+    set(transactionHistoryAtom, newHistory);
+  }
+);
 
 export const skipFetchPendingTransactionHistoryStatus = atomWithQuery((get) => {
   const skip = get(skipClient);
@@ -50,7 +60,8 @@ export const skipFetchPendingTransactionHistoryStatus = atomWithQuery((get) => {
 
   const pendingTransactionHistoryItemsFound = transactionHistory.find(
     (transactionHistoryItem) =>
-      transactionHistoryItem.status !== "completed" && transactionHistoryItem.status !== "failed",
+      transactionHistoryItem.status !== "completed" &&
+      transactionHistoryItem.status !== "failed"
   );
 
   return {
@@ -59,21 +70,23 @@ export const skipFetchPendingTransactionHistoryStatus = atomWithQuery((get) => {
       const nestedTransactionHistoryPromises = transactionHistory.map(
         async (transactionHistoryItem) => {
           const transactionDetailsPromises = await Promise.all(
-            transactionHistoryItem.transactionDetails.map(async (transactionDetail) => {
-              if (
-                transactionHistoryItem.status !== "completed" &&
-                transactionHistoryItem.status !== "failed"
-              ) {
-                return await skip.transactionStatus({
-                  chainID: transactionDetail.chainID,
-                  txHash: transactionDetail.txHash,
-                });
+            transactionHistoryItem.transactionDetails.map(
+              async (transactionDetail) => {
+                if (
+                  transactionHistoryItem.status !== "completed" &&
+                  transactionHistoryItem.status !== "failed"
+                ) {
+                  return await skip.transactionStatus({
+                    chainID: transactionDetail.chainID,
+                    txHash: transactionDetail.txHash,
+                  });
+                }
+                return new Promise((resolve) => resolve(null));
               }
-              return new Promise((resolve) => resolve(null));
-            }) as Promise<TxStatusResponse | null>[],
+            ) as Promise<TxStatusResponse | null>[]
           );
           return transactionDetailsPromises;
-        },
+        }
       );
       return nestedTransactionHistoryPromises;
     },

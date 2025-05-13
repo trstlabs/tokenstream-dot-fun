@@ -26,13 +26,15 @@ export function useSwapExecutionState({
     if (isLoading) return SwapExecutionState.pendingGettingAddresses;
     if (!chainAddresses) return SwapExecutionState.destinationAddressUnset;
     const requiredChainAddresses = route?.requiredChainAddresses;
-    if (!requiredChainAddresses) return SwapExecutionState.destinationAddressUnset;
+    if (!requiredChainAddresses)
+      return SwapExecutionState.destinationAddressUnset;
 
     const allAddressesSet = requiredChainAddresses.every(
-      (_chainId, index) => chainAddresses[index]?.address,
+      (_chainId, index) => chainAddresses[index]?.address
     );
 
-    const lastChainAddress = chainAddresses[requiredChainAddresses.length - 1]?.address;
+    const lastChainAddress =
+      chainAddresses[requiredChainAddresses.length - 1]?.address;
 
     if (overallStatus === "completed") {
       return SwapExecutionState.confirmed;
@@ -49,7 +51,10 @@ export function useSwapExecutionState({
       return SwapExecutionState.approving;
     }
 
-    if (isValidatingGasBalance && isValidatingGasBalance.status !== "completed") {
+    if (
+      isValidatingGasBalance &&
+      isValidatingGasBalance.status !== "completed"
+    ) {
       return SwapExecutionState.validatingGasBalance;
     }
 

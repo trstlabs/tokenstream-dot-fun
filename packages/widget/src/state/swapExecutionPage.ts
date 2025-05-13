@@ -125,7 +125,6 @@ export const setSwapExecutionStateAtom = atom(null, (get, set) => {
   const sourceAddress = requiredChainAddresses[0];
   const destinationAddress =
     requiredChainAddresses[requiredChainAddresses.length - 1];
-
   const initialChainAddresses: Record<number, ChainAddress> = {};
 
   route?.requiredChainAddresses?.forEach((chainID, index) => {
@@ -186,6 +185,10 @@ export const setSwapExecutionStateAtom = atom(null, (get, set) => {
       });
     },
     onTransactionCompleted: async (chainId: string, txHash: string, status) => {
+      //in the case of stream transactions, the status is not returned
+      if (status == undefined) {
+        set(setOverallStatusAtom, "completed");
+      }
       track("execute route: transaction completed", {
         chainId,
         txHash,
@@ -198,6 +201,7 @@ export const setSwapExecutionStateAtom = atom(null, (get, set) => {
         chainType: chain?.chainType,
         txHash,
       });
+
       callbacks?.onTransactionComplete?.({
         chainId,
         txHash,
@@ -475,30 +479,27 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
             ...submitSwapExecutionCallbacks,
           });
           console.log("res", res);
-          const status = await skip.waitForTransaction({
-            chainID: chainID,
-            txHash: res.transactionHash,
-          });
-          console.log("status", status);
+          // seems to get stuck here, so we leave it out for now
+          // const status = await skip.waitForTransaction({
+          //   chainID: chainID,
+          //   txHash: res.transactionHash,
+          // });
 
           submitSwapExecutionCallbacks?.onTransactionCompleted?.(
             chainID,
             res.transactionHash,
-            status
+            undefined
           );
           console.log("returning");
 
           // if (res.code == 0) {
           //   window.location.href = `https://triggerportal.zone/alert?owner=${intoAddress}&derivedAddress=true`;
-          // } else {
-          //   throw new Error("Failed to submit msg");
           // }
           if (res.code != 0) {
             throw new Error("Failed to submit msg");
           }
 
-          // console.log("response:", res);
-          return { isPending: false, isSucces: true, isError: false };
+          return null;
         }
 
         // Handle non-streaming swap execution
@@ -551,7 +552,7 @@ export const msgTransferAtomToIntentoAtom = atomWithMutation((get) => {
         );
 
         const msgTransfer = {
-          source_channel: import.meta.env.VITE_CHANNEL_ID_ATOM,
+          source_channel: import.meta.env.VITE_CHANNEL_ID_ATOM_INTO,
           source_port: "transfer",
           sender: cosmosAddress,
           token: {

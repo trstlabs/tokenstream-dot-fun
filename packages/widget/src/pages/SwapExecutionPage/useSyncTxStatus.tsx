@@ -43,21 +43,28 @@ export const useSyncTxStatus = ({
       if (isPending) {
         setOverallStatus("pending");
       }
+
       return "pending";
     }
 
     if (transferEvents?.length === 0 && !statusData?.isSettled) {
-      if (isPending && overallStatus !== "pending") {
+      if (
+        isPending &&
+        overallStatus !== "pending" &&
+        overallStatus !== "completed"
+      ) {
         setOverallStatus("signing");
       }
       return;
     }
+
     if (
       !isPending &&
       streamSettings.shouldStream &&
       overallStatus == "pending"
     ) {
       setOverallStatus("completed");
+      return "completed";
     }
     if (!transferEvents) return;
 
@@ -71,10 +78,7 @@ export const useSyncTxStatus = ({
     if (transferEvents?.find(({ status }) => status === "pending")) {
       return "pending";
     }
-    if (!isPending && streamSettings.shouldStream) {
-      setOverallStatus("completed");
-      return "completed";
-    }
+
     if (transferEvents?.every(({ status }) => status === "unconfirmed")) {
       return "unconfirmed";
     }
@@ -90,6 +94,7 @@ export const useSyncTxStatus = ({
 
   useEffect(() => {
     if (computedSwapStatus) {
+      console.log("computedSwapStatus", computedSwapStatus);
       const index = historyIndex ?? transactionHistoryIndex;
       setTransactionHistory(historyIndex ?? transactionHistoryIndex, {
         ...txHistory[index],

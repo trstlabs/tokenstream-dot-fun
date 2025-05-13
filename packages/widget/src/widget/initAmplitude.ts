@@ -5,7 +5,7 @@ let isAmplitudeInitialized = false;
 
 export const initAmplitude = () => {
   if (isAmplitudeInitialized) return;
-  init("b7df7ffed56826090415b2f151f5578", {
+  init("f98ae2d5732f9d57abb0a772df74ff95", {
     autocapture: true,
     appVersion: version,
   });
