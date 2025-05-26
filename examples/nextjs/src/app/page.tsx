@@ -17,8 +17,8 @@ export default function Home() {
   // optional theme, widget will be dark mode be default
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [disableShadowDom, setDisableShadowDom] = useState(false);
-  const [apiUrl, setApiUrl] = useState<"prod" | "dev">("prod");
-  const [testnet, setTestnet] = useState<boolean>(false);
+  const [apiUrl, setApiUrl] = useState<"prod" | "dev">("dev");
+  const [testnet, setTestnet] = useState<boolean>(true);
 
   useLayoutEffect(() => {
     if (otherParams !== undefined) {
@@ -31,7 +31,7 @@ export default function Home() {
     if (loaded) {
       setUrlParamsLoaded(true);
     }
-  }, [otherParams, apiUrl, testnet, disableShadowDom, theme, loaded]);
+  }, [otherParams, loaded]);
 
   useEffect(() => {
     const initEruda = async () => {
@@ -182,7 +182,7 @@ export default function Home() {
             boxSizing: "border-box",
           }}
         >
-          {urlParamsLoaded && (
+          {urlParamsLoaded && typeof window !== "undefined" && (
             <Widget
               theme={theme}
               brandColor="#3b75c2"
