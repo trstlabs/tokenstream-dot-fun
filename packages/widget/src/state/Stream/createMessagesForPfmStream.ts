@@ -8,11 +8,11 @@ import {
   StreamMessagesResult,
   getCounterpartyChannelId,
   getForwardAddress,
-  getIntentoAddressForChannel,
 } from "./converters";
 
 import { MsgTransfer } from "cosmjs-types/ibc/applications/transfer/v1/tx";
 import { EncodeObject } from "@cosmjs/proto-signing";
+import { fromBech32, toBech32 } from "@cosmjs/encoding";
 
 export async function createMessagesForPfmStream({
   route,
@@ -107,17 +107,18 @@ export async function createMessagesForPfmStream({
     originalSender: userAddresses[0].address,
   });
 
-  const intoAddress = getIntentoAddressForChannel({
-    destPrefix: "into",
-    channel: intentoChannelToDest,
-    originalSender: fwdAddress,
-  });
+  // const intoAddress = getIntentoAddressForChannel({
+  //   destPrefix: "into",
+  //   channel: intentoChannelToDest,
+  //   originalSender: fwdAddress,
+  // });
 
   // const intoAddress = toBech32(
   //   "into",
   //   fromBech32(userAddresses[0].address).data
   // );
 
+  const intoAddress = toBech32("into", fromBech32(fwdAddress).data);
   const recurrences = Math.floor(
     Number(streamSettings.duration) / Number(streamSettings.interval)
   );
@@ -193,12 +194,11 @@ export async function createMessagesForPfmStream({
     token: { amount: route.amountIn, denom: route.sourceAssetDenom },
     receiver: "pfm",
     memo: JSON.stringify(memoSourceChain),
-    timeoutTimestamp: (
-      BigInt(Math.floor(Date.now() / 1000) + 10 * 60) * 1_000_000_000n
-    ).toString(), // 10 minutes
+    timeoutTimestamp:
+      BigInt(Math.floor(Date.now() / 1000) + 10 * 60) * 1_000_000_000n, // 10 minutes
     timeoutHeight: {
-      revisionNumber: "0",
-      revisionHeight: "0",
+      revisionNumber: 0n,
+      revisionHeight: 0n,
     },
   });
   console.log("msgTransfer", msgTransfer);
