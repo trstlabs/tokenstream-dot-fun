@@ -12,7 +12,6 @@ import {
   chainAddressesAtom,
   skipSubmitSwapExecutionAtom,
   swapExecutionStateAtom,
-  msgTransferAtomToIntentoAtom,
 } from "@/state/swapExecutionPage";
 import { useAutoSetAddress } from "@/hooks/useAutoSetAddress";
 import { useBroadcastedTxsStatus } from "./useBroadcastedTxs";
@@ -57,9 +56,6 @@ export const SwapExecutionPage = () => {
     skipSubmitSwapExecutionAtom
   );
 
-  const { mutate: msgTransferAtomToIntentoMutation } = useAtomValue(
-    msgTransferAtomToIntentoAtom
-  );
   const shouldDisplaySignaturesRemaining =
     route?.txsRequired && route.txsRequired > 1;
   const signaturesRemaining = shouldDisplaySignaturesRemaining
@@ -199,7 +195,6 @@ export const SwapExecutionPage = () => {
         lastOperation={lastOperation}
         connectRequiredChains={connectRequiredChains}
         submitExecuteRouteMutation={submitExecuteRouteMutation}
-        msgTransferAtomToIntentoMutation={msgTransferAtomToIntentoMutation}
       />
       <SwapPageFooter showRouteInfo={overallStatus === "unconfirmed"} />
     </Column>

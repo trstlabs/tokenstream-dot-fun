@@ -4,7 +4,7 @@ import { ICONS } from "@/icons";
 import { SwapExecutionState } from "./SwapExecutionPage";
 import pluralize from "pluralize";
 import { convertSecondsToMinutesOrHours } from "@/utils/number";
-import { useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { clearAssetInputAmountsAtom } from "@/state/swapPage";
 import { currentPageAtom, Routes } from "@/state/router";
 import { errorAtom, ErrorType } from "@/state/errorPage";
@@ -17,12 +17,14 @@ import { useIsGoFast } from "@/hooks/useIsGoFast";
 import { useCountdown } from "./useCountdown";
 import { track } from "@amplitude/analytics-browser";
 import { useCallback } from "react";
+import { useTheme } from "styled-components";
 
 import {
   createStreamMessagesAtom,
   expectedStreamFeesAtom,
-} from "@/state/swapExecutionPage";
-import { Row } from "@/components/Layout";
+  msgTransferAtomToIntentoAtom,
+} from "@/state/streamSettings";
+// import { Row } from "@/components/Layout";
 
 type SwapExecutionButtonProps = {
   swapExecutionState: SwapExecutionState | undefined;
@@ -31,7 +33,6 @@ type SwapExecutionButtonProps = {
   lastOperation: ClientOperation;
   connectRequiredChains: (openModal?: boolean) => Promise<void>;
   submitExecuteRouteMutation: () => void;
-  msgTransferAtomToIntentoMutation: () => void;
 };
 
 export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
@@ -41,19 +42,21 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
   lastOperation,
   connectRequiredChains,
   submitExecuteRouteMutation,
-  msgTransferAtomToIntentoMutation,
 }) => {
   const countdown = useCountdown({
     estimatedRouteDurationSeconds: route?.estimatedRouteDurationSeconds,
     swapExecutionState,
   });
 
+  const theme = useTheme();
   const setError = useSetAtom(errorAtom);
   const setCurrentPage = useSetAtom(currentPageAtom);
   const clearAssetInputAmounts = useSetAtom(clearAssetInputAmountsAtom);
   const isGoFast = useIsGoFast(route);
   const triggerCreateStreamMessages = useSetAtom(createStreamMessagesAtom);
-  const setExpectedStreamFees = useSetAtom(expectedStreamFeesAtom);
+  const expectedStreamFees = useAtomValue(expectedStreamFeesAtom);
+  const onClickFund = useSetAtom(msgTransferAtomToIntentoAtom);
+
   const getDestinationAddreessUnsetText = useCallback(() => {
     const destinationChainIdHasSignRequired =
       lastOperation.signRequired &&
@@ -165,22 +168,34 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
       );
     //todo only show if balance is enough
     case SwapExecutionState.confirmed:
-      return (
-        <>
-          <Row
-            justify="center"
-            align="center"
-            gap={20}
-            style={{ marginTop: "10px" }}
-          >
+      if (expectedStreamFees?.length === 0) {
+        return (
+          <MainButton
+            label="Go again"
+            icon={ICONS.checkmark}
+            backgroundColor={theme.success.text}
+            onClick={() => {
+              track("swap execution page: go again button - clicked");
+              clearAssetInputAmounts();
+              setCurrentPage(Routes.SwapPage);
+            }}
+          />
+        );
+      } else {
+        return (
+          <>
+            {/* <Row
+              justify="center"
+              align="center"
+              // gap={20}
+              style={{ marginTop: "10px" }}
+            > */}
             <MainButton
               label="Fund ATOM"
               icon={ICONS.rightArrow}
               onClick={() => {
                 track("swap execution page: fund atom button - clicked");
-                msgTransferAtomToIntentoMutation();
-                //todo check if balance is enough now
-                setExpectedStreamFees([]);
+                onClickFund();
               }}
             />
             {/* <MainButton
@@ -192,9 +207,10 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
                 setCurrentPage(Routes.SwapPage);
               }}
             /> */}
-          </Row>
-        </>
-      );
+            {/* </Row> */}
+          </>
+        );
+      }
     case SwapExecutionState.pendingGettingAddresses:
       return <MainButton label="Getting addresses" loading />;
 

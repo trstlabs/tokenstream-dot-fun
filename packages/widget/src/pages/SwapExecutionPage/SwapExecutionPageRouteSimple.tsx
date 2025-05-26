@@ -40,7 +40,7 @@ export const SwapExecutionPageRouteSimple = ({
 
   const destinationStatus = useMemo(() => {
     const destinationStatus = status?.[lastOperation.transferIndex]?.status;
-    if (swapExecutionState === SwapExecutionState.confirmed) {
+    if (swapExecutionState === SwapExecutionState.confirmed && !shouldStream) {
       return "completed";
     }
 
