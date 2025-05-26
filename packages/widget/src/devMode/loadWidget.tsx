@@ -10,8 +10,8 @@ import { Widget, WidgetProps } from "@/widget/Widget";
 
 const DevMode = () => {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
-  const [apiUrl, setApiUrl] = useState<"prod" | "dev">("prod");
-  const [testnet, setTestnet] = useState<boolean>(false);
+  const [apiUrl, setApiUrl] = useState<"prod" | "dev">("dev");
+  const [testnet, setTestnet] = useState<boolean>(true);
   const [disableShadowDom, setDisableShadowDom] = useState(true);
   const [renderWebComponent, setRenderWebComponent] = useState(false);
 
@@ -40,7 +40,9 @@ const DevMode = () => {
         experimentalFeatures: ["eureka"],
       },
       apiUrl:
-        apiUrl === "prod" ? "https://go.skip.build/api/skip" : "https://dev.go.skip.build/api/skip",
+        apiUrl === "prod"
+          ? "https://go.skip.build/api/skip"
+          : "https://dev.go.skip.build/api/skip",
       ibcEurekaHighlightedAssets: {
         USDC: ["cosmoshub-4"],
         USDT: undefined,
@@ -58,7 +60,9 @@ const DevMode = () => {
       ],
       filterOut: {
         destination: {
-          "pacific-1": ["ibc/6C00E4AA0CC7618370F81F7378638AE6C48EFF8C9203CE1C2357012B440EBDB7"],
+          "pacific-1": [
+            "ibc/6C00E4AA0CC7618370F81F7378638AE6C48EFF8C9203CE1C2357012B440EBDB7",
+          ],
           "1329": ["0xB75D0B03c06A926e488e2659DF1A861F860bD3d1"],
           "1": ["0xbf45a5029d081333407cc52a84be5ed40e181c46"],
         },
@@ -89,7 +93,9 @@ const DevMode = () => {
   return (
     <Column align="flex-end">
       <Column gap={5} style={{ width: 200 }}>
-        <button onClick={() => toggleTheme()}>Toggle theme (current theme: {theme})</button>
+        <button onClick={() => toggleTheme()}>
+          Toggle theme (current theme: {theme})
+        </button>
         <button onClick={() => setDisableShadowDom((prev) => !prev)}>
           shadow dom:{(!disableShadowDom).toString()}
         </button>
@@ -97,8 +103,12 @@ const DevMode = () => {
         <button onClick={() => resetWidget({ onlyClearInputValues: true })}>
           reset widget only clear input values
         </button>
-        <button onClick={() => setTestnet(!testnet)}>{testnet ? "testnet" : "mainnet"}</button>
-        <button onClick={() => setApiUrl((v) => (v === "prod" ? "dev" : "prod"))}>
+        <button onClick={() => setTestnet(!testnet)}>
+          {testnet ? "testnet" : "mainnet"}
+        </button>
+        <button
+          onClick={() => setApiUrl((v) => (v === "prod" ? "dev" : "prod"))}
+        >
           {apiUrl === "prod" ? "prod" : "dev"}
         </button>
         <button onClick={() => setRenderWebComponent((v) => !v)}>
@@ -139,5 +149,5 @@ const DevMode = () => {
 createRoot(document.getElementById("root") as HTMLElement)?.render(
   <StrictMode>
     <DevMode />
-  </StrictMode>,
+  </StrictMode>
 );
