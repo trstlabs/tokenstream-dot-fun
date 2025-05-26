@@ -13,7 +13,6 @@ import {
   UserAddress,
   ChainType,
   ValidateGasResult,
-  cosmosMsgFromJSON,
 } from "@skip-go/client";
 import {
   DEEPLINK_CHOICE,
@@ -38,11 +37,7 @@ import { createExplorerLink } from "@/utils/explorerLink";
 import { callbacksAtom } from "./callbacks";
 import { setUser, setTag } from "@sentry/react";
 import { track } from "@amplitude/analytics-browser";
-import { streamSettingsAtom } from "./streamSettings";
-import { createMessagesForPfmStream } from "./Stream/createMessagesForPfmStream";
-import { Coin } from "@cosmjs/amino";
-import { fromBech32, toBech32 } from "@cosmjs/encoding";
-import { StreamMessagesResult } from "./Stream/converters";
+import { streamMessagesAtom, streamSettingsAtom } from "./streamSettings";
 
 type ValidatingGasBalanceData = {
   chainID?: string;
@@ -450,7 +445,8 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
       try {
         if (streamSettings.shouldStream) {
           if (!streamMesages) throw new Error("stream messages not found");
-          const { chainID, signerAddress, messages } = streamMesages;
+          const { chainID, signerAddress, messages, intoAddress } =
+            streamMesages;
 
           console.log(signerAddress);
           if (!sourceAsset?.chainID) return null;
@@ -492,10 +488,28 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
           );
           console.log("returning");
 
-          // if (res.code == 0) {
-          //   window.location.href = `https://triggerportal.zone/alert?owner=${intoAddress}&derivedAddress=true`;
-          // }
-          if (res.code != 0) {
+          if (res.code === 0) {
+            const email = streamSettings.emailAddress?.trim();
+            const owner = intoAddress?.trim();
+
+            if (email && owner) {
+              fetch(
+                "https://triggerportal.zone/.netlify/functions/flow-alert?subscribe=true",
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    owner,
+                    email,
+                  }),
+                }
+              ).catch((err) => {
+                console.error("Flow alert subscription failed", err);
+              });
+            }
+          } else {
             throw new Error("Failed to submit msg");
           }
 
@@ -527,114 +541,4 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
       submitSwapExecutionCallbacks?.onError?.(error, transactionDetailsArray);
     },
   };
-});
-
-export const expectedStreamFeesAtom = atom<Coin[]>();
-
-export const streamMessagesAtom = atom<StreamMessagesResult>();
-
-export const msgTransferAtomToIntentoAtom = atomWithMutation((get) => {
-  const skip = get(skipClient);
-  const { userAddresses } = get(swapExecutionStateAtom);
-
-  const expectedStreamFees = get(expectedStreamFeesAtom);
-  const streamFeesAddress = get(streamMessagesAtom)?.intoAddress;
-
-  return {
-    gcTime: Infinity,
-    mutationFn: async () => {
-      if (!userAddresses.length) return;
-      try {
-        const chainId = import.meta.env.VITE_CHAIN_ID_ATOM;
-        const cosmosAddress = toBech32(
-          "cosmos",
-          fromBech32(userAddresses[0].address).data
-        );
-
-        const msgTransfer = {
-          source_channel: import.meta.env.VITE_CHANNEL_ID_ATOM_INTO,
-          source_port: "transfer",
-          sender: cosmosAddress,
-          token: {
-            amount: expectedStreamFees?.find((fee) => fee.denom === "uatom")
-              ?.amount,
-            denom: "uatom",
-          },
-          receiver: streamFeesAddress,
-          timeout_height: {
-            revision_number: "0",
-            revision_height: "0",
-          },
-          timeout_timestamp: (
-            BigInt(Math.floor(Date.now() / 1000) + 10 * 60) * 1_000_000_000n
-          ).toString(), // 10 minutes
-          memo: "",
-        };
-        const msgJSON = cosmosMsgFromJSON({
-          msg: JSON.stringify(msgTransfer),
-          msg_type_url: "/ibc.applications.transfer.v1.MsgTransfer",
-        });
-        const validateGasResult = await skip.validateCosmosGasBalance({
-          chainID: chainId,
-          signerAddress: cosmosAddress,
-          messages: [msgJSON],
-          simulate: true,
-        });
-
-        console.log(validateGasResult);
-        const { signer, stargateClient } = await skip.getSigningStargateClient({
-          chainId,
-        });
-
-        // // Explicitly define types for executeCosmosMessage
-        const res = await skip.executeCosmosMessage({
-          chainID: chainId, // Use the chainID from result
-          signerAddress: cosmosAddress, // Use signerAddress from result
-          messages: [msgJSON], // Pass messages
-          gas: validateGasResult as ValidateGasResult, // Use validateGasResult from result
-          signer: signer, // Use signer from skip.getSigningStargateClient
-          stargateClient: stargateClient, // Use stargateClient from skip.getSigningStargateClient
-        });
-        console.log(res);
-        if (res.code != 0) {
-          throw new Error("Failed to submit msg");
-        }
-        return null;
-      } catch (error: unknown) {
-        console.error(error);
-      }
-      return null;
-    },
-    onError: (error: unknown) => {
-      console.error(error);
-    },
-  };
-});
-
-export const createStreamMessagesAtom = atom(null, async (get, set) => {
-  const skip = get(skipClient);
-  const { route, userAddresses, transactionDetailsArray } = get(
-    swapExecutionStateAtom
-  );
-  const submitSwapExecutionCallbacks = get(submitSwapExecutionCallbacksAtom);
-  const swapSettings = get(swapSettingsAtom);
-  const streamSettings = get(streamSettingsAtom);
-  if (!route) return;
-
-  const result = await createMessagesForPfmStream({
-    skip,
-    route,
-    userAddresses,
-    streamSettings,
-    swapSettings,
-    get,
-  });
-
-  if (!result) {
-    const error = new Error("wasm contract not found");
-    submitSwapExecutionCallbacks?.onError?.(error, transactionDetailsArray);
-    return;
-  }
-
-  set(streamMessagesAtom, result);
 });

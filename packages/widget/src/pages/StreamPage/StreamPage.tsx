@@ -10,14 +10,12 @@ import { WaveIcon } from "@/icons/WaveIcon";
 import { currentPageAtom, Routes } from "@/state/router";
 import { useAtom, useSetAtom } from "jotai";
 import { streamSettingsAtom } from "@/state/streamSettings";
-import {
-  expectedStreamFeesAtom,
-  swapExecutionStateAtom,
-} from "@/state/swapExecutionPage";
+import { expectedStreamFeesAtom } from "@/state/streamSettings";
 import { useStreamFeeParams } from "@/hooks/useStreamFeeParams";
 import { useEffect, useState } from "react";
 import { Coin } from "@cosmjs/amino";
 import { convertTokenAmountToHumanReadableAmount } from "@/utils/crypto";
+import { swapExecutionStateAtom } from "@/state/swapExecutionPage";
 
 export type StreamPageProps = {};
 
@@ -140,7 +138,7 @@ export const StreamPage = ({}: StreamPageProps) => {
           </SmallText>
           {expectedStreamFees && (
             <SmallText style={{ marginTop: "10px" }} textAlign="center">
-              Expected fees are{" "}
+              Total streaming fees are ~{" "}
               {convertTokenAmountToHumanReadableAmount(
                 expectedStreamFees?.find((fee) => fee.denom === "uinto")
                   ?.amount ?? "0"
@@ -149,7 +147,7 @@ export const StreamPage = ({}: StreamPageProps) => {
               {convertTokenAmountToHumanReadableAmount(
                 expectedStreamFees.find(
                   (fee) =>
-                    fee.denom === import.meta.env.VITE_CHAIN_ID_ATOM ||
+                    fee.denom === import.meta.env.VITE_IBC_DENOM_ATOM ||
                     fee.denom != "uinto"
                 )?.amount ?? "0"
               )}{" "}
@@ -166,31 +164,35 @@ export const StreamPage = ({}: StreamPageProps) => {
           style={{ marginTop: "10px" }}
         >
           {/* Button to go back to swap */}
-          <MainButton
-            label="Go Once"
-            onClick={async () => {
-              track("stream page: swap button clicked");
-              setStreamSettings((prev) => ({
-                ...prev,
-                shouldStream: false,
-              }));
-              setHasTriggeredSwap(true);
-            }}
-            icon={ICONS.swap}
-          />
+          <div style={{ width: "100%" }}>
+            <MainButton
+              label="Go Once"
+              onClick={async () => {
+                track("stream page: swap button clicked");
+                setStreamSettings((prev) => ({
+                  ...prev,
+                  shouldStream: false,
+                }));
+                setHasTriggeredSwap(true);
+              }}
+              icon={ICONS.swap}
+            />
+          </div>
           {/* Button to continue */}
-          <MainButton
-            label="Stream"
-            onClick={() => {
-              track("stream page: continue button clicked");
-              setStreamSettings((prev) => ({
-                ...prev,
-                shouldStream: true,
-              }));
-              setHasTriggeredSwap(true);
-            }}
-            icon={ICONS.checkmark}
-          />
+          <div style={{ width: "100%" }}>
+            <MainButton
+              label="Stream"
+              onClick={() => {
+                track("stream page: continue button clicked");
+                setStreamSettings((prev) => ({
+                  ...prev,
+                  shouldStream: true,
+                }));
+                setHasTriggeredSwap(true);
+              }}
+              icon={ICONS.checkmark}
+            />{" "}
+          </div>
         </Row>
       )}
       {/* <div style={{ marginTop: '20px' }}>

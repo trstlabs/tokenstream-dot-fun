@@ -9,6 +9,7 @@ import { Modals } from "../registerModals";
 import { DurationSetting } from "./DurationSetting";
 import { IntervalSetting } from "./IntervalSetting";
 import { StartAtSetting } from "./StartAtSetting";
+import { EmailSetting } from "./EmailSetting";
 // import { SaveIndicator } from "./SaveIndicator";
 
 export const StreamSettingsDrawer = createModal(() => {
@@ -16,7 +17,9 @@ export const StreamSettingsDrawer = createModal(() => {
     <StyledStreamSettings gap={15}>
       <Column gap={12}>
         <StartAtSetting />
-        <StyledHelpText>Start is when to start swap streaming</StyledHelpText>
+        <StyledHelpText>
+          Start is when to start token streaming, 0 for now
+        </StyledHelpText>
 
         <IntervalSetting />
         <StyledHelpText>
@@ -26,8 +29,9 @@ export const StreamSettingsDrawer = createModal(() => {
 
         <DurationSetting />
         <StyledHelpText>
-          Duration is how long to swap stream after starting.
+          Duration is how long to stream after starting.
         </StyledHelpText>
+        <EmailSetting />
       </Column>
 
       <Row justify="flex-end">
