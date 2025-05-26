@@ -17,6 +17,8 @@ import {
 import { MsgTransfer } from "cosmjs-types/ibc/applications/transfer/v1/tx";
 import { getSigningStargateClient } from "@skip-go/client";
 import { EncodeObject } from "@cosmjs/proto-signing";
+import { getConnectedSignersAtom, walletsAtom } from "./wallets";
+import { getWallet, WalletType } from "graz";
 
 export interface IntentoStreamSettings {
   customGasAmount: string;
@@ -53,8 +55,14 @@ export const msgTransferAtomToIntentoAtom = atom(null, async (get, set) => {
   // Get expected fees or other required state here
   const expectedStreamFees = get(expectedStreamFeesAtom);
   const streamFeesAddress = get(streamMessagesAtom)?.intoAddress;
-
+  const getSigners = get(getConnectedSignersAtom);
+  const wallets = get(walletsAtom);
   try {
+    // Ensure wallet is connected before proceeding
+    if (!getSigners?.getCosmosSigner) {
+      throw new Error("Cosmos wallet is not connected");
+    }
+
     // Prepare the message for transfer
     const chainId = import.meta.env.VITE_CHAIN_ID_ATOM;
     const cosmosAddress = toBech32(
@@ -73,12 +81,11 @@ export const msgTransferAtomToIntentoAtom = atom(null, async (get, set) => {
       ),
       receiver: streamFeesAddress,
       timeoutHeight: {
-        revisionNumber: "0",
-        revisionHeight: "0",
+        revisionNumber: 0n,
+        revisionHeight: 0n,
       },
-      timeoutTimestamp: (
-        BigInt(Math.floor(Date.now() / 1000) + 10 * 60) * 1_000_000_000n
-      ).toString(), // 10 minutes
+      timeoutTimestamp:
+        BigInt(Math.floor(Date.now() / 1000) + 10 * 60) * 1_000_000_000n, // 10 minutes
       memo: "",
     });
     console.log("msgTransfer", msgTransfer);
@@ -87,8 +94,27 @@ export const msgTransferAtomToIntentoAtom = atom(null, async (get, set) => {
       typeUrl: "/ibc.applications.transfer.v1.MsgTransfer",
       value: msgTransfer,
     };
+    const getOfflineSigner = async (chainId: string) => {
+      if (getSigners?.getCosmosSigner) {
+        return getSigners.getCosmosSigner(chainId);
+      }
+      if (!wallets.cosmos) {
+        throw new Error("getCosmosSigner error: no cosmos wallet");
+      }
+      const wallet = getWallet(wallets.cosmos.walletName as WalletType);
+      if (!wallet) {
+        throw new Error("getCosmosSigner error: wallet not found");
+      }
+      const key = await wallet.getKey(chainId);
+
+      return key.isNanoLedger
+        ? wallet.getOfflineSignerOnlyAmino(chainId)
+        : wallet.getOfflineSigner(chainId);
+    };
+
     const { stargateClient } = await getSigningStargateClient({
       chainId,
+      getOfflineSigner,
     });
 
     // Execute the transfer

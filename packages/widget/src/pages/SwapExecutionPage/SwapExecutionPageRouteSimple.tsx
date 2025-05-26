@@ -71,7 +71,7 @@ export const SwapExecutionPageRouteSimple = ({
     tokenAmount: shouldStream
       ? Math.floor(Number(firstOperation.amountOut) / recurrences).toString()
       : firstOperation.amountOut,
-    chainId: firstOperation.fromChainID ?? firstOperation.chainID,
+    chainId: firstOperation.fromChainId ?? firstOperation.chainId,
     usdValue: shouldStream
       ? safeDivide(Number(route?.usdAmountOut), recurrences)
       : route?.usdAmountOut,
@@ -82,7 +82,7 @@ export const SwapExecutionPageRouteSimple = ({
     tokenAmount: shouldStream
       ? Math.floor(Number(lastOperation.amountOut) / recurrences).toString()
       : lastOperation.amountOut,
-    chainId: lastOperation.toChainID ?? lastOperation.chainID,
+    chainId: lastOperation.toChainId ?? lastOperation.chainId,
     usdValue: shouldStream
       ? safeDivide(Number(route?.usdAmountOut), recurrences)
       : route?.usdAmountOut,

@@ -34,6 +34,7 @@ import {
   UserAddress,
   TxStatusResponse,
   getSigningStargateClient,
+  getRecommendedGasPrice,
 } from "@skip-go/client";
 import { currentPageAtom, Routes } from "./router";
 import { LOCAL_STORAGE_KEYS } from "./localStorageKeys";
@@ -42,6 +43,7 @@ import { getWallet, WalletType } from "graz";
 import { config } from "@/constants/wagmi";
 import { WalletClient } from "viem";
 import { getWalletClient } from "@wagmi/core";
+import { Uint64 } from "@cosmjs/math";
 
 type ValidatingGasBalanceData = {
   chainId?: string;
@@ -454,6 +456,7 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
       // Adjusted return type
       if (!route) return null;
       if (!userAddresses.length) return null;
+
       try {
         if (streamSettings.shouldStream) {
           if (!streamMesages) throw new Error("stream messages not found");
@@ -463,15 +466,50 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
           console.log(signerAddress);
           if (!sourceAsset?.chainId) return null;
 
-          const { /* signer, */ stargateClient } =
-            await getSigningStargateClient({
-              chainId: sourceAsset?.chainId,
-            });
+          const getOfflineSigner = async (chainId: string) => {
+            if (getSigners?.getCosmosSigner) {
+              return getSigners.getCosmosSigner(chainId);
+            }
+            if (!wallets.cosmos) {
+              throw new Error("getCosmosSigner error: no cosmos wallet");
+            }
+            const wallet = getWallet(wallets.cosmos.walletName as WalletType);
+            if (!wallet) {
+              throw new Error("getCosmosSigner error: wallet not found");
+            }
+            const key = await wallet.getKey(chainId);
 
+            return key.isNanoLedger
+              ? wallet.getOfflineSignerOnlyAmino(chainId)
+              : wallet.getOfflineSigner(chainId);
+          };
+
+          const { stargateClient } = await getSigningStargateClient({
+            chainId: sourceAsset.chainId,
+            getOfflineSigner,
+          });
+          console.log(stargateClient);
+          const gasPrice = await getRecommendedGasPrice({
+            chainId: sourceAsset.chainId,
+          });
+          const granularity = Uint64.fromNumber(1000000);
+
+          const amountInteger =
+            gasPrice?.amount.multiply(granularity).toString() || "";
+          const gasPriceStdFee = {
+            amount: [
+              {
+                amount: amountInteger,
+                denom: gasPrice?.denom || "",
+              },
+            ],
+            gas: "500000",
+          };
+          console.log("gasPrice", gasPriceStdFee);
           const res = await stargateClient.signAndBroadcast(
             signerAddress,
             messages,
-            "auto"
+            gasPriceStdFee
           );
 
           console.log("res", res);
