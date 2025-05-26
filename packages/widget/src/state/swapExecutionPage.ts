@@ -1,46 +1,50 @@
 import { atomWithMutation } from "jotai-tanstack-query";
-import {
-  skipChainsAtom,
-  skipClient,
-  skipSwapVenuesAtom,
-} from "@/state/skipClient";
+import { skipChainsAtom } from "@/state/skipClient";
 import { routeConfigAtom, skipRouteAtom } from "@/state/route";
 import { atom } from "jotai";
 import {
-  TransactionCallbacks,
-  RouteResponse,
-  TxStatusResponse,
-  UserAddress,
-  ChainType,
-  ValidateGasResult,
-} from "@skip-go/client";
-import {
   DEEPLINK_CHOICE,
+  getConnectedSignersAtom,
   MinimalWallet,
   RECENT_WALLET_DATA,
   walletConnectDeepLinkByChainTypeAtom,
+  walletsAtom,
 } from "./wallets";
 import { atomEffect } from "jotai-effect";
 import { setTransactionHistoryAtom, transactionHistoryAtom } from "./history";
-import { SimpleStatus } from "@/utils/clientType";
-import { errorAtom, ErrorType } from "./errorPage";
+import {
+  ClientOperation,
+  getClientOperations,
+  SimpleStatus,
+} from "@/utils/clientType";
+import { errorWarningAtom, ErrorWarningType } from "./errorWarning";
 import { atomWithStorageNoCrossTabSync } from "@/utils/misc";
 import { isUserRejectedRequestError } from "@/utils/error";
-import {
-  COSMOS_GAS_AMOUNT,
-  EVM_GAS_AMOUNT,
-  sourceAssetAtom,
-  swapSettingsAtom,
-} from "./swapPage";
-import { currentPageAtom, Routes } from "./router";
+import { sourceAssetAtom, swapSettingsAtom } from "./swapPage";
 import { createExplorerLink } from "@/utils/explorerLink";
 import { callbacksAtom } from "./callbacks";
 import { setUser, setTag } from "@sentry/react";
 import { track } from "@amplitude/analytics-browser";
 import { streamMessagesAtom, streamSettingsAtom } from "./streamSettings";
+import {
+  ChainType,
+  executeRoute,
+  RouteResponse,
+  TransactionCallbacks,
+  UserAddress,
+  TxStatusResponse,
+  getSigningStargateClient,
+} from "@skip-go/client";
+import { currentPageAtom, Routes } from "./router";
+import { LOCAL_STORAGE_KEYS } from "./localStorageKeys";
+import { solanaWallets } from "@/constants/solana";
+import { getWallet, WalletType } from "graz";
+import { config } from "@/constants/wagmi";
+import { WalletClient } from "viem";
+import { getWalletClient } from "@wagmi/core";
 
 type ValidatingGasBalanceData = {
-  chainID?: string;
+  chainId?: string;
   txIndex?: number;
   status: "success" | "error" | "pending" | "completed";
 };
@@ -48,6 +52,7 @@ type ValidatingGasBalanceData = {
 type SwapExecutionState = {
   userAddresses: UserAddress[];
   route?: RouteResponse;
+  clientOperations: ClientOperation[];
   transactionDetailsArray: TransactionDetails[];
   transactionHistoryIndex: number;
   overallStatus: SimpleStatus;
@@ -56,7 +61,7 @@ type SwapExecutionState = {
 };
 
 export type ChainAddress = {
-  chainID: string;
+  chainId: string;
   chainType?: ChainType;
   address?: string;
 } & {
@@ -69,20 +74,24 @@ export type ChainAddress = {
 
 /**
  * route.requiredChainAddresses is a list of chainIDs that are required to have an address associated with them
- * the key in this atom is the index of the chainID in the requiredChainAddresses array
+ * the key in this atom is the index of the chainId in the requiredChainAddresses array
  */
 export const chainAddressesAtom = atom<Record<number, ChainAddress>>({});
 
 export const swapExecutionStateAtom =
-  atomWithStorageNoCrossTabSync<SwapExecutionState>("swapExecutionState", {
-    route: undefined,
-    userAddresses: [],
-    transactionDetailsArray: [],
-    transactionHistoryIndex: 0,
-    overallStatus: "unconfirmed",
-    isValidatingGasBalance: undefined,
-    transactionsSigned: 0,
-  });
+  atomWithStorageNoCrossTabSync<SwapExecutionState>(
+    LOCAL_STORAGE_KEYS.swapExecutionState,
+    {
+      route: undefined,
+      clientOperations: [],
+      userAddresses: [],
+      transactionDetailsArray: [],
+      transactionHistoryIndex: 0,
+      overallStatus: "unconfirmed",
+      isValidatingGasBalance: undefined,
+      transactionsSigned: 0,
+    }
+  );
 
 export const setOverallStatusAtom = atom(
   null,
@@ -112,9 +121,9 @@ export const setSwapExecutionStateAtom = atom(null, (get, set) => {
   const {
     requiredChainAddresses,
     sourceAssetDenom,
-    sourceAssetChainID,
+    sourceAssetChainId,
     destAssetDenom,
-    destAssetChainID,
+    destAssetChainId,
   } = route;
 
   const sourceAddress = requiredChainAddresses[0];
@@ -122,9 +131,9 @@ export const setSwapExecutionStateAtom = atom(null, (get, set) => {
     requiredChainAddresses[requiredChainAddresses.length - 1];
   const initialChainAddresses: Record<number, ChainAddress> = {};
 
-  route?.requiredChainAddresses?.forEach((chainID, index) => {
+  route?.requiredChainAddresses?.forEach((chainId, index) => {
     initialChainAddresses[index] = {
-      chainID,
+      chainId,
       address: "",
     };
   });
@@ -135,6 +144,7 @@ export const setSwapExecutionStateAtom = atom(null, (get, set) => {
     userAddresses: [],
     transactionDetailsArray: [],
     route,
+    clientOperations: getClientOperations(route.operations),
     transactionHistoryIndex,
     overallStatus: "unconfirmed",
     isValidatingGasBalance: undefined,
@@ -156,9 +166,9 @@ export const setSwapExecutionStateAtom = atom(null, (get, set) => {
     onTransactionBroadcast: async (txInfo) => {
       track("execute route: transaction broadcasted", { txInfo });
       setUser({ id: txInfo?.txHash });
-      const chain = chains?.find((chain) => chain.chainID === txInfo.chainID);
+      const chain = chains?.find((chain) => chain.chainId === txInfo.chainId);
       const explorerLink = createExplorerLink({
-        chainID: txInfo.chainID,
+        chainId: txInfo.chainId,
         chainType: chain?.chainType,
         txHash: txInfo.txHash,
       });
@@ -168,18 +178,18 @@ export const setSwapExecutionStateAtom = atom(null, (get, set) => {
         transactionHistoryIndex
       );
       callbacks?.onTransactionBroadcasted?.({
-        chainId: txInfo.chainID,
+        chainId: txInfo.chainId,
         txHash: txInfo.txHash,
         explorerLink: explorerLink ?? "",
         sourceAddress,
         destinationAddress,
         sourceAssetDenom,
-        sourceAssetChainID,
+        sourceAssetChainId,
         destAssetDenom,
-        destAssetChainID,
+        destAssetChainId,
       });
     },
-    onTransactionCompleted: async (chainId: string, txHash: string, status) => {
+    onTransactionCompleted: async ({ chainId, txHash, status }) => {
       //in the case of stream transactions, the status is not returned
       if (status == undefined) {
         set(setOverallStatusAtom, "completed");
@@ -190,9 +200,9 @@ export const setSwapExecutionStateAtom = atom(null, (get, set) => {
         status,
       });
       setTag("txCompleted", true);
-      const chain = chains?.find((chain) => chain.chainID === chainId);
+      const chain = chains?.find((chain) => chain.chainId === chainId);
       const explorerLink = createExplorerLink({
-        chainID: chainId,
+        chainId: chainId,
         chainType: chain?.chainType,
         txHash,
       });
@@ -204,18 +214,34 @@ export const setSwapExecutionStateAtom = atom(null, (get, set) => {
         sourceAddress,
         destinationAddress,
         sourceAssetDenom,
-        sourceAssetChainID,
+        sourceAssetChainId,
         destAssetDenom,
-        destAssetChainID,
+        destAssetChainId,
       });
     },
-    onTransactionSigned: async () => {
+    onTransactionSigned: async (txInfo) => {
       track("execute route: transaction signed");
 
-      set(swapExecutionStateAtom, (prev) => ({
-        ...prev,
-        transactionsSigned: (prev.transactionsSigned ?? 0) + 1,
-      }));
+      set(swapExecutionStateAtom, (prev) => {
+        const clientOperations = prev.clientOperations;
+        const signRequiredIndex = clientOperations.findIndex((operation) => {
+          return (
+            operation.signRequired &&
+            (operation.chainId === txInfo.chainId ||
+              operation.fromChainId === txInfo.chainId)
+          );
+        });
+
+        if (signRequiredIndex >= 0) {
+          clientOperations[signRequiredIndex].signRequired = false;
+        }
+
+        return {
+          ...prev,
+          clientOperations: clientOperations,
+          transactionsSigned: (prev.transactionsSigned ?? 0) + 1,
+        };
+      });
 
       set(setOverallStatusAtom, "pending");
     },
@@ -229,10 +255,10 @@ export const setSwapExecutionStateAtom = atom(null, (get, set) => {
       const lastTransaction =
         transactionDetailsArray?.[transactionDetailsArray?.length - 1];
       if (isUserRejectedRequestError(error)) {
-        track("error page: user rejected request");
+        track("expected error page: user rejected request");
         if (currentPage === Routes.SwapExecutionPage) {
-          set(errorAtom, {
-            errorType: ErrorType.AuthFailed,
+          set(errorWarningAtom, {
+            errorWarningType: ErrorWarningType.AuthFailed,
             onClickBack: () => {
               set(setOverallStatusAtom, "unconfirmed");
               set(clearIsValidatingGasBalanceAtom);
@@ -242,20 +268,33 @@ export const setSwapExecutionStateAtom = atom(null, (get, set) => {
       } else if (
         (error as Error)?.message
           ?.toLowerCase()
+          .includes("relay fee quote has expired")
+      ) {
+        track("error page: relay fee quote has expired");
+        set(errorWarningAtom, {
+          errorWarningType: ErrorWarningType.ExpiredRelayFeeQuote,
+          error: error as Error,
+          onClickBack: () => {
+            set(setOverallStatusAtom, "unconfirmed");
+          },
+        });
+      } else if (
+        (error as Error)?.message
+          ?.toLowerCase()
           .includes("insufficient balance for gas")
       ) {
-        track("error page: insufficient balance for gas");
-        set(errorAtom, {
-          errorType: ErrorType.InsufficientBalanceForGas,
+        track("expected error page: insufficient gas balance");
+        set(errorWarningAtom, {
+          errorWarningType: ErrorWarningType.InsufficientBalanceForGas,
           error: error as Error,
           onClickBack: () => {
             set(setOverallStatusAtom, "unconfirmed");
           },
         });
       } else if (lastTransaction?.explorerLink) {
-        track("error page: transaction failed", { lastTransaction });
-        set(errorAtom, {
-          errorType: ErrorType.TransactionFailed,
+        track("unexpected error page: transaction failed", { lastTransaction });
+        set(errorWarningAtom, {
+          errorWarningType: ErrorWarningType.TransactionFailed,
           onClickBack: () => {
             set(setOverallStatusAtom, "unconfirmed");
           },
@@ -266,9 +305,9 @@ export const setSwapExecutionStateAtom = atom(null, (get, set) => {
           },
         });
       } else {
-        track("error page: unexpected error");
-        set(errorAtom, {
-          errorType: ErrorType.Unexpected,
+        track("unexpected error page: unexpected error", { error, route });
+        set(errorWarningAtom, {
+          errorWarningType: ErrorWarningType.Unexpected,
           error: error as Error,
           onClickBack: () => {
             set(setOverallStatusAtom, "unconfirmed");
@@ -325,8 +364,7 @@ export const setTransactionDetailsAtom = atom(
     });
 
     set(setTransactionHistoryAtom, transactionHistoryIndex, {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      route: route!,
+      route: route as RouteResponse,
       transactionDetails: newTransactionDetailsArray,
       timestamp: Date.now(),
       status: "unconfirmed",
@@ -343,7 +381,7 @@ export const chainAddressEffectAtom = atomEffect((get, set) => {
 
   const userAddresses = Object.values(chainAddresses).map((chainAddress) => {
     return {
-      chainID: chainAddress.chainID,
+      chainId: chainAddress.chainId,
       address: chainAddress.address as string,
     };
   });
@@ -356,7 +394,7 @@ export const chainAddressEffectAtom = atomEffect((get, set) => {
 
 export type TransactionDetails = {
   txHash: string;
-  chainID: string;
+  chainId: string;
   explorerLink?: string;
   status?: TxStatusResponse;
 };
@@ -373,45 +411,19 @@ export const submitSwapExecutionCallbacksAtom = atom<
   SubmitSwapExecutionCallbacks | undefined
 >();
 
-export const fallbackGasAmountFnAtom = atom((get) => {
-  const swapVenues = get(skipSwapVenuesAtom)?.data;
-
-  return async (
-    chainId: string,
-    chainType: ChainType
-  ): Promise<number | undefined> => {
-    if (chainType === ChainType.EVM) {
-      return EVM_GAS_AMOUNT;
-    }
-    if (chainType !== ChainType.Cosmos) return undefined;
-
-    const isSwapChain =
-      swapVenues?.some((venue) => venue.chainID === chainId) ?? false;
-    const defaultGasAmount = Math.ceil(
-      isSwapChain ? COSMOS_GAS_AMOUNT.SWAP : COSMOS_GAS_AMOUNT.DEFAULT
-    );
-
-    // Special case for carbon-1
-    if (chainId === "carbon-1") {
-      return COSMOS_GAS_AMOUNT.CARBON;
-    }
-
-    return defaultGasAmount;
-  };
-});
-
 export const simulateTxAtom = atom<boolean>();
 
 export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
-  const skip = get(skipClient);
   const { route, userAddresses, transactionDetailsArray } = get(
     swapExecutionStateAtom
   );
   const submitSwapExecutionCallbacks = get(submitSwapExecutionCallbacksAtom);
-  const getFallbackGasAmount = get(fallbackGasAmountFnAtom);
   const simulateTx = get(simulateTxAtom);
   const swapSettings = get(swapSettingsAtom);
   const streamSettings = get(streamSettingsAtom);
+  const getSigners = get(getConnectedSignersAtom);
+  const wallets = get(walletsAtom);
+
   const { timeoutSeconds } = get(routeConfigAtom);
   const { data: chains } = get(skipChainsAtom);
   const sourceAsset = get(sourceAssetAtom);
@@ -421,12 +433,12 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
   );
 
   const chainType = chains?.find(
-    (chain) => chain.chainID === sourceAsset?.chainID
+    (chain) => chain.chainId === sourceAsset?.chainId
   )?.chainType;
 
   if (chainType) {
     const { deeplink, recentWalletData } =
-      walletConnectDeepLinkByChainType[chainType];
+      walletConnectDeepLinkByChainType[chainType as ChainType];
     if (chainType === ChainType.Cosmos) {
       window.localStorage.removeItem(DEEPLINK_CHOICE);
       window.localStorage.removeItem(RECENT_WALLET_DATA);
@@ -449,43 +461,26 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
             streamMesages;
 
           console.log(signerAddress);
-          if (!sourceAsset?.chainID) return null;
+          if (!sourceAsset?.chainId) return null;
 
-          const validateGasResult = await skip.validateCosmosGasBalance({
-            chainID: sourceAsset?.chainID,
-            signerAddress: signerAddress,
-            messages: messages,
-            simulate: true,
-          });
-
-          console.log(validateGasResult);
-          const { signer, stargateClient } =
-            await skip.getSigningStargateClient({
-              chainId: sourceAsset?.chainID,
+          const { /* signer, */ stargateClient } =
+            await getSigningStargateClient({
+              chainId: sourceAsset?.chainId,
             });
 
-          // // Explicitly define types for executeCosmosMessage
-          const res = await skip.executeCosmosMessage({
-            chainID: chainID, // Use the chainID from result
-            signerAddress: signerAddress, // Use signerAddress from result
-            messages: messages, // Pass messages
-            gas: validateGasResult as ValidateGasResult, // Use validateGasResult from result
-            signer: signer, // Use signer from skip.getSigningStargateClient
-            stargateClient: stargateClient, // Use stargateClient from skip.getSigningStargateClient
-            ...submitSwapExecutionCallbacks,
-          });
-          console.log("res", res);
-          // seems to get stuck here, so we leave it out for now
-          // const status = await skip.waitForTransaction({
-          //   chainID: chainID,
-          //   txHash: res.transactionHash,
-          // });
-
-          submitSwapExecutionCallbacks?.onTransactionCompleted?.(
-            chainID,
-            res.transactionHash,
-            undefined
+          const res = await stargateClient.signAndBroadcast(
+            signerAddress,
+            messages,
+            "auto"
           );
+
+          console.log("res", res);
+
+          submitSwapExecutionCallbacks?.onTransactionCompleted?.({
+            chainId: chainID,
+            txHash: res.transactionHash,
+            status: undefined,
+          });
           console.log("returning");
 
           if (res.code === 0) {
@@ -517,7 +512,7 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
         }
 
         // Handle non-streaming swap execution
-        await skip.executeRoute({
+        await executeRoute({
           route,
           userAddresses,
           timeoutSeconds,
@@ -526,9 +521,49 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
           simulate:
             simulateTx !== undefined
               ? simulateTx
-              : route.sourceAssetChainID !== "984122",
-          getFallbackGasAmount,
+              : route.sourceAssetChainId !== "984122",
           ...submitSwapExecutionCallbacks,
+          getCosmosSigner: async (chainId) => {
+            if (getSigners?.getCosmosSigner) {
+              return getSigners.getCosmosSigner(chainId);
+            }
+            if (!wallets.cosmos) {
+              throw new Error("getCosmosSigner error: no cosmos wallet");
+            }
+            const wallet = getWallet(wallets.cosmos.walletName as WalletType);
+            if (!wallet) {
+              throw new Error("getCosmosSigner error: wallet not found");
+            }
+            const key = await wallet.getKey(chainId);
+
+            return key.isNanoLedger
+              ? wallet.getOfflineSignerOnlyAmino(chainId)
+              : wallet.getOfflineSigner(chainId);
+          },
+          getEvmSigner: async (chainId) => {
+            if (getSigners?.getEvmSigner) {
+              return getSigners.getEvmSigner(chainId);
+            }
+            const evmWalletClient = (await getWalletClient(config, {
+              chainId: parseInt(chainId),
+            })) as WalletClient;
+
+            return evmWalletClient;
+          },
+          getSvmSigner: async () => {
+            if (getSigners?.getSvmSigner) {
+              return getSigners.getSvmSigner();
+            }
+            const walletName = wallets.svm?.walletName;
+            if (!walletName)
+              throw new Error("getSvmSigner error: no svm wallet");
+            const solanaWallet = solanaWallets.find(
+              (w) => w.name === walletName
+            );
+            if (!solanaWallet)
+              throw new Error("getSvmSigner error: wallet not found");
+            return solanaWallet;
+          },
         });
       } catch (error: unknown) {
         console.error(error);

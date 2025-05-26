@@ -4,7 +4,7 @@ import { skipClientConfigAtom } from "@/state/skipClient"; // adjust import path
 import { getChainInfo } from "graz";
 import { sha256 } from "@cosmjs/crypto";
 import { atomWithMutation } from "jotai-tanstack-query";
-import { CosmosMsg } from "@skip-go/client";
+import { EncodeObject } from "@cosmjs/proto-signing";
 
 // Constants (this would need to be the equivalent of `types.ModuleName` in Go)
 const ModuleName = "packetfowardmiddleware";
@@ -100,6 +100,6 @@ export const getCounterpartyChannelId = async ({
 export type StreamMessagesResult = {
   chainID: string;
   signerAddress: string;
-  messages: CosmosMsg[];
+  messages: EncodeObject[];
   intoAddress: string;
 };

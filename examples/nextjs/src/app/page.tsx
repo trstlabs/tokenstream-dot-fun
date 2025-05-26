@@ -182,10 +182,9 @@ export default function Home() {
             boxSizing: "border-box",
           }}
         >
-          {urlParamsLoaded && typeof window !== "undefined" && (
+          {urlParamsLoaded && (
             <Widget
               theme={theme}
-              brandColor="#3b75c2"
               defaultRoute={defaultRoute}
               onWalletConnected={(props) =>
                 console.log("onWalletConnected", { ...props })

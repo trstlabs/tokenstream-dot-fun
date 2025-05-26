@@ -14,7 +14,7 @@ import { chainAddressesAtom } from "@/state/swapExecutionPage";
 import { useAtomValue } from "jotai";
 import { getTruncatedAddress } from "@/utils/crypto";
 import { formatUSD } from "@/utils/intl";
-import { limitDecimalsDisplayed, removeTrailingZeros } from "@/utils/number";
+import { formatDisplayAmount } from "@/utils/number";
 import { useIsMobileScreenSize } from "@/hooks/useIsMobileScreenSize";
 import { useCopyAddress } from "@/hooks/useCopyAddress";
 import { fromBech32, toBech32 } from "@cosmjs/encoding";
@@ -23,7 +23,7 @@ export type SwapExecutionPageRouteSimpleRowIntentoProps = {
   denom: ClientOperation["denomIn"] | ClientOperation["denomOut"];
   tokenAmount: ClientOperation["amountIn"] | ClientOperation["amountOut"];
   usdValue?: string;
-  chainId: ClientOperation["fromChainID"] | ClientOperation["chainID"];
+  chainId: ClientOperation["fromChainId"] | ClientOperation["chainId"];
   onClickEditDestinationWallet?: () => void;
   explorerLink?: ChainTransaction["explorerLink"];
   status?: SimpleStatus;
@@ -72,10 +72,6 @@ export const SwapExecutionPageRouteSimpleRowIntento = ({
     };
   }, [chainAddresses]);
 
-  const displayAmount = useMemo(() => {
-    return removeTrailingZeros(limitDecimalsDisplayed(assetDetails.amount));
-  }, [assetDetails.amount]);
-
   const renderExplorerLink = useMemo(() => {
     if (!explorerLink) return;
     if (isMobileScreenSize) {
@@ -114,7 +110,7 @@ export const SwapExecutionPageRouteSimpleRowIntento = ({
       </StyledAnimatedBorder>
       <Column gap={5}>
         <StyledSymbolAndAmount>
-          {displayAmount} {assetDetails?.symbol}
+          {formatDisplayAmount(assetDetails.amount)} {assetDetails?.symbol}
         </StyledSymbolAndAmount>
         {usdValue && <SmallText>{formatUSD(usdValue)}</SmallText>}
 

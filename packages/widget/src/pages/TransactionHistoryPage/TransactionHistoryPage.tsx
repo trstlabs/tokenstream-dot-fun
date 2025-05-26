@@ -52,9 +52,10 @@ export const TransactionHistoryPage = () => {
               />
             ),
           }}
-          itemHeight={1}
-          renderItem={(item, index) => (
+          itemHeight={55}
+          renderItem={(item, index, refSetter) => (
             <TransactionHistoryPageHistoryItem
+              ref={refSetter}
               index={index}
               txHistoryItem={item}
               showDetails={index === itemIndexToShowDetail}
@@ -68,7 +69,12 @@ export const TransactionHistoryPage = () => {
               }}
             />
           )}
-          itemKey={(item) => item.transactionDetails?.[0].txHash}
+          itemKey={(item) => item?.transactionDetails?.[0]?.txHash}
+          expandedItemKey={
+            itemIndexToShowDetail
+              ? historyList[itemIndexToShowDetail]?.transactionDetails?.[0]?.txHash
+              : undefined
+          }
         />
       </StyledContainer>
       <SwapPageFooter />

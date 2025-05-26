@@ -1,9 +1,6 @@
 // src/state/streamSettings.ts
 
-import { skipClient } from "@/state/skipClient";
-
 import { atom } from "jotai";
-import { ValidateGasResult, cosmosMsgFromJSON } from "@skip-go/client";
 
 import { atomWithStorageNoCrossTabSync } from "@/utils/misc";
 
@@ -17,6 +14,9 @@ import {
   submitSwapExecutionCallbacksAtom,
   swapExecutionStateAtom,
 } from "./swapExecutionPage";
+import { MsgTransfer } from "cosmjs-types/ibc/applications/transfer/v1/tx";
+import { getSigningStargateClient } from "@skip-go/client";
+import { EncodeObject } from "@cosmjs/proto-signing";
 
 export interface IntentoStreamSettings {
   customGasAmount: string;
@@ -49,7 +49,6 @@ export const streamMessagesAtom = atom<StreamMessagesResult>();
 
 // Define the atom for triggering the msgTransfer action
 export const msgTransferAtomToIntentoAtom = atom(null, async (get, set) => {
-  const skip = get(skipClient); // Assuming skipClient atom exists
   const { userAddresses } = get(swapExecutionStateAtom);
   // Get expected fees or other required state here
   const expectedStreamFees = get(expectedStreamFeesAtom);
@@ -63,9 +62,9 @@ export const msgTransferAtomToIntentoAtom = atom(null, async (get, set) => {
       fromBech32(userAddresses[0].address).data
     );
 
-    const msgTransfer = {
-      source_channel: import.meta.env.VITE_CHANNEL_ID_ATOM_INTO,
-      source_port: "transfer",
+    const msgTransfer: MsgTransfer = MsgTransfer.fromPartial({
+      sourceChannel: import.meta.env.VITE_CHANNEL_ID_ATOM_INTO,
+      sourcePort: "transfer",
       sender: cosmosAddress,
       token: expectedStreamFees?.find(
         (fee) =>
@@ -73,47 +72,37 @@ export const msgTransferAtomToIntentoAtom = atom(null, async (get, set) => {
           fee.denom != "uinto"
       ),
       receiver: streamFeesAddress,
-      timeout_height: {
-        revision_number: "0",
-        revision_height: "0",
+      timeoutHeight: {
+        revisionNumber: "0",
+        revisionHeight: "0",
       },
-      timeout_timestamp: (
+      timeoutTimestamp: (
         BigInt(Math.floor(Date.now() / 1000) + 10 * 60) * 1_000_000_000n
       ).toString(), // 10 minutes
       memo: "",
+    });
+    console.log("msgTransfer", msgTransfer);
+
+    const msgTransferEncodeObject: EncodeObject = {
+      typeUrl: "/ibc.applications.transfer.v1.MsgTransfer",
+      value: msgTransfer,
     };
-    console.log(msgTransfer);
-    // const msgJSON = cosmosMsgFromJSON({
-    //   msg: JSON.stringify(msgTransfer),
-    //   msg_type_url: "/ibc.applications.transfer.v1.MsgTransfer",
-    // });
+    const { stargateClient } = await getSigningStargateClient({
+      chainId,
+    });
 
-    // const validateGasResult = await skip.validateCosmosGasBalance({
-    //   chainID: chainId,
-    //   signerAddress: cosmosAddress,
-    //   messages: [msgJSON],
-    //   simulate: true,
-    // });
+    // Execute the transfer
+    const res = await stargateClient.signAndBroadcast(
+      cosmosAddress,
+      [msgTransferEncodeObject],
+      "auto"
+    );
 
-    // const { signer, stargateClient } = await skip.getSigningStargateClient({
-    //   chainId,
-    // });
+    console.log(res);
 
-    // // Execute the transfer
-    // const res = await skip.executeCosmosMessage({
-    //   chainID: chainId,
-    //   signerAddress: cosmosAddress,
-    //   messages: [msgJSON],
-    //   gas: validateGasResult as ValidateGasResult,
-    //   signer: signer,
-    //   stargateClient: stargateClient,
-    // });
-
-    // console.log(res);
-
-    // if (res.code !== 0) {
-    //   throw new Error("Failed to submit msg");
-    // }
+    if (res.code !== 0) {
+      throw new Error("Failed to submit msg");
+    }
 
     // If successful, do something, e.g., update state
     set(expectedStreamFeesAtom, []); // Clear expected fees after successful transfer
@@ -123,7 +112,6 @@ export const msgTransferAtomToIntentoAtom = atom(null, async (get, set) => {
 });
 
 export const createStreamMessagesAtom = atom(null, async (get, set) => {
-  const skip = get(skipClient);
   const { route, userAddresses, transactionDetailsArray } = get(
     swapExecutionStateAtom
   );
@@ -133,7 +121,6 @@ export const createStreamMessagesAtom = atom(null, async (get, set) => {
   if (!route) return;
 
   const result = await createMessagesForPfmStream({
-    skip,
     route,
     userAddresses,
     streamSettings,

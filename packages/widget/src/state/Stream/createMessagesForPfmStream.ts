@@ -1,9 +1,4 @@
-import {
-  cosmosMsgFromJSON,
-  RouteResponse,
-  SkipClient,
-  UserAddress,
-} from "@skip-go/client";
+import { messages, RouteResponse, UserAddress } from "@skip-go/client";
 import { hash } from "@stablelib/sha256";
 import { memoDivideSkipContractSwapAmount } from "./memoDivideSkipContractSwapAmount";
 import { IntentoStreamSettings } from "@/state/streamSettings";
@@ -16,15 +11,16 @@ import {
   getIntentoAddressForChannel,
 } from "./converters";
 
+import { MsgTransfer } from "cosmjs-types/ibc/applications/transfer/v1/tx";
+import { EncodeObject } from "@cosmjs/proto-signing";
+
 export async function createMessagesForPfmStream({
-  skip,
   route,
   userAddresses,
   streamSettings,
   swapSettings,
   get,
 }: {
-  skip: SkipClient;
   route: RouteResponse;
   userAddresses: UserAddress[];
   streamSettings: IntentoStreamSettings;
@@ -39,15 +35,19 @@ export async function createMessagesForPfmStream({
   // TODO: add support for other operations
 
   if (!streamSettings.shouldStream || !("transfer" in firstOp)) return;
-  if (firstOp.transfer.toChainID != route.swapVenues?.[0].chainID) {
+  // Type guard to ensure TypeScript knows firstOp has transfer property
+  if (
+    "transfer" in firstOp &&
+    firstOp.transfer?.toChainId != route.swapVenues?.[0].chainId
+  ) {
     return;
   }
 
-  const originalRouteMsgs = await skip.messages({
+  const originalRouteMsgs = await messages({
     sourceAssetDenom: route.sourceAssetDenom,
-    sourceAssetChainID: route.sourceAssetChainID,
+    sourceAssetChainId: route.sourceAssetChainId,
     destAssetDenom: route.destAssetDenom,
-    destAssetChainID: route.destAssetChainID,
+    destAssetChainId: route.destAssetChainId,
     amountIn: route.amountIn,
     amountOut: route.amountOut,
     addressList: userAddresses.map((user) => user.address),
@@ -56,13 +56,21 @@ export async function createMessagesForPfmStream({
     slippageTolerancePercent: swapSettings.slippage.toString(),
   });
 
-  if (!("cosmosTx" in originalRouteMsgs.txs[0])) return;
+  if (
+    !originalRouteMsgs ||
+    !originalRouteMsgs.txs ||
+    !("cosmosTx" in originalRouteMsgs.txs[0])
+  )
+    return;
   //!("cosmosTx" in routeMsgsFromDex.txs[0])
   let ibcDenomHash = null;
   let intentoChannelToDest = "";
   let channelDestToIntento = "";
 
-  switch (firstOp.transfer.toChainID) {
+  // Ensure TypeScript knows transfer exists
+  if (!("transfer" in firstOp)) return;
+
+  switch (firstOp.transfer?.toChainId) {
     case "osmosis-1":
       intentoChannelToDest = import.meta.env.VITE_CHANNEL_ID_INTO_OSMO;
       channelDestToIntento = import.meta.env.VITE_CHANNEL_ID_OSMO_INTO;
@@ -78,7 +86,7 @@ export async function createMessagesForPfmStream({
   ibcDenomHash = Buffer.from(
     hash(
       new TextEncoder().encode(
-        `transfer/${intentoChannelToDest}/${firstOp.transfer.denomOut}`
+        `transfer/${intentoChannelToDest}/${firstOp.transfer?.denomOut}`
       )
     )
   )
@@ -86,9 +94,9 @@ export async function createMessagesForPfmStream({
     .toUpperCase();
 
   const counterpartyChannelId = await getCounterpartyChannelId({
-    chainID: firstOp.transfer.fromChainID,
-    channelId: firstOp.transfer.channel,
-    portId: firstOp.transfer.port,
+    chainID: firstOp.transfer?.fromChainId || "",
+    channelId: firstOp.transfer?.channel || "",
+    portId: firstOp.transfer?.port || "",
     get,
   });
   console.log(counterpartyChannelId);
@@ -116,7 +124,7 @@ export async function createMessagesForPfmStream({
   const streamAmount = Math.floor(Number(firstOp.amountOut) / recurrences);
 
   const memoOG = JSON.parse(
-    JSON.parse(originalRouteMsgs.txs[0].cosmosTx.msgs[0].msg)["memo"]
+    JSON.parse(originalRouteMsgs.txs?.[0].cosmosTx.msgs?.[0].msg || "")["memo"]
   );
   if (!memoOG.wasm.contract) throw new Error("skip wasm contract not found");
   const memoSkipContract = memoDivideSkipContractSwapAmount(
@@ -178,32 +186,31 @@ export async function createMessagesForPfmStream({
   };
   console.log(memoSourceChain);
 
-  // });
-  const msgTransfer = {
-    source_channel: firstOp.transfer.channel,
-    source_port: firstOp.transfer.port,
+  const msgTransfer = MsgTransfer.fromPartial({
+    sourceChannel: firstOp.transfer?.channel,
+    sourcePort: firstOp.transfer?.port,
     sender: userAddresses.map((user) => user.address)[0],
     token: { amount: route.amountIn, denom: route.sourceAssetDenom },
     receiver: "pfm",
     memo: JSON.stringify(memoSourceChain),
-    timeout_timestamp: (
+    timeoutTimestamp: (
       BigInt(Math.floor(Date.now() / 1000) + 10 * 60) * 1_000_000_000n
     ).toString(), // 10 minutes
-    timeout_height: {
-      revision_number: "0",
-      revision_height: "0",
+    timeoutHeight: {
+      revisionNumber: "0",
+      revisionHeight: "0",
     },
-  };
-  console.log(msgTransfer);
-  const msgJSON = cosmosMsgFromJSON({
-    msg: JSON.stringify(msgTransfer),
-    msg_type_url: "/ibc.applications.transfer.v1.MsgTransfer",
   });
+  console.log("msgTransfer", msgTransfer);
+  const msgTransferEncodeObject: EncodeObject = {
+    typeUrl: "/ibc.applications.transfer.v1.MsgTransfer",
+    value: msgTransfer,
+  };
 
   return {
-    chainID: route.sourceAssetChainID,
+    chainID: route.sourceAssetChainId,
     signerAddress: Object.values(userAddresses)[0].address,
-    messages: [msgJSON],
+    messages: [msgTransferEncodeObject],
     intoAddress,
   };
 }

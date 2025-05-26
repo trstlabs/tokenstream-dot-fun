@@ -1,5 +1,101 @@
 # @skip-go/client
 
+## 1.1.4
+
+### Patch Changes
+
+- 07fc190: bump registries and fix route response type
+
+## 1.1.3
+
+### Patch Changes
+
+- fc09b51: fix swagger types
+- d71e6b0: validate all txs
+
+## 1.1.2
+
+### Patch Changes
+
+- df9e97c: Add defaultFallbackGasAmount to client library
+- df9e97c: fix sei evm txs
+- df9e97c: Remove old non-existant fallback for getEvmSigner and getSvmSigner
+- df9e97c: Fix error message for getRestEndpointForChain when no REST endpoint found
+
+## 1.1.1
+
+### Patch Changes
+
+- 5e42be2: add response and request types
+- 9bdd303: simplify types naming
+- cf920fe: update registries
+- 11c3c79: add missing request and response json types
+
+## 1.1.0
+
+### Minor Changes
+
+- df62bf0: bump cosmjs package
+
+### Patch Changes
+
+- 376583c: Add on_chain_ts to ChainTransaction type
+- 4458538: export json types
+
+## 1.0.6
+
+### Patch Changes
+
+- a009e22: Fix packageJson for esm format
+
+## 1.0.5
+
+### Patch Changes
+
+- fd69bee: Update client build format as esm
+
+## 1.0.4
+
+### Patch Changes
+
+- 9b1f4fe: Fix esm build, updated all imports to follow esm convention
+
+## 1.0.3
+
+### Patch Changes
+
+- d0e0de4: revert cjs
+
+## 1.0.2
+
+### Patch Changes
+
+- b22c07b: Update type imports to be explicit for esm
+
+## 1.0.1
+
+### Patch Changes
+
+- aba3e58: release cjs version temporarily
+
+## 1.0.0
+
+### Major Changes
+
+- 4007e19: Refactored client library to export seperate functions instead of single class to improve treeshaking and reduce bundle size impact
+  Refactored prop/variable naming to follow camelCase and PascalCase (for enums) strictly to autogenerate interfaces based on open api spec (swagger.yml) and use util functions to easily convert between camelCase and snake_case for API consumption
+  Added auto-cancelling previous requests if multiple requests for the same API are made before previous one completes
+
+### Patch Changes
+
+- be8dda4: update registries
+
+## 0.17.2
+
+### Patch Changes
+
+- b5d0b31: update registries
+
 ## 0.17.1
 
 ### Patch Changes

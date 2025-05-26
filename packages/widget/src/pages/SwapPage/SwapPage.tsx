@@ -30,7 +30,7 @@ import {
   useInsufficientSourceBalance,
   useMaxAmountTokenMinusFees,
 } from "./useSetMaxAmount";
-import { errorAtom, ErrorType } from "@/state/errorPage";
+import { errorWarningAtom, ErrorWarningType } from "@/state/errorWarning";
 import { ConnectedWalletContent } from "./ConnectedWalletContent";
 import { skipAllBalancesAtom } from "@/state/balances";
 import { useFetchAllBalances } from "@/hooks/useFetchAllBalances";
@@ -44,13 +44,14 @@ import NiceModal from "@ebay/nice-modal-react";
 import { Modals } from "@/modals/registerModals";
 import { useIsGoFast, useIsSwapOperation } from "@/hooks/useIsGoFast";
 import { useShowCosmosLedgerWarning } from "@/hooks/useShowCosmosLedgerWarning";
-import { setUser } from "@sentry/react";
+import { setUser, getReplay } from "@sentry/react";
 import { useSettingsDrawer } from "@/hooks/useSettingsDrawer";
 import { setUserId, track } from "@amplitude/analytics-browser";
 import { useSwitchEvmChain } from "@/hooks/useSwitchEvmChain";
 import { useGetBalance } from "@/hooks/useGetBalance";
 import { useStreamSettingsDrawer } from "@/hooks/useStreamSettingsDrawer";
 import { streamSettingsAtom } from "@/state/streamSettings";
+import { startAmplitudeSessionReplay } from "@/widget/initAmplitude";
 
 export const SwapPage = () => {
   const { SettingsFooter, drawerOpen } = useSettingsDrawer();
@@ -70,7 +71,7 @@ export const SwapPage = () => {
   const isInvertingSwap = useAtomValue(isInvertingSwapAtom);
   const insufficientBalance = useInsufficientSourceBalance();
   const setSwapExecutionState = useSetAtom(setSwapExecutionStateAtom);
-  const setError = useSetAtom(errorAtom);
+  const setError = useSetAtom(errorWarningAtom);
   const { isFetching, isPending } = useAtomValue(skipAllBalancesAtom);
   const isLoadingBalances = isFetching && isPending;
   const {
@@ -91,9 +92,9 @@ export const SwapPage = () => {
   useFetchAllBalances();
   useCleanupDebouncedAtoms();
   useUpdateAmountWhenRouteChanges();
-  const switchEvmChainId = useSwitchEvmChain();
+  const switchEvmchainId = useSwitchEvmChain();
   const getAccount = useGetAccount();
-  const sourceAccount = getAccount(sourceAsset?.chainID);
+  const sourceAccount = getAccount(sourceAsset?.chainId);
   const txHistory = useAtomValue(transactionHistoryAtom);
   const isSwapOperation = useIsSwapOperation(route);
 
@@ -103,7 +104,7 @@ export const SwapPage = () => {
     if (
       route?.operations &&
       "transfer" in route.operations[0] &&
-      route.operations[0].transfer.toChainID == route.swapVenues?.[0].chainID
+      route.operations[0].transfer?.toChainId == route.swapVenues?.[0].chainId
     ) {
       // Redirect to StreamPage if "transfer" is found
       setNextPage(Routes.StreamPage);
@@ -119,7 +120,7 @@ export const SwapPage = () => {
       if (!assets) return;
       return assets.find(
         (a) =>
-          a.denom.toLowerCase() === denom.toLowerCase() && a.chainID === chainId
+          a.denom.toLowerCase() === denom.toLowerCase() && a.chainId === chainId
       );
     },
     [assets]
@@ -135,7 +136,7 @@ export const SwapPage = () => {
           ...old,
           ...asset,
         }));
-        switchEvmChainId(asset?.chainID);
+        switchEvmchainId(asset?.chainId);
         setSourceAssetAmount("");
         setDestinationAssetAmount("");
         NiceModal.hide(Modals.AssetAndChainSelectorModal);
@@ -145,7 +146,7 @@ export const SwapPage = () => {
     setDestinationAssetAmount,
     setSourceAsset,
     setSourceAssetAmount,
-    switchEvmChainId,
+    switchEvmchainId,
   ]);
 
   const handleChangeSourceChain = useCallback(() => {
@@ -158,18 +159,18 @@ export const SwapPage = () => {
           ...old,
           ...asset,
         }));
-        switchEvmChainId(asset?.chainID);
+        switchEvmchainId(asset?.chainId);
         NiceModal.hide(Modals.AssetAndChainSelectorModal);
       },
-      selectedAsset: getClientAsset(sourceAsset?.denom, sourceAsset?.chainID),
+      selectedAsset: getClientAsset(sourceAsset?.denom, sourceAsset?.chainId),
       selectChain: true,
     });
   }, [
     getClientAsset,
     setSourceAsset,
-    sourceAsset?.chainID,
+    sourceAsset?.chainId,
     sourceAsset?.denom,
-    switchEvmChainId,
+    switchEvmchainId,
   ]);
 
   const handleChangeDestinationAsset = useCallback(() => {
@@ -201,12 +202,12 @@ export const SwapPage = () => {
       },
       selectedAsset: getClientAsset(
         destinationAsset?.denom,
-        destinationAsset?.chainID
+        destinationAsset?.chainId
       ),
       selectChain: true,
     });
   }, [
-    destinationAsset?.chainID,
+    destinationAsset?.chainId,
     destinationAsset?.denom,
     getClientAsset,
     setDestinationAsset,
@@ -230,9 +231,9 @@ export const SwapPage = () => {
           icon={ICONS.plus}
           onClick={() => {
             track("swap page: connect wallet button - clicked");
-            if (sourceAsset?.chainID) {
+            if (sourceAsset?.chainId) {
               NiceModal.show(Modals.WalletSelectorModal, {
-                chainId: sourceAsset?.chainID,
+                chainId: sourceAsset?.chainId,
               });
             } else {
               NiceModal.show(Modals.ConnectedWalletModal);
@@ -242,7 +243,7 @@ export const SwapPage = () => {
       );
     }
 
-    if (!sourceAsset?.chainID) {
+    if (!sourceAsset?.chainId) {
       return (
         <MainButton
           label="Please select a source asset"
@@ -252,7 +253,7 @@ export const SwapPage = () => {
       );
     }
 
-    if (!destinationAsset?.chainID) {
+    if (!destinationAsset?.chainId) {
       return (
         <MainButton
           label="Please select a destination asset"
@@ -306,7 +307,7 @@ export const SwapPage = () => {
 
     if (insufficientBalance) {
       const sourceAssetBalance = getBalance(
-        sourceAsset?.chainID,
+        sourceAsset?.chainId,
         sourceAsset?.denom
       )?.formattedAmount;
       const insufficientBalanceForGas =
@@ -334,9 +335,9 @@ export const SwapPage = () => {
       });
       setUserId(sourceAccount?.address);
       if (showCosmosLedgerWarning) {
-        track("error page: cosmos ledger warning", { route });
+        track("warning page: cosmos ledger", { route });
         setError({
-          errorType: ErrorType.CosmosLedgerWarning,
+          errorWarningType: ErrorWarningType.CosmosLedgerWarning,
           onClickBack: () => {
             setError(undefined);
           },
@@ -344,9 +345,9 @@ export const SwapPage = () => {
         return;
       }
       if (route?.warning?.type === "BAD_PRICE_WARNING") {
-        track("error page: bad price warning", { route });
+        track("warning page: bad price", { route });
         setError({
-          errorType: ErrorType.BadPriceWarning,
+          errorWarningType: ErrorWarningType.BadPriceWarning,
           onClickContinue: () => {
             setError(undefined);
             setChainAddresses({});
@@ -362,9 +363,9 @@ export const SwapPage = () => {
       }
 
       if (route?.warning?.type === "LOW_INFO_WARNING") {
-        track("error page: low info warning", { route });
+        track("warning page: low info", { route });
         setError({
-          errorType: ErrorType.LowInfoWarning,
+          errorWarningType: ErrorWarningType.LowInfoWarning,
           onClickContinue: () => {
             setError(undefined);
             setChainAddresses({});
@@ -380,9 +381,9 @@ export const SwapPage = () => {
       }
 
       if (showGoFastWarning && isGoFast) {
-        track("error page: go fast warning", { route });
+        track("warning page: go fast", { route });
         setError({
-          errorType: ErrorType.GoFastWarning,
+          errorWarningType: ErrorWarningType.GoFastWarning,
           onClickContinue: () => {
             setError(undefined);
             setChainAddresses({});
@@ -399,6 +400,11 @@ export const SwapPage = () => {
       setChainAddresses({});
       setCurrentPage(nextPage);
       setUser({ username: sourceAccount?.address });
+      if (sourceAccount?.address) {
+        startAmplitudeSessionReplay();
+        const replay = getReplay();
+        replay?.start();
+      }
       setSwapExecutionState();
     };
 
@@ -411,12 +417,12 @@ export const SwapPage = () => {
       />
     );
   }, [
-    sourceAsset?.chainID,
+    sourceAsset?.chainId,
     sourceAsset?.amount,
     sourceAsset?.denom,
     sourceAccount?.address,
     isInvertingSwap,
-    destinationAsset?.chainID,
+    destinationAsset?.chainId,
     destinationAsset?.amount,
     isWaitingForNewRoute,
     isRouteError,

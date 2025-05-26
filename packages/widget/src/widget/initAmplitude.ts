@@ -1,5 +1,6 @@
-import { init } from "@amplitude/analytics-browser";
+import { init, add } from "@amplitude/analytics-browser";
 import { version } from "../../package.json";
+import { sessionReplayPlugin } from "@amplitude/plugin-session-replay-browser";
 
 let isAmplitudeInitialized = false;
 
@@ -10,4 +11,11 @@ export const initAmplitude = () => {
     appVersion: version,
   });
   isAmplitudeInitialized = true;
+};
+
+export const startAmplitudeSessionReplay = () => {
+  if (isAmplitudeInitialized) {
+    const plugin = sessionReplayPlugin({});
+    add(plugin);
+  }
 };

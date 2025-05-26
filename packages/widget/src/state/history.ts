@@ -1,21 +1,22 @@
-import { RouteResponse, TxStatusResponse } from "@skip-go/client";
+import { TxStatusResponse } from "@skip-go/client";
 import { atomWithStorage } from "jotai/utils";
 import { TransactionDetails } from "./swapExecutionPage";
 import { SimpleStatus } from "@/utils/clientType";
 import { atom } from "jotai";
 import { atomWithQuery } from "jotai-tanstack-query";
-import { skipClient } from "./skipClient";
 import { TxsStatus } from "@/pages/SwapExecutionPage/useBroadcastedTxs";
+import { RouteResponse, transactionStatus } from "@skip-go/client";
+import { LOCAL_STORAGE_KEYS } from "./localStorageKeys";
 
 export type TransactionHistoryItem = {
   route: RouteResponse;
   transactionDetails: TransactionDetails[];
   timestamp: number;
   status: SimpleStatus;
-} & TxsStatus;
+} & Partial<TxsStatus>;
 
 export const transactionHistoryAtom = atomWithStorage<TransactionHistoryItem[]>(
-  "transactionHistory",
+  LOCAL_STORAGE_KEYS.transactionHistory,
   [],
   undefined
 );
@@ -55,7 +56,6 @@ export const removeTransactionHistoryItemAtom = atom(
 );
 
 export const skipFetchPendingTransactionHistoryStatus = atomWithQuery((get) => {
-  const skip = get(skipClient);
   const transactionHistory = get(transactionHistoryAtom);
 
   const pendingTransactionHistoryItemsFound = transactionHistory.find(
@@ -76,7 +76,7 @@ export const skipFetchPendingTransactionHistoryStatus = atomWithQuery((get) => {
                   transactionHistoryItem.status !== "completed" &&
                   transactionHistoryItem.status !== "failed"
                 ) {
-                  return await skip.transactionStatus({
+                  return await transactionStatus({
                     chainID: transactionDetail.chainID,
                     txHash: transactionDetail.txHash,
                   });

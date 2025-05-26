@@ -1,5 +1,157 @@
 ## 0.0.15
 
+## 3.10.5
+
+### Patch Changes
+
+- 07fc190: bump registries and fix route response type
+- Updated dependencies [07fc190]
+  - @skip-go/client@1.1.4
+
+## 3.10.4
+
+### Patch Changes
+
+- 49fd0da: Add tests for getClientOperations in clientType utility.
+- 2075ee9: Add tests for utils number functions
+- e6cdb46: Cache Playwright browser binaries and skip reinstall when already cached.
+- 3f8fce1: Fix mobile date formatting by zero-padding hours, minutes, month, and day.
+- cba7980: Fix window existence check in useIsMobileScreenSize hook to avoid runtime errors when `window` is undefined.
+- e6cdb46: Improve widget tests workflow to cache dependencies and Playwright browsers for faster execution.
+- Updated dependencies [fc09b51]
+- Updated dependencies [d71e6b0]
+  - @skip-go/client@1.1.3
+
+## 3.10.3
+
+### Patch Changes
+
+- df9e97c: reduce number of session replays to connected wallet sessions
+- df9e97c: fix history page asset styling and display amount updates
+- df9e97c: separate error and warning
+- df9e97c: Fix using incorrect method on localStorage to remove an item
+- df9e97c: track two tx routes in amplitude
+- df9e97c: bump solana walletconnect deps
+- df9e97c: Add fix for modal animation jank on windows
+- Updated dependencies [df9e97c]
+- Updated dependencies [df9e97c]
+- Updated dependencies [df9e97c]
+- Updated dependencies [df9e97c]
+  - @skip-go/client@1.1.2
+
+## 3.10.2
+
+### Patch Changes
+
+- cf920fe: update registries
+- 1e9f832: remove unused packages
+- 78281ec: Use virtualization on history page
+- Updated dependencies [5e42be2]
+- Updated dependencies [9bdd303]
+- Updated dependencies [cf920fe]
+- Updated dependencies [11c3c79]
+  - @skip-go/client@1.1.1
+
+## 3.10.1
+
+### Patch Changes
+
+- 6c1ff69: bump graz 0.3.2
+
+## 3.10.0
+
+### Minor Changes
+
+- df62bf0: bump cosmjs package
+
+### Patch Changes
+
+- be7c302: only session record on valid user id
+- c609cd4: fix decimals display for grouped assets
+- c8315f2: asset logo consistency
+- Updated dependencies [376583c]
+- Updated dependencies [df62bf0]
+- Updated dependencies [4458538]
+  - @skip-go/client@1.1.0
+
+## 3.9.7
+
+### Patch Changes
+
+- d5aa812: refetch route on swap settings changed
+- 041a12a: minor improvements to amplitude analytics
+- 9849401: Temporarily remove fadeout animation from selecting asset
+
+## 3.9.6
+
+### Patch Changes
+
+- Updated dependencies [a009e22]
+  - @skip-go/client@1.0.6
+
+## 3.9.5
+
+### Patch Changes
+
+- Updated dependencies [fd69bee]
+  - @skip-go/client@1.0.5
+
+## 3.9.4
+
+### Patch Changes
+
+- Updated dependencies [9b1f4fe]
+  - @skip-go/client@1.0.4
+
+## 3.9.3
+
+### Patch Changes
+
+- Updated dependencies [d0e0de4]
+  - @skip-go/client@1.0.3
+
+## 3.9.2
+
+### Patch Changes
+
+- Updated dependencies [b22c07b]
+  - @skip-go/client@1.0.2
+
+## 3.9.1
+
+### Patch Changes
+
+- Updated dependencies [aba3e58]
+  - @skip-go/client@1.0.1
+
+## 3.9.0
+
+### Minor Changes
+
+- 4007e19: Update widget to use client v1.0.0
+
+### Patch Changes
+
+- 30d7b1f: only record sentry replay on valid user id
+- be8dda4: update registries
+- Updated dependencies [4007e19]
+- Updated dependencies [be8dda4]
+  - @skip-go/client@1.0.0
+
+## 3.8.9
+
+### Patch Changes
+
+- fa63d79: bump graz
+- 5b3b9bc: fix max button cosmos amount
+- 2d5c7ce: Update useGasFeeTokenAmount for EVM
+- b5d0b31: update registries
+- c64a70a: improve number formatting and decrowd settings bar by removing powered by skip go text
+- 2c1967a: Hide signature required for operation once signed
+- 22200c8: Fix showing formattedAmount instead of balance.amount in Asset/Chain selector modal
+- Updated dependencies [b5d0b31]
+  - @skip-go/client@0.17.2
+
 ## 3.8.8
 
 ### Patch Changes

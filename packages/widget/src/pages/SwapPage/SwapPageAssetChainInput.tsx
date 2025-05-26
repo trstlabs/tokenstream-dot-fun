@@ -57,7 +57,7 @@ export const SwapPageAssetChainInput = ({
   const assetDetails = useGetAssetDetails({
     assetDenom: selectedAsset?.denom,
     amount: value,
-    chainId: selectedAsset?.chainID,
+    chainId: selectedAsset?.chainId,
   });
 
   const groupedAssetsByRecommendedSymbol = useGroupedAssetByRecommendedSymbol({ context });
@@ -229,7 +229,6 @@ export const SwapPageAssetChainInput = ({
             {showPriceChangePercentage && (
               <SmallText color={priceChangeColor}>{priceChangePercentage}%</SmallText>
             )}
-
           </Row>
         ) : (
           <SmallText>{usdValue && formatUSD(usdValue)}</SmallText>

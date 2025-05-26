@@ -1,7 +1,6 @@
 import React, { useMemo } from "react";
 import { Row } from "@/components/Layout";
 import { GhostButton } from "@/components/Button";
-import { SkipLogoIcon } from "@/icons/SkipLogoIcon";
 import { SignatureIcon } from "@/icons/SignatureIcon";
 import { CogIcon } from "@/icons/CogIcon";
 import { useAtomValue } from "jotai";
@@ -19,11 +18,6 @@ import { useIsGoFast } from "@/hooks/useIsGoFast";
 import { convertSecondsToMinutesOrHours } from "@/utils/number";
 import { getFeeList, getTotalFees } from "@/utils/route";
 
-export const PoweredBySkipGo = () => (
-  <Row align="center" data-logo="skip-go" gap={3}>
-    Powered by <SkipLogoIcon />
-  </Row>
-);
 
 const EstimatedDuration = ({ seconds }: { seconds?: number }) => {
   const formatted = seconds
@@ -35,13 +29,7 @@ const EstimatedDuration = ({ seconds }: { seconds?: number }) => {
 const Fee = ({ amount }: { amount?: string }) =>
   amount ? <Row gap={4} align="flex-end">Fee: {amount}</Row> : null;
 
-const SettingsButton = ({
-  highlight,
-  changed,
-}: {
-  highlight?: boolean;
-  changed: boolean;
-}) => (
+const SettingsButton = ({ highlight, changed }: { highlight?: boolean; changed: boolean }) => (
   <StyledSettingsContainer align="flex-end" gap={3} highlightSettings={highlight}>
     <CogIconWrapper>
       <CogIcon />
@@ -61,10 +49,7 @@ const SignatureRequired = ({ count }: { count: number }) => (
 );
 
 const RoutePreferenceLabel = ({ preference }: { preference: RoutePreference }) => {
-  const label =
-    preference === RoutePreference.FASTEST
-      ? "Fastest route"
-      : "Cheapest route";
+  const label = preference === RoutePreference.FASTEST ? "Fastest route" : "Cheapest route";
   return <span>{label}</span>;
 };
 
@@ -115,12 +100,10 @@ export const SwapPageFooterItems: React.FC<SwapPageFooterItemsProps> = ({
     );
   };
 
-  const rightContent = () => 
+  const rightContent = () =>
     isMobile && isGoFast ? (
       <RoutePreferenceLabel preference={routePreference} />
-    ) : (
-      <PoweredBySkipGo />
-    );
+    ) : null;
 
   return (
     <>
@@ -131,7 +114,8 @@ export const SwapPageFooterItems: React.FC<SwapPageFooterItemsProps> = ({
 };
 
 export const SwapPageFooter: React.FC<
-  { onClick?: () => void } & SwapPageFooterItemsProps & React.ButtonHTMLAttributes<HTMLButtonElement>
+  { onClick?: () => void } & SwapPageFooterItemsProps &
+    React.ButtonHTMLAttributes<HTMLButtonElement>
 > = ({ onClick, ...props }) => (
   <GhostButton
     gap={5}
@@ -150,8 +134,7 @@ export const StyledSignatureRequiredContainer = styled(Row)`
 `;
 
 const StyledSettingsContainer = styled(Row)<{ highlightSettings?: boolean }>`
-  ${({ highlightSettings, theme }) =>
-    highlightSettings && `color: ${theme.primary.text.normal}`};
+  ${({ highlightSettings, theme }) => highlightSettings && `color: ${theme.primary.text.normal}`};
 `;
 
 const CogIconWrapper = styled(Row)`
