@@ -80,6 +80,6 @@ export const useTxHistory = ({ txHistoryItem, index }: useTxHistoryProps) => {
     status: query.data as SimpleStatus,
     explorerLinks: Array.from(explorerLinks).filter((link) => link) as string[],
     transferAssetRelease:
-      statusData?.transferAssetRelease ?? txHistoryItem.transferAssetRelease,
+      statusData?.transferAssetRelease ?? txHistoryItem?.transferAssetRelease,
   };
 };

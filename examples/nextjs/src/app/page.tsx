@@ -17,7 +17,7 @@ export default function Home() {
   // optional theme, widget will be dark mode be default
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [disableShadowDom, setDisableShadowDom] = useState(false);
-  const [apiUrl, setApiUrl] = useState<"prod" | "dev">("dev");
+  const [apiUrl, setApiUrl] = useState<"prod" | "dev">("prod");
   const [testnet, setTestnet] = useState<boolean>(true);
 
   useLayoutEffect(() => {

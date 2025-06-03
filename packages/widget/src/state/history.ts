@@ -36,11 +36,13 @@ export const setTransactionHistoryAtom = atom(
     set(transactionHistoryAtom, newHistory);
   }
 );
-export const removeTransactionHistoryItemAtom = atom(null, (get, set, index: number) => {
-  const history = get(transactionHistoryAtom);
-  if (!history) return;
-  if (index < 0) return;
-  if (index >= history.length) return;
+export const removeTransactionHistoryItemAtom = atom(
+  null,
+  (get, set, index: number) => {
+    const history = get(transactionHistoryAtom);
+    if (!history) return;
+    if (index < 0) return;
+    if (index >= history.length) return;
 
     // Create a new array without mutating the original
     const newHistory = history.filter((_, i) => i !== index);
@@ -64,12 +66,15 @@ export const skipFetchPendingTransactionHistoryStatus = atomWithQuery((get) => {
       const nestedTransactionHistoryPromises = transactionHistory.map(
         async (transactionHistoryItem) => {
           const transactionDetailsPromises = await Promise.all(
-            transactionHistoryItem.transactionDetails?.map(async (transactionDetail) => {
-              if (
-                transactionHistoryItem.status !== "completed" &&
-                transactionHistoryItem.status !== "failed"
-              ) {
-                return await transactionStatus(transactionDetail);
+            transactionHistoryItem.transactionDetails?.map(
+              async (transactionDetail) => {
+                if (
+                  transactionHistoryItem.status !== "completed" &&
+                  transactionHistoryItem.status !== "failed"
+                ) {
+                  return await transactionStatus(transactionDetail);
+                }
+                return new Promise((resolve) => resolve(null));
               }
             ) as Promise<TxStatusResponse | null>[]
           );

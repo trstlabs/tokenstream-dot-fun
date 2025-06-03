@@ -54,9 +54,6 @@ export const SwapExecutionPage = () => {
   const { connectRequiredChains, isLoading } = useAutoSetAddress();
   const [simpleRoute, setSimpleRoute] = useState(true);
   const streamSettings = useAtomValue(streamSettingsAtom);
-  const { mutate: submitExecuteRouteMutation } = useAtomValue(
-    skipSubmitSwapExecutionAtom
-  );
 
   const { mutate: submitExecuteRouteMutation, error } = useAtomValue(
     skipSubmitSwapExecutionAtom
