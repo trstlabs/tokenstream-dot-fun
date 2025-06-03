@@ -7,7 +7,11 @@ import {
   swapExecutionStateAtom,
   skipSubmitSwapExecutionAtom,
 } from "@/state/swapExecutionPage";
-import { getClientOperations, ClientOperation } from "@/utils/clientType";
+import {
+  getClientOperations,
+  ClientOperation,
+  SimpleStatus,
+} from "@/utils/clientType";
 import { useSetAtom, useAtomValue } from "jotai";
 import { useMemo, useEffect } from "react";
 import { TxsStatus } from "./useBroadcastedTxs";
@@ -26,9 +30,10 @@ export const useSyncTxStatus = ({
     route,
     transactionDetailsArray,
     overallStatus,
-    transactionHistoryIndex,
+    transactionHistoryIndex: currentTransactionHistoryIndex,
   } = useAtomValue(swapExecutionStateAtom);
   const setTransactionHistory = useSetAtom(setTransactionHistoryAtom);
+
   const txHistory = useAtomValue(transactionHistoryAtom);
   const streamSettings = useAtomValue(streamSettingsAtom);
   const { isPending } = useAtomValue(skipSubmitSwapExecutionAtom);
@@ -84,7 +89,6 @@ export const useSyncTxStatus = ({
     }
   }, [
     isPending,
-    setOverallStatus,
     statusData?.isSettled,
     statusData?.isSuccess,
     statusData?.lastTxStatus,
@@ -95,13 +99,18 @@ export const useSyncTxStatus = ({
   useEffect(() => {
     if (computedSwapStatus) {
       console.log("computedSwapStatus", computedSwapStatus);
-      const index = historyIndex ?? transactionHistoryIndex;
-      setTransactionHistory(historyIndex ?? transactionHistoryIndex, {
+      const index = historyIndex ?? currentTransactionHistoryIndex;
+      const newTxHistoryItem = {
         ...txHistory[index],
         ...statusData,
-        status: computedSwapStatus,
-      });
-      if (!historyIndex) {
+        status: computedSwapStatus as SimpleStatus,
+      };
+      const oldTxHistoryItem = txHistory[index];
+
+      if (
+        JSON.stringify(newTxHistoryItem) !== JSON.stringify(oldTxHistoryItem)
+      ) {
+        setTransactionHistory(index, newTxHistoryItem);
         setOverallStatus(computedSwapStatus);
       }
     }
@@ -111,10 +120,10 @@ export const useSyncTxStatus = ({
     computedSwapStatus,
     setOverallStatus,
     transactionDetailsArray.length,
-    setTransactionHistory,
-    transactionHistoryIndex,
-    historyIndex,
     txHistory,
     statusData,
+    setTransactionHistory,
+    historyIndex,
+    currentTransactionHistoryIndex,
   ]);
 };

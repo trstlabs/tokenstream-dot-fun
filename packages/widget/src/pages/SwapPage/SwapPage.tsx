@@ -24,20 +24,17 @@ import {
   chainAddressesAtom,
 } from "@/state/swapExecutionPage";
 import { SwapPageBridge } from "./SwapPageBridge";
-import { SwapPageHeader } from "./SwapPageHeader";
 import { currentPageAtom, Routes } from "@/state/router";
 import {
   useInsufficientSourceBalance,
   useMaxAmountTokenMinusFees,
 } from "./useSetMaxAmount";
 import { errorWarningAtom, ErrorWarningType } from "@/state/errorWarning";
-import { ConnectedWalletContent } from "./ConnectedWalletContent";
 import { skipAllBalancesAtom } from "@/state/balances";
 import { useFetchAllBalances } from "@/hooks/useFetchAllBalances";
 import { SwapPageAssetChainInput } from "./SwapPageAssetChainInput";
 import { useGetAccount } from "@/hooks/useGetAccount";
 import { calculatePercentageChange } from "@/utils/number";
-import { transactionHistoryAtom } from "@/state/history";
 import { useCleanupDebouncedAtoms } from "./useCleanupDebouncedAtoms";
 import { useUpdateAmountWhenRouteChanges } from "./useUpdateAmountWhenRouteChanges";
 import NiceModal from "@ebay/nice-modal-react";
@@ -52,6 +49,7 @@ import { useGetBalance } from "@/hooks/useGetBalance";
 import { useStreamSettingsDrawer } from "@/hooks/useStreamSettingsDrawer";
 import { streamSettingsAtom } from "@/state/streamSettings";
 import { startAmplitudeSessionReplay } from "@/widget/initAmplitude";
+import { SwapPageHeader } from "./SwapPageHeader";
 
 export const SwapPage = () => {
   const { SettingsFooter, drawerOpen } = useSettingsDrawer();
@@ -95,7 +93,6 @@ export const SwapPage = () => {
   const switchEvmchainId = useSwitchEvmChain();
   const getAccount = useGetAccount();
   const sourceAccount = getAccount(sourceAsset?.chainId);
-  const txHistory = useAtomValue(transactionHistoryAtom);
   const isSwapOperation = useIsSwapOperation(route);
 
   const [nextPage, setNextPage] = useState(Routes.SwapExecutionPage);
@@ -444,19 +441,6 @@ export const SwapPage = () => {
     setError,
   ]);
 
-  const historyPageButton = useMemo(() => {
-    if (txHistory.length === 0) return;
-
-    return {
-      label: "History",
-      icon: ICONS.history,
-      onClick: () => {
-        track("swap page: history button - clicked");
-        setCurrentPage(Routes.TransactionHistoryPage);
-      },
-    };
-  }, [setCurrentPage, txHistory]);
-
   return (
     <Column
       gap={5}
@@ -464,10 +448,7 @@ export const SwapPage = () => {
         opacity: drawerOpen || streamDrawerOpen ? 0.3 : 1,
       }}
     >
-      <SwapPageHeader
-        leftButton={historyPageButton}
-        rightContent={sourceAccount ? <ConnectedWalletContent /> : null}
-      />
+      <SwapPageHeader />
       <Column align="center">
         <SwapPageAssetChainInput
           selectedAsset={sourceAsset}
@@ -484,7 +465,6 @@ export const SwapPage = () => {
             });
             setSourceAssetAmount(v);
           }}
-          context="source"
           disabled={sourceAsset?.locked}
         />
         <SwapPageBridge />
@@ -505,7 +485,6 @@ export const SwapPage = () => {
             });
             setDestinationAssetAmount(v);
           }}
-          context="destination"
           disabled={destinationAsset?.locked}
         />
       </Column>

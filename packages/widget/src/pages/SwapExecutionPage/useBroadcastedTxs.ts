@@ -32,6 +32,7 @@ export const useBroadcastedTxsStatus = ({
     () => ["txs-status", txsRequired, txs] as const,
     [txs, txsRequired]
   );
+
   return useQuery({
     queryKey,
     queryFn: async ({ queryKey: [, txsRequired, txs] }) => {
@@ -84,6 +85,8 @@ export const useBroadcastedTxsStatus = ({
       return resData;
     },
     enabled:
+      txsRequired !== undefined &&
+      txs !== undefined &&
       !isSettled &&
       (!!txs && txs.length > 0 && enabled !== undefined ? enabled : true),
     refetchInterval: 500,

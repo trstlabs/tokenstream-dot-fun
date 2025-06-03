@@ -13,6 +13,7 @@ export type TransactionHistoryItem = {
   transactionDetails: TransactionDetails[];
   timestamp: number;
   status: SimpleStatus;
+  signatures: number;
 } & Partial<TxsStatus>;
 
 export const transactionHistoryAtom = atomWithStorage<TransactionHistoryItem[]>(
@@ -25,28 +26,21 @@ export const setTransactionHistoryAtom = atom(
   null,
   (get, set, index: number, historyItem: TransactionHistoryItem) => {
     const history = get(transactionHistoryAtom);
-    const oldHistoryItem = history?.[index] ?? {};
-    const newHistory = history;
-    //fix for the case where the route is not defined in case of stream transactions
-    if (
-      historyItem.route == undefined ||
-      historyItem.route.txsRequired == undefined
-    ) {
-      return;
-    }
+
+    const newHistory = [...history];
+
+    const oldHistoryItem = newHistory[index] ?? {};
 
     newHistory[index] = { ...oldHistoryItem, ...historyItem };
+
     set(transactionHistoryAtom, newHistory);
   }
 );
-
-export const removeTransactionHistoryItemAtom = atom(
-  null,
-  (get, set, index: number) => {
-    const history = get(transactionHistoryAtom);
-    if (!history) return;
-    if (index < 0) return;
-    if (index >= history.length) return;
+export const removeTransactionHistoryItemAtom = atom(null, (get, set, index: number) => {
+  const history = get(transactionHistoryAtom);
+  if (!history) return;
+  if (index < 0) return;
+  if (index >= history.length) return;
 
     // Create a new array without mutating the original
     const newHistory = history.filter((_, i) => i !== index);
@@ -70,18 +64,12 @@ export const skipFetchPendingTransactionHistoryStatus = atomWithQuery((get) => {
       const nestedTransactionHistoryPromises = transactionHistory.map(
         async (transactionHistoryItem) => {
           const transactionDetailsPromises = await Promise.all(
-            transactionHistoryItem.transactionDetails.map(
-              async (transactionDetail) => {
-                if (
-                  transactionHistoryItem.status !== "completed" &&
-                  transactionHistoryItem.status !== "failed"
-                ) {
-                  return await transactionStatus({
-                    chainID: transactionDetail.chainID,
-                    txHash: transactionDetail.txHash,
-                  });
-                }
-                return new Promise((resolve) => resolve(null));
+            transactionHistoryItem.transactionDetails?.map(async (transactionDetail) => {
+              if (
+                transactionHistoryItem.status !== "completed" &&
+                transactionHistoryItem.status !== "failed"
+              ) {
+                return await transactionStatus(transactionDetail);
               }
             ) as Promise<TxStatusResponse | null>[]
           );
