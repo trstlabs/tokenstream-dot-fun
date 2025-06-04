@@ -7,6 +7,7 @@ import { atomWithStorageNoCrossTabSync } from "@/utils/misc";
 import { swapSettingsAtom } from "./swapPage";
 
 import { createMessagesForPfmStream } from "./Stream/createMessagesForPfmStream";
+import { createMessagesForAuthzExec } from "./Stream/createMessagesForAuthzExec";
 import { Coin } from "@cosmjs/amino";
 import { fromBech32, toBech32 } from "@cosmjs/encoding";
 import { StreamMessagesResult } from "./Stream/converters";
@@ -146,13 +147,34 @@ export const createStreamMessagesAtom = atom(null, async (get, set) => {
   const streamSettings = get(streamSettingsAtom);
   if (!route) return;
 
-  const result = await createMessagesForPfmStream({
-    route,
-    userAddresses,
-    streamSettings,
-    swapSettings,
-    get,
-  });
+  // Check if the destination chain is Osmosis to determine which function to use
+  const firstOp = route.operations[0];
+  const isOsmosisChain = 
+    ("transfer" in firstOp) && 
+    (firstOp.transfer?.toChainId === "osmosis-1" || 
+     firstOp.transfer?.toChainId === "osmo-test-5");
+
+  // Use AuthZ MsgExec for Osmosis, otherwise use PFM Stream
+  let result;
+  if (isOsmosisChain) {
+    console.log("Using AuthZ MsgExec for Osmosis chain");
+    result = await createMessagesForAuthzExec({
+      route,
+      userAddresses,
+      streamSettings,
+      swapSettings,
+      get,
+    });
+  } else {
+    console.log("Using PFM Stream for non-Osmosis chain");
+    result = await createMessagesForPfmStream({
+      route,
+      userAddresses,
+      streamSettings,
+      swapSettings,
+      get,
+    });
+  }
 
   if (!result) {
     const error = new Error("wasm contract not found");
