@@ -10,12 +10,15 @@ import { DurationSetting } from "./DurationSetting";
 import { IntervalSetting } from "./IntervalSetting";
 import { StartAtSetting } from "./StartAtSetting";
 import { EmailSetting } from "./EmailSetting";
+import { StreamModeSetting } from "./StreamModeSetting";
 // import { SaveIndicator } from "./SaveIndicator";
 
 export const StreamSettingsDrawer = createModal(() => {
   return (
     <StyledStreamSettings gap={15}>
       <Column gap={12}>
+        <StreamModeSetting />
+        
         <StartAtSetting />
         <StyledHelpText>
           Start is when to start token streaming, 0 for now

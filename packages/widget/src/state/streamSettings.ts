@@ -8,6 +8,7 @@ import { swapSettingsAtom } from "./swapPage";
 
 import { createMessagesForPfmStream } from "./Stream/createMessagesForPfmStream";
 import { createMessagesForAuthzExec } from "./Stream/createMessagesForAuthzExec";
+import { intentoHostedAccountSupportedChains } from "@/constants/intentoChains";
 import { Coin } from "@cosmjs/amino";
 import { fromBech32, toBech32 } from "@cosmjs/encoding";
 import { StreamMessagesResult } from "./Stream/converters";
@@ -21,23 +22,27 @@ import { EncodeObject } from "@cosmjs/proto-signing";
 import { getConnectedSignersAtom, walletsAtom } from "./wallets";
 import { getWallet, WalletType } from "graz";
 
+export type StreamMode = 'EQUAL_PARTS' | 'RECURRING';
+
 export interface IntentoStreamSettings {
   customGasAmount: string;
   interval: number;
   duration: number;
   startAt: number;
-  shouldStream: Boolean;
+  shouldStream: boolean;
   emailAddress: string;
+  streamMode: StreamMode;
 }
 
 // Default values (same as before)
 export const defaultStreamSettings: IntentoStreamSettings = {
-  customGasAmount: "200000", // Replace with your actual DEFAULT_GAS_AMOUNT if needed
-  interval: 600,
-  duration: 86400,
+  customGasAmount: "200000",
+  interval: 600, // 10 minutes
+  duration: 86400, // 1 day
   startAt: 0,
   shouldStream: false,
   emailAddress: "",
+  streamMode: 'EQUAL_PARTS', // Default to equal parts mode
 };
 
 // Persisted atom
@@ -147,26 +152,26 @@ export const createStreamMessagesAtom = atom(null, async (get, set) => {
   const streamSettings = get(streamSettingsAtom);
   if (!route) return;
 
-  // Check if the destination chain is Osmosis to determine which function to use
-  const firstOp = route.operations[0];
-  const isOsmosisChain = 
-    ("transfer" in firstOp) && 
-    (firstOp.transfer?.toChainId === "osmosis-1" || 
-     firstOp.transfer?.toChainId === "osmo-test-5");
+  // Check if the source chain supports Intento hosted accounts for AuthZ MsgExec
+  const sourceChainId = route.sourceAssetChainId;
+  const isIntentoHostedAccountSupportedChain =
+    intentoHostedAccountSupportedChains.includes(sourceChainId);
 
-  // Use AuthZ MsgExec for Osmosis, otherwise use PFM Stream
+  // Use AuthZ MsgExec for supported chains (e.g., Osmosis), otherwise use PFM Stream
   let result;
-  if (isOsmosisChain) {
-    console.log("Using AuthZ MsgExec for Osmosis chain");
+  if (isIntentoHostedAccountSupportedChain) {
+    console.log(`Using AuthZ MsgExec for ${sourceChainId} chain`);
     result = await createMessagesForAuthzExec({
       route,
       userAddresses,
       streamSettings,
-      swapSettings,
+      swapSettings: {
+        slippage: swapSettings.slippage,
+      },
       get,
     });
   } else {
-    console.log("Using PFM Stream for non-Osmosis chain");
+    console.log(`Using PFM Stream for ${sourceChainId} chain`);
     result = await createMessagesForPfmStream({
       route,
       userAddresses,
