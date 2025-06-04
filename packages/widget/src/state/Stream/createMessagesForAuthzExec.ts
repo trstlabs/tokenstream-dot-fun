@@ -1,18 +1,23 @@
 import { messages, RouteResponse, UserAddress } from "@skip-go/client";
-import { hash } from "@stablelib/sha256";
-import { memoDivideSkipContractSwapAmount } from "./memoDivideSkipContractSwapAmount";
-import { IntentoStreamSettings } from "@/state/streamSettings";
-
-import { atomWithMutation } from "jotai-tanstack-query";
 import {
-  StreamMessagesResult,
-  getCounterpartyChannelId,
-  getForwardAddress,
-} from "./converters";
-
+  expectedStreamFeesAtom,
+  IntentoStreamSettings,
+} from "@/state/streamSettings";
+import { StreamMessagesResult } from "./converters";
+import { MsgSend } from "cosmjs-types/cosmos/bank/v1beta1/tx"; // Example; depends on message types used
+import { Registry } from "@cosmjs/proto-signing";
 import { MsgTransfer } from "cosmjs-types/ibc/applications/transfer/v1/tx";
 import { EncodeObject } from "@cosmjs/proto-signing";
-import { fromBech32, toBech32 } from "@cosmjs/encoding";
+import {
+  intentoHostedAccountSupportedChains,
+  getChainChannelConfig,
+} from "@/constants/intentoChains";
+import { MsgExecuteContract } from "cosmjs-types/cosmwasm/wasm/v1/tx";
+import { atomWithMutation } from "jotai-tanstack-query";
+import { Coin } from "cosmjs-types/cosmos/base/v1beta1/coin";
+import { GenericAuthorization } from "cosmjs-types/cosmos/authz/v1beta1/authz";
+import { MsgGrant } from "cosmjs-types/cosmos/authz/v1beta1/tx";
+import { Timestamp } from "cosmjs-types/google/protobuf/timestamp";
 
 // Define the required types directly
 interface MsgExec {
@@ -29,6 +34,10 @@ interface Any {
  * Create messages for Osmosis AuthZ MsgExec flow
  * This wraps the CosmosMsg into AuthZ MsgExec and creates a transfer to Intento
  */
+interface SwapSettings {
+  slippage: number;
+}
+
 export async function createMessagesForAuthzExec({
   route,
   userAddresses,
@@ -39,36 +48,27 @@ export async function createMessagesForAuthzExec({
   route: RouteResponse;
   userAddresses: UserAddress[];
   streamSettings: IntentoStreamSettings;
-  swapSettings: {
-    slippage: number;
-  };
+  swapSettings: SwapSettings;
   get: Parameters<Parameters<typeof atomWithMutation>[0]>[0]; // to access atoms inside mutation
 }): Promise<StreamMessagesResult | undefined> {
-  console.log("Creating messages for AuthZ MsgExec for Osmosis");
-  
-  const firstOp = route.operations[0];
+  console.log("Creating messages for AuthZ MsgExec");
 
-  if (!streamSettings.shouldStream || !("transfer" in firstOp)) return;
-  
-  // Type guard to ensure TypeScript knows firstOp has transfer property
-  if (
-    "transfer" in firstOp &&
-    firstOp.transfer?.toChainId != route.swapVenues?.[0].chainId
-  ) {
-    return;
-  }
+  if (!streamSettings.shouldStream) return;
+  // Get the source chain and denom info
+  const { sourceAssetChainId, amountIn } = route;
+  // Check if source chain is in the supported chains list
+  const isSupportedChain =
+    intentoHostedAccountSupportedChains.includes(sourceAssetChainId);
 
-  // Check if the chain is Osmosis
-  const isOsmosisChain = 
-    firstOp.transfer?.toChainId === "osmosis-1" || 
-    firstOp.transfer?.toChainId === "osmo-test-5";
-  
-  if (!isOsmosisChain) {
+  if (!isSupportedChain) {
+    console.log(
+      `Chain ${sourceAssetChainId} is not in the supported chains list for AuthZ MsgExec`
+    );
     return;
   }
 
   // Generate the original route messages
-  const originalRouteMsgs = await messages({
+  const messagesResponse = await messages({
     sourceAssetDenom: route.sourceAssetDenom,
     sourceAssetChainId: route.sourceAssetChainId,
     destAssetDenom: route.destAssetDenom,
@@ -81,180 +81,203 @@ export async function createMessagesForAuthzExec({
     slippageTolerancePercent: swapSettings.slippage.toString(),
   });
 
-  if (
-    !originalRouteMsgs ||
-    !originalRouteMsgs.txs ||
-    !("cosmosTx" in originalRouteMsgs.txs[0])
-  )
+  if (!messagesResponse?.txs?.length) {
+    console.error("No transaction data found in messages response");
     return;
-
-  let ibcDenomHash = null;
-  let intentoChannelToDest = "";
-  let channelDestToIntento = "";
-
-  // Ensure TypeScript knows transfer exists
-  if (!("transfer" in firstOp)) return;
-
-  // Set channels based on destination chain
-  switch (firstOp.transfer?.toChainId) {
-    case "osmosis-1":
-      intentoChannelToDest = import.meta.env.VITE_CHANNEL_ID_INTO_OSMO;
-      channelDestToIntento = import.meta.env.VITE_CHANNEL_ID_OSMO_INTO;
-      break;
-    case "osmo-test-5":
-      intentoChannelToDest = import.meta.env.VITE_CHANNEL_ID_INTO_OSMO;
-      channelDestToIntento = import.meta.env.VITE_CHANNEL_ID_OSMO_INTO;
-      break;
-    default:
-      console.error("Unsupported chain for AuthZ MsgExec");
-      return;
   }
 
-  // Calculate the IBC denom hash
-  ibcDenomHash = Buffer.from(
-    hash(
-      new TextEncoder().encode(
-        `transfer/${intentoChannelToDest}/${firstOp.transfer?.denomOut}`
-      )
-    )
-  )
-    .toString("hex")
-    .toUpperCase();
+  console.log("messagesResponse", messagesResponse);
 
-  // Get the counterparty channel ID
-  const counterpartyChannelId = await getCounterpartyChannelId({
-    chainID: firstOp.transfer?.fromChainId || "",
-    channelId: firstOp.transfer?.channel || "",
-    portId: firstOp.transfer?.port || "",
-    get,
+  // Calculate stream amount based on stream mode
+  let streamAmount: string;
+  if (streamSettings.streamMode === 'EQUAL_PARTS') {
+    const recurrences = Math.floor(
+      Number(streamSettings.duration) / Number(streamSettings.interval)
+    );
+    // For DCA mode, split the amount into equal parts
+    streamAmount = Math.floor(Number(amountIn) / recurrences).toString();
+  } else {
+    // For FULL_AMOUNT mode, use the full amount for each stream
+    streamAmount = amountIn;
+  }
+  
+  console.log(`Streaming ${streamAmount} in ${streamSettings.streamMode} mode`);
+
+  // Find the first cosmos transaction with messages
+  const cosmosTx = messagesResponse.txs.find((tx) => "cosmosTx" in tx) as
+    | { cosmosTx: { msgs: Array<{ msgTypeUrl: string; msg: any }> } }
+    | undefined;
+
+  if (!cosmosTx?.cosmosTx?.msgs?.length) {
+    console.error("No valid Cosmos transaction messages found");
+    return;
+  }
+
+  // Transform messages into proper EncodeObjects
+  const encodeObjects = cosmosTx.cosmosTx.msgs
+    .map((msg) => {
+      if (!msg.msgTypeUrl || !msg.msg) {
+        console.warn("Skipping invalid message format:", msg);
+        return null;
+      }
+      return {
+        typeUrl: msg.msgTypeUrl,
+        value: msg.msg,
+      } as EncodeObject;
+    })
+    .filter((msg): msg is EncodeObject => msg !== null);
+
+  if (encodeObjects.length === 0) {
+    console.error("No valid messages found after transformation");
+    return;
+  }
+  const registry = new Registry(); // You should register all types used
+  registry.register("/cosmos.bank.v1beta1.MsgSend", MsgSend);
+  registry.register("/ibc.applications.transfer.v1.MsgTransfer", MsgTransfer);
+  registry.register("/cosmwasm.wasm.v1.MsgExecuteContract", MsgExecuteContract);
+
+  const updatedEncodeObjects = encodeObjects.map((msg) => {
+    const clonedValue = structuredClone(msg.value); // Avoid mutating original
+    // Modify amount field based on structure and DCA mode
+    if (clonedValue.amount?.amount !== undefined) {
+      clonedValue.amount.amount = streamAmount;
+    } else if (clonedValue.token?.amount !== undefined) {
+      clonedValue.token.amount = streamAmount;
+    } else if (Array.isArray(clonedValue.funds)) {
+      clonedValue.funds = clonedValue.funds.map((coin: Coin) => ({
+        ...coin,
+        amount: streamAmount.toString(),
+      }));
+    }
+
+    return {
+      typeUrl: msg.typeUrl,
+      value: clonedValue,
+    };
   });
-  
-  // Get the forward address
-  const fwdAddress = getForwardAddress({
-    destPrefix: "osmo",
-    channel: counterpartyChannelId,
-    originalSender: userAddresses[0].address,
+  console.log("updatedEncodeObjects", updatedEncodeObjects);
+
+  const msgs: Any[] = updatedEncodeObjects.map((msg) => {
+    const encoded = registry.encode(msg); // Gives Uint8Array
+    return {
+      typeUrl: msg.typeUrl,
+      value: encoded,
+    };
   });
+  // Get the Intento address for the source chain
+  const intoAddress = userAddresses.find(
+    (addr) => addr.chainId === sourceAssetChainId
+  )?.address;
 
-  // Convert to Intento address
-  const intoAddress = toBech32("into", fromBech32(fwdAddress).data);
-  
-  // Calculate recurrences and stream amount
-  const recurrences = Math.floor(
-    Number(streamSettings.duration) / Number(streamSettings.interval)
-  );
-  const streamAmount = Math.floor(Number(firstOp.amountOut) / recurrences);
+  if (!intoAddress) {
+    console.error("No Intento address found for the source chain");
+    return;
+  }
 
-  // Parse the original memo
-  const memoOG = JSON.parse(
-    JSON.parse(originalRouteMsgs.txs?.[0].cosmosTx.msgs?.[0].msg || "")["memo"]
-  );
-  if (!memoOG.wasm.contract) throw new Error("skip wasm contract not found");
-  
-  // Divide skip contract swap amount
-  const memoSkipContract = memoDivideSkipContractSwapAmount(
-    memoOG,
-    recurrences
-  );
+  // Get channel configuration for the source chain
+  const channelConfig = getChainChannelConfig(sourceAssetChainId);
+  if (!channelConfig) {
+    console.error(
+      `No channel configuration found for chain: ${sourceAssetChainId}`
+    );
+    return;
+  }
 
-  // Create the flow message for Intento
-  const flowMsgIntento = {
-    "@type": "/ibc.applications.transfer.v1.MsgTransfer",
-    source_channel: intentoChannelToDest,
-    source_port: "transfer",
-    sender: intoAddress,
-    token: { amount: String(streamAmount), denom: "ibc/" + ibcDenomHash },
-    receiver: memoOG.wasm.contract,
-    timeout_height: { revision_number: "0", revision_height: "0" },
-    timeout_timestamp:
-      streamSettings.startAt == 0
-        ? (
-            BigInt(
-              Math.floor(Date.now() / 1000) + 600 + streamSettings.duration
-            ) * 1_000_000_000n
-          ).toString()
-        : (
-            BigInt(
-              Math.floor(Date.now() / 1000) +
-                600 +
-                streamSettings.duration +
-                streamSettings.startAt
-            ) * 1_000_000_000n
-          ).toString(), // 10 minutes
-    memo: JSON.stringify(memoSkipContract),
-  };
-  
-  // Create the source chain memo with flow instructions
-  const memoSourceChain = {
-    forward: {
-      receiver: intoAddress,
-      port: "transfer",
-      channel: channelDestToIntento,
-      timeout: "10m",
-      retries: 2,
-      next: {
-        flow: {
-          msgs: [flowMsgIntento],
-          duration: streamSettings.duration + "s",
-          interval: streamSettings.interval + "s",
-          start_at:
-            streamSettings.startAt == 0
-              ? "0"
-              : Math.floor(
-                  Date.now() / 1000 + streamSettings.startAt
-                ).toString(),
-          stop_on_fail: "true",
-          label: "test flow",
-          owner: intoAddress,
-          fallback: "true",
-        },
-      },
-    },
-  };
-
-  // Create the MsgTransfer
-  const msgTransfer = MsgTransfer.fromPartial({
-    sourceChannel: firstOp.transfer?.channel,
-    sourcePort: firstOp.transfer?.port,
-    sender: userAddresses.map((user) => user.address)[0],
-    token: { amount: route.amountIn, denom: route.sourceAssetDenom },
-    receiver: "pfm",
-    memo: JSON.stringify(memoSourceChain),
-    timeoutTimestamp:
-      BigInt(Math.floor(Date.now() / 1000) + 10 * 60) * 1_000_000_000n, // 10 minutes
-    timeoutHeight: {
-      revisionNumber: 0n,
-      revisionHeight: 0n,
-    },
-  });
-
-  // We don't need the msgTransferEncodeObject when using AuthZ MsgExec
-  // Wrap the message in AuthZ MsgExec
-  // Create an Any message for the MsgTransfer
-  // Since we don't have access to MsgTransfer.encode, we'll use the msgTransfer directly
-  const anyMsg: Any = {
-    typeUrl: "/ibc.applications.transfer.v1.MsgTransfer",
-    value: new Uint8Array(Buffer.from(JSON.stringify(msgTransfer))),
-  };
-
-  // Create the AuthZ MsgExec message
-  // The grantee should be the Intento address
+  // Create the AuthZ MsgExec message with properly encoded messages
   const msgExec: MsgExec = {
     grantee: intoAddress,
-    msgs: [anyMsg],
+    msgs,
   };
+
+  const now = Math.floor(Date.now() / 1000);
+  const expiration: Timestamp = {
+    seconds: BigInt(now + streamSettings.duration + 600), // 10 minutes after the end of the stream
+    nanos: 0,
+  };
+
+  // Deduplicate typeUrls for grant
+  const uniqueTypeUrls = [
+    ...new Set(updatedEncodeObjects.map((msg) => msg.typeUrl)),
+  ];
+
+  const msgGrants: EncodeObject[] = uniqueTypeUrls.map((typeUrl) => {
+    const grant = {
+      authorization: {
+        typeUrl: "/cosmos.authz.v1beta1.GenericAuthorization",
+        value: GenericAuthorization.encode({ msg: typeUrl }).finish(),
+      },
+      expiration,
+    };
+
+    return {
+      typeUrl: "/cosmos.authz.v1beta1.MsgGrant",
+      value: MsgGrant.fromPartial({
+        granter: userAddresses[0].address,
+        grantee: channelConfig.hostedICAAddress,
+        grant,
+      }),
+    };
+  });
+  console.log("msgGrants", msgGrants);
 
   // Create the MsgExec encode object
   const msgExecEncodeObject: EncodeObject = {
     typeUrl: "/cosmos.authz.v1beta1.MsgExec",
     value: msgExec,
   };
+  const expectedStreamFees = get(expectedStreamFeesAtom);
+  // Create the source chain memo with flow instructions
+  const memoIntentoFlow = {
+    flow: {
+      msgs: [msgExecEncodeObject],
+      duration: `${streamSettings.duration}s`,
+      interval: `${streamSettings.interval}s`,
+      start_at:
+        streamSettings.startAt === 0
+          ? "0"
+          : Math.floor(Date.now() / 1000 + streamSettings.startAt).toString(),
+      stop_on_fail: "true",
+      label: "AuthZ DCA Flow",
+      owner: intoAddress,
+      fallback: "true",
+    },
+  };
+  console.log("memoIntentoFlow", memoIntentoFlow);
+  // Create the MsgTransfer with the flow instructions
+  const msgTransfer = MsgTransfer.fromPartial({
+    sourceChannel: channelConfig.channelDestToIntento,
+    sourcePort: "transfer", // Default transfer port
+    sender: intoAddress,
+    token: {
+      amount: expectedStreamFees?.find(
+        (fee) =>
+          fee.denom === channelConfig.denomOnIntento ||
+          fee.denom ===
+            "ibc/4810C6E0DF162BD8BCEB9189DAFE25AF6B2A47323891BD3EB95365C0D2A889F6" //temporary fix
+      )?.amount,
+      denom: channelConfig.denom,
+    },
+    receiver: "Intento Flows",
+    memo: JSON.stringify(memoIntentoFlow),
+    timeoutTimestamp:
+      BigInt(Math.floor(Date.now() / 1000) + 600) * 1_000_000_000n, // 10 minutes
+    timeoutHeight: {
+      revisionNumber: 0n,
+      revisionHeight: 0n,
+    },
+  });
+
+  console.log("msgTransfer", msgTransfer);
+  const msgTransferEncodeObject: EncodeObject = {
+    typeUrl: "/ibc.applications.transfer.v1.MsgTransfer",
+    value: msgTransfer,
+  };
 
   // Return the result
   return {
     chainID: route.sourceAssetChainId,
     signerAddress: userAddresses[0].address,
-    messages: [msgExecEncodeObject],
+    messages: [...msgGrants, msgTransferEncodeObject],
     intoAddress,
   };
 }
