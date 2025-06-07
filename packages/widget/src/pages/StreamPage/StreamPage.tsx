@@ -52,33 +52,37 @@ export const StreamPage = ({}: StreamPageProps) => {
   useEffect(() => {
     const getExpectedStreamFees = async () => {
       if (!streamFeeParams || streamFeeParams.gasFeeCoins.length === 0) return;
+
       const gasUsed = 100_000;
       const lenMsgs = 1;
 
-      let fees: Coin[] = [];
+      const recurrences = Math.floor(
+        Number(streamSettings.duration) / Number(streamSettings.interval)
+      );
+
+      const fees: Coin[] = [];
 
       for (const coin of streamFeeParams.gasFeeCoins) {
         const denom = coin.denom;
+        const denomPrice = Number(coin.amount); // denom-specific gas price (e.g. INTO=30, ATOM=5)
 
-        const flexFeeForPeriod =
-          (Number(streamFeeParams.flexFeeMul) / 1000) * gasUsed;
+        // Gas fee in raw units: (gasUsed * flexFeeMul) / 1000
+        const gasFeeUnits =
+          (gasUsed * Number(streamFeeParams.flexFeeMul)) / 1000;
+        const gasFee = gasFeeUnits * denomPrice;
 
-        const recurrences = Math.floor(
-          Number(streamSettings.duration) / Number(streamSettings.interval)
-        );
+        // Burn fee (only if denom is INTO)
+        const applyBurnFee = denom === "INTO";
+        const burnFeePerRun = applyBurnFee
+          ? Number(streamFeeParams.burnFeePerMsg) * lenMsgs
+          : 0;
 
-        const flowFee =
-          recurrences * flexFeeForPeriod +
-          recurrences * Number(streamFeeParams.burnFeePerMsg) * lenMsgs;
+        const totalFee = recurrences * (gasFee + burnFeePerRun);
 
-        const denomCoin = streamFeeParams.gasFeeCoins.find(
-          (c) => c.denom === denom
-        );
-        if (!denomCoin) continue;
-
-        const flowFeeForDenom = flowFee * Number(denomCoin.amount);
-        fees = [...fees, { denom, amount: flowFeeForDenom.toString() }];
-        //fees[coin.denom] = Number(flowFeeNormalized.toFixed(4));
+        fees.push({
+          denom,
+          amount: Math.round(totalFee).toString(), // keep it in microdenom (no decimals)
+        });
       }
 
       setExpectedStreamFees(fees);
