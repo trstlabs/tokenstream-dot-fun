@@ -13,6 +13,7 @@ interface ChainChannelConfig {
   denom: string;
   denomOnIntento: string;
   hostedICAAddress: string;
+  hostedAddress: string;
 }
 
 /**
@@ -38,6 +39,7 @@ export const chainChannelConfigs: Record<string, ChainChannelConfig> = {
     denom: "uosmo",
     denomOnIntento: import.meta.env.VITE_IBC_DENOM_OSMO || "",
     hostedICAAddress: import.meta.env.VITE_HOSTED_ICA_ADDRESS || "",
+    hostedAddress: import.meta.env.VITE_HOSTED_ADDRESS || "",
   },
   "osmo-test-5": {
     chainId: "osmo-test-5",
@@ -48,6 +50,7 @@ export const chainChannelConfigs: Record<string, ChainChannelConfig> = {
     denom: "uosmo",
     denomOnIntento: import.meta.env.VITE_IBC_DENOM_OSMO || "",
     hostedICAAddress: import.meta.env.VITE_HOSTED_ICA_ADDRESS || "",
+    hostedAddress: import.meta.env.VITE_HOSTED_ADDRESS || "",
   },
 };
 
