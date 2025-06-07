@@ -1,6 +1,6 @@
 import { messages, RouteResponse, UserAddress } from "@skip-go/client";
 import { hash } from "@stablelib/sha256";
-import { memoDivideSkipContractSwapAmount } from "./memoDivideSkipContractSwapAmount";
+import { wasmMsgDivideSkipContractSwapAmount } from "./memoDivideSkipContractSwapAmount";
 import { IntentoStreamSettings } from "@/state/streamSettings";
 
 import { atomWithMutation } from "jotai-tanstack-query";
@@ -128,10 +128,12 @@ export async function createMessagesForPfmStream({
     JSON.parse(originalRouteMsgs.txs?.[0].cosmosTx.msgs?.[0].msg || "")["memo"]
   );
   if (!memoOG.wasm.contract) throw new Error("skip wasm contract not found");
-  const memoSkipContract = memoDivideSkipContractSwapAmount(
-    memoOG,
+  const wasmMsg = wasmMsgDivideSkipContractSwapAmount(
+    memoOG.wasm.msg,
     recurrences
   );
+
+  memoOG.wasm.msg = wasmMsg;
 
   const flowMsgIntento = {
     "@type": "/ibc.applications.transfer.v1.MsgTransfer",
@@ -156,7 +158,7 @@ export async function createMessagesForPfmStream({
                 streamSettings.startAt
             ) * 1_000_000_000n
           ).toString(), // 10 minutes
-    memo: JSON.stringify(memoSkipContract),
+    memo: JSON.stringify(memoOG),
   };
   console.log(flowMsgIntento);
   const memoSourceChain = {

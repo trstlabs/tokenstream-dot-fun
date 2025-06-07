@@ -4,31 +4,19 @@ import {
   IntentoStreamSettings,
 } from "@/state/streamSettings";
 import { StreamMessagesResult } from "./converters";
-import { MsgSend } from "cosmjs-types/cosmos/bank/v1beta1/tx"; // Example; depends on message types used
-import { Registry } from "@cosmjs/proto-signing";
 import { MsgTransfer } from "cosmjs-types/ibc/applications/transfer/v1/tx";
 import { EncodeObject } from "@cosmjs/proto-signing";
 import {
   intentoHostedAccountSupportedChains,
   getChainChannelConfig,
 } from "@/constants/intentoChains";
-import { MsgExecuteContract } from "cosmjs-types/cosmwasm/wasm/v1/tx";
+
 import { atomWithMutation } from "jotai-tanstack-query";
-import { Coin } from "cosmjs-types/cosmos/base/v1beta1/coin";
 import { GenericAuthorization } from "cosmjs-types/cosmos/authz/v1beta1/authz";
 import { MsgGrant } from "cosmjs-types/cosmos/authz/v1beta1/tx";
 import { Timestamp } from "cosmjs-types/google/protobuf/timestamp";
 
-// Define the required types directly
-interface MsgExec {
-  grantee: string;
-  msgs: Any[];
-}
-
-interface Any {
-  typeUrl: string;
-  value: Uint8Array;
-}
+import { wasmMsgDivideSkipContractSwapAmount } from "./memoDivideSkipContractSwapAmount";
 
 /**
  * Create messages for Osmosis AuthZ MsgExec flow
@@ -88,82 +76,71 @@ export async function createMessagesForAuthzExec({
 
   console.log("messagesResponse", messagesResponse);
 
-  // Calculate stream amount based on stream mode
-  let streamAmount: string;
-  if (streamSettings.streamMode === 'EQUAL_PARTS') {
-    const recurrences = Math.floor(
-      Number(streamSettings.duration) / Number(streamSettings.interval)
-    );
-    // For DCA mode, split the amount into equal parts
-    streamAmount = Math.floor(Number(amountIn) / recurrences).toString();
-  } else {
-    // For FULL_AMOUNT mode, use the full amount for each stream
-    streamAmount = amountIn;
-  }
-  
-  console.log(`Streaming ${streamAmount} in ${streamSettings.streamMode} mode`);
-
   // Find the first cosmos transaction with messages
-  const cosmosTx = messagesResponse.txs.find((tx) => "cosmosTx" in tx) as
-    | { cosmosTx: { msgs: Array<{ msgTypeUrl: string; msg: any }> } }
-    | undefined;
-
-  if (!cosmosTx?.cosmosTx?.msgs?.length) {
+  const cosmosTx =
+    "cosmosTx" in messagesResponse.txs[0]
+      ? messagesResponse.txs[0].cosmosTx
+      : undefined;
+  if (!cosmosTx) {
+    console.error("No valid Cosmos transaction found");
+    return;
+  }
+  if (!cosmosTx.msgs || !cosmosTx.msgs.length) {
     console.error("No valid Cosmos transaction messages found");
     return;
   }
 
-  // Transform messages into proper EncodeObjects
-  const encodeObjects = cosmosTx.cosmosTx.msgs
-    .map((msg) => {
-      if (!msg.msgTypeUrl || !msg.msg) {
-        console.warn("Skipping invalid message format:", msg);
-        return null;
-      }
-      return {
-        typeUrl: msg.msgTypeUrl,
-        value: msg.msg,
-      } as EncodeObject;
-    })
-    .filter((msg): msg is EncodeObject => msg !== null);
+  // // Transform messages into proper EncodeObjects
+  // const encodeObjects = cosmosTx.cosmosTx.msgs
+  //   .map((msg) => {
+  //     if (!msg.msgTypeUrl || !msg.msg) {
+  //       console.warn("Skipping invalid message format:", msg);
+  //       return null;
+  //     }
+  //     return {
+  //       typeUrl: msg.msgTypeUrl,
+  //       value: msg.msg,
+  //     } as EncodeObject;
+  //   })
+  //   .filter((msg): msg is EncodeObject => msg !== null);
 
-  if (encodeObjects.length === 0) {
-    console.error("No valid messages found after transformation");
-    return;
-  }
-  const registry = new Registry(); // You should register all types used
-  registry.register("/cosmos.bank.v1beta1.MsgSend", MsgSend);
-  registry.register("/ibc.applications.transfer.v1.MsgTransfer", MsgTransfer);
-  registry.register("/cosmwasm.wasm.v1.MsgExecuteContract", MsgExecuteContract);
+  // if (encodeObjects.length === 0) {
+  //   console.error("No valid messages found after transformation");
+  //   return;
+  // }
+  // const registry = new Registry(); // You should register all types used
+  // registry.register("/cosmos.bank.v1beta1.MsgSend", MsgSend);
+  // registry.register("/ibc.applications.transfer.v1.MsgTransfer", MsgTransfer);
+  // registry.register("/cosmwasm.wasm.v1.MsgExecuteContract", MsgExecuteContract);
 
-  const updatedEncodeObjects = encodeObjects.map((msg) => {
-    const clonedValue = structuredClone(msg.value); // Avoid mutating original
-    // Modify amount field based on structure and DCA mode
-    if (clonedValue.amount?.amount !== undefined) {
-      clonedValue.amount.amount = streamAmount;
-    } else if (clonedValue.token?.amount !== undefined) {
-      clonedValue.token.amount = streamAmount;
-    } else if (Array.isArray(clonedValue.funds)) {
-      clonedValue.funds = clonedValue.funds.map((coin: Coin) => ({
-        ...coin,
-        amount: streamAmount.toString(),
-      }));
-    }
+  // const updatedEncodeObjects = encodeObjects.map((msg) => {
+  //   const clonedValue = structuredClone(msg.value); // Avoid mutating original
+  //   // Modify amount field based on structure and DCA mode
+  //   if (clonedValue.amount?.amount !== undefined) {
+  //     clonedValue.amount.amount = streamAmount;
+  //   } else if (clonedValue.token?.amount !== undefined) {
+  //     clonedValue.token.amount = streamAmount;
+  //   } else if (Array.isArray(clonedValue.funds)) {
+  //     clonedValue.funds = clonedValue.funds.map((coin: Coin) => ({
+  //       ...coin,
+  //       amount: streamAmount.toString(),
+  //     }));
+  //   }
 
-    return {
-      typeUrl: msg.typeUrl,
-      value: clonedValue,
-    };
-  });
-  console.log("updatedEncodeObjects", updatedEncodeObjects);
+  //   return {
+  //     typeUrl: msg.typeUrl,
+  //     value: clonedValue,
+  //   };
+  // });
+  // console.log("updatedEncodeObjects", updatedEncodeObjects);
 
-  const msgs: Any[] = updatedEncodeObjects.map((msg) => {
-    const encoded = registry.encode(msg); // Gives Uint8Array
-    return {
-      typeUrl: msg.typeUrl,
-      value: encoded,
-    };
-  });
+  // const msgs: Any[] = updatedEncodeObjects.map((msg) => {
+  //   const encoded = registry.encode(msg); // Gives Uint8Array
+  //   return {
+  //     typeUrl: msg.typeUrl,
+  //     value: encoded,
+  //   };
+  // });
   // Get the Intento address for the source chain
   const intoAddress = userAddresses.find(
     (addr) => addr.chainId === sourceAssetChainId
@@ -182,11 +159,41 @@ export async function createMessagesForAuthzExec({
     );
     return;
   }
+  // Calculate stream amount based on stream mode
+  let streamAmount: string;
+  if (streamSettings.streamMode === "EQUAL_PARTS") {
+    const recurrences = Math.floor(
+      Number(streamSettings.duration) / Number(streamSettings.interval)
+    );
+    // For DCA mode, split the amount into equal parts
+    streamAmount = Math.floor(Number(amountIn) / recurrences).toString();
+    cosmosTx.msgs.map((msg) => {
+      console.log(msg);
+      const cosmosMsgObject = JSON.parse(msg.msg || "");
+      if (cosmosMsgObject.msg) {
+        const wasmMsg = wasmMsgDivideSkipContractSwapAmount(
+          cosmosMsgObject.msg,
+          recurrences
+        );
+        cosmosMsgObject.funds[0].amount = streamAmount;
+        console.log("wasmMsg", wasmMsg);
+        msg.msg = JSON.stringify(cosmosMsgObject);
+      }
+    });
+  } else {
+    // For FULL_AMOUNT mode, use the full amount for each stream
+    streamAmount = amountIn;
+  }
+
+  console.log(`Streaming ${streamAmount} in ${streamSettings.streamMode} mode`);
 
   // Create the AuthZ MsgExec message with properly encoded messages
-  const msgExec: MsgExec = {
+  const msgExec = {
     grantee: intoAddress,
-    msgs,
+    msgs: cosmosTx.msgs.map((msg) => ({
+      typeUrl: msg.msgTypeUrl,
+      value: msg.msg,
+    })),
   };
 
   const now = Math.floor(Date.now() / 1000);
@@ -197,14 +204,14 @@ export async function createMessagesForAuthzExec({
 
   // Deduplicate typeUrls for grant
   const uniqueTypeUrls = [
-    ...new Set(updatedEncodeObjects.map((msg) => msg.typeUrl)),
+    ...new Set(cosmosTx.msgs.map((msg) => msg.msgTypeUrl)),
   ];
 
   const msgGrants: EncodeObject[] = uniqueTypeUrls.map((typeUrl) => {
     const grant = {
       authorization: {
         typeUrl: "/cosmos.authz.v1beta1.GenericAuthorization",
-        value: GenericAuthorization.encode({ msg: typeUrl }).finish(),
+        value: GenericAuthorization.encode({ msg: typeUrl || "" }).finish(),
       },
       expiration,
     };
@@ -240,6 +247,7 @@ export async function createMessagesForAuthzExec({
       label: "AuthZ DCA Flow",
       owner: intoAddress,
       fallback: "true",
+      hosted_address: channelConfig.hostedAddress,
     },
   };
   console.log("memoIntentoFlow", memoIntentoFlow);
@@ -272,12 +280,13 @@ export async function createMessagesForAuthzExec({
     typeUrl: "/ibc.applications.transfer.v1.MsgTransfer",
     value: msgTransfer,
   };
-
+  console.log("msgTransferEncodeObject", msgTransferEncodeObject);
+  console.log("msgGrants", msgGrants);
   // Return the result
   return {
     chainID: route.sourceAssetChainId,
     signerAddress: userAddresses[0].address,
-    messages: [...msgGrants, msgTransferEncodeObject],
+    messages: [], //[...msgGrants, msgTransferEncodeObject],
     intoAddress,
   };
 }
