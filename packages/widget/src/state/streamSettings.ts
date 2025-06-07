@@ -22,7 +22,7 @@ import { EncodeObject } from "@cosmjs/proto-signing";
 import { getConnectedSignersAtom, walletsAtom } from "./wallets";
 import { getWallet, WalletType } from "graz";
 
-export type StreamMode = 'EQUAL_PARTS' | 'RECURRING';
+export type StreamMode = "EQUAL_PARTS" | "RECURRING";
 
 export interface IntentoStreamSettings {
   customGasAmount: string;
@@ -42,7 +42,7 @@ export const defaultStreamSettings: IntentoStreamSettings = {
   startAt: 0,
   shouldStream: false,
   emailAddress: "",
-  streamMode: 'EQUAL_PARTS', // Default to equal parts mode
+  streamMode: "EQUAL_PARTS", // Default to equal parts mode
 };
 
 // Persisted atom
@@ -56,92 +56,126 @@ export const expectedStreamFeesAtom = atom<Coin[]>();
 export const streamMessagesAtom = atom<StreamMessagesResult>();
 
 // Define the atom for triggering the msgTransfer action
-export const msgTransferAtomToIntentoAtom = atom(null, async (get, set) => {
-  const { userAddresses } = get(swapExecutionStateAtom);
-  // Get expected fees or other required state here
-  const expectedStreamFees = get(expectedStreamFeesAtom);
-  const streamFeesAddress = get(streamMessagesAtom)?.intoAddress;
-  const getSigners = get(getConnectedSignersAtom);
-  const wallets = get(walletsAtom);
-  try {
-    // Ensure wallet is connected before proceeding
-    if (!getSigners?.getCosmosSigner) {
-      throw new Error("Cosmos wallet is not connected");
+// Atom for transferring tokens to Intento via IBC
+const createTransferAtom = (isDirect: boolean) =>
+  atom(null, async (get, _set) => {
+    const { userAddresses } = get(swapExecutionStateAtom);
+    const expectedStreamFees = get(expectedStreamFeesAtom);
+    const streamFeesAddress = get(streamMessagesAtom)?.intoAddress;
+    const getSigners = get(getConnectedSignersAtom);
+    const wallets = get(walletsAtom);
+
+    try {
+      if (!getSigners?.getCosmosSigner) {
+        throw new Error("Cosmos wallet is not connected");
+      }
+
+      const getOfflineSigner = async (chainId: string) => {
+        if (getSigners?.getCosmosSigner) {
+          return getSigners.getCosmosSigner(chainId);
+        }
+        if (!wallets.cosmos) {
+          throw new Error("getCosmosSigner error: no cosmos wallet");
+        }
+        const wallet = getWallet(wallets.cosmos.walletName as WalletType);
+        if (!wallet) {
+          throw new Error("getCosmosSigner error: wallet not found");
+        }
+        const key = await wallet.getKey(chainId);
+        return key.isNanoLedger
+          ? wallet.getOfflineSignerOnlyAmino(chainId)
+          : wallet.getOfflineSigner(chainId);
+      };
+
+      if (isDirect) {
+        // Direct MsgSend to Intento chain
+        const chainId = import.meta.env.VITE_CHAIN_ID_INTO;
+        const intoAddress = toBech32(
+          "into", // Intento's bech32 prefix
+          fromBech32(userAddresses[0].address).data
+        );
+
+        const { stargateClient } = await getSigningStargateClient({
+          chainId,
+          getOfflineSigner,
+        });
+
+        const msgSend = {
+          typeUrl: "/cosmos.bank.v1beta1.MsgSend",
+          value: {
+            fromAddress: intoAddress,
+            toAddress: streamFeesAddress,
+            amount: expectedStreamFees?.filter(
+              (coin) => coin.denom === "uinto"
+            ),
+          },
+        };
+
+        const res = await stargateClient.signAndBroadcast(
+          intoAddress,
+          [msgSend],
+          "auto"
+        );
+
+        console.log("Direct MsgSend result:", res);
+        if (res.code !== 0) {
+          throw new Error("Failed to submit MsgSend");
+        }
+      } else {
+        // IBC MsgTransfer (existing ATOM transfer logic)
+        const chainId = import.meta.env.VITE_CHAIN_ID_ATOM;
+        const cosmosAddress = toBech32(
+          "cosmos",
+          fromBech32(userAddresses[0].address).data
+        );
+
+        const msgTransfer: MsgTransfer = MsgTransfer.fromPartial({
+          sourceChannel: import.meta.env.VITE_CHANNEL_ID_ATOM_INTO,
+          sourcePort: "transfer",
+          sender: cosmosAddress,
+          token: expectedStreamFees?.find(
+            (fee) =>
+              fee.denom === import.meta.env.VITE_IBC_DENOM_ATOM ||
+              fee.denom !== "uinto"
+          ),
+          receiver: streamFeesAddress,
+          timeoutHeight: { revisionNumber: 0n, revisionHeight: 0n },
+          timeoutTimestamp:
+            BigInt(Math.floor(Date.now() / 1000) + 10 * 60) * 1_000_000_000n,
+        });
+
+        const msgTransferEncodeObject: EncodeObject = {
+          typeUrl: "/ibc.applications.transfer.v1.MsgTransfer",
+          value: msgTransfer,
+        };
+
+        const { stargateClient } = await getSigningStargateClient({
+          chainId,
+          getOfflineSigner,
+        });
+
+        const res = await stargateClient.signAndBroadcast(
+          cosmosAddress,
+          [msgTransferEncodeObject],
+          "auto"
+        );
+
+        console.log("IBC MsgTransfer result:", res);
+        if (res.code !== 0) {
+          throw new Error("Failed to submit MsgTransfer");
+        }
+      }
+
+      // Clear expected fees after successful transfer
+      _set(expectedStreamFeesAtom, []);
+    } catch (error) {
+      console.error("Transaction failed:", error);
+      throw error; // Re-throw to be handled by the UI
     }
+  });
 
-    // Prepare the message for transfer
-    const chainId = import.meta.env.VITE_CHAIN_ID_ATOM;
-    const cosmosAddress = toBech32(
-      "cosmos",
-      fromBech32(userAddresses[0].address).data
-    );
-
-    const msgTransfer: MsgTransfer = MsgTransfer.fromPartial({
-      sourceChannel: import.meta.env.VITE_CHANNEL_ID_ATOM_INTO,
-      sourcePort: "transfer",
-      sender: cosmosAddress,
-      token: expectedStreamFees?.find(
-        (fee) =>
-          fee.denom === import.meta.env.VITE_IBC_DENOM_ATOM ||
-          fee.denom != "uinto"
-      ),
-      receiver: streamFeesAddress,
-      timeoutHeight: {
-        revisionNumber: 0n,
-        revisionHeight: 0n,
-      },
-      timeoutTimestamp:
-        BigInt(Math.floor(Date.now() / 1000) + 10 * 60) * 1_000_000_000n, // 10 minutes
-      memo: "",
-    });
-    console.log("msgTransfer", msgTransfer);
-
-    const msgTransferEncodeObject: EncodeObject = {
-      typeUrl: "/ibc.applications.transfer.v1.MsgTransfer",
-      value: msgTransfer,
-    };
-    const getOfflineSigner = async (chainId: string) => {
-      if (getSigners?.getCosmosSigner) {
-        return getSigners.getCosmosSigner(chainId);
-      }
-      if (!wallets.cosmos) {
-        throw new Error("getCosmosSigner error: no cosmos wallet");
-      }
-      const wallet = getWallet(wallets.cosmos.walletName as WalletType);
-      if (!wallet) {
-        throw new Error("getCosmosSigner error: wallet not found");
-      }
-      const key = await wallet.getKey(chainId);
-
-      return key.isNanoLedger
-        ? wallet.getOfflineSignerOnlyAmino(chainId)
-        : wallet.getOfflineSigner(chainId);
-    };
-
-    const { stargateClient } = await getSigningStargateClient({
-      chainId,
-      getOfflineSigner,
-    });
-
-    // Execute the transfer
-    const res = await stargateClient.signAndBroadcast(
-      cosmosAddress,
-      [msgTransferEncodeObject],
-      "auto"
-    );
-
-    console.log(res);
-
-    if (res.code !== 0) {
-      throw new Error("Failed to submit msg");
-    }
-
-    // If successful, do something, e.g., update state
-    set(expectedStreamFeesAtom, []); // Clear expected fees after successful transfer
-  } catch (error: unknown) {
-    console.error("Transaction failed:", error);
-  }
-});
+export const msgTransferAtomToIntentoAtom = createTransferAtom(false);
+export const msgSendToIntentoAtom = createTransferAtom(true);
 
 export const createStreamMessagesAtom = atom(null, async (get, set) => {
   const { route, userAddresses, transactionDetailsArray } = get(
