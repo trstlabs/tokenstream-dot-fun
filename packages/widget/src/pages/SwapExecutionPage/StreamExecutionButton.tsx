@@ -16,15 +16,21 @@ import { GoFastSymbol } from "@/components/GoFastSymbol";
 import { useIsGoFast } from "@/hooks/useIsGoFast";
 import { useCountdown } from "./useCountdown";
 import { track } from "@amplitude/analytics-browser";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useTheme } from "styled-components";
-
+import { useAuthzGrants } from "@/hooks/useAuthzGrants";
 import {
   createStreamMessagesAtom,
   expectedStreamFeesAtom,
   msgTransferAtomToIntentoAtom,
+  msgSendToIntentoAtom,
+  streamMessagesAtom,
 } from "@/state/streamSettings";
-// import { Row } from "@/components/Layout";
+import { buildMessagesResponse } from "@/utils/buildMessagesResponse";
+import { useQuery } from "@tanstack/react-query";
+import { swapSettingsAtom } from "@/state/swapPage";
+import { chainAddressesAtom } from "@/state/swapExecutionPage";
+import { intentoHostedAccountSupportedChains } from "@/constants/intentoChains";
 
 type SwapExecutionButtonProps = {
   swapExecutionState: SwapExecutionState | undefined;
@@ -54,8 +60,102 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
   const clearAssetInputAmounts = useSetAtom(clearAssetInputAmountsAtom);
   const isGoFast = useIsGoFast(route);
   const triggerCreateStreamMessages = useSetAtom(createStreamMessagesAtom);
+  // Get all required state
+  const swapSettings = useAtomValue(swapSettingsAtom);
+  const chainAddresses = useAtomValue(chainAddressesAtom);
   const expectedStreamFees = useAtomValue(expectedStreamFeesAtom);
-  const onClickFund = useSetAtom(msgTransferAtomToIntentoAtom);
+  const streamMessages = useAtomValue(streamMessagesAtom);
+
+  // Get the current user's address for the source chain
+  const currentUserAddress = useMemo(() => {
+    if (!route?.sourceAssetChainId) return "";
+    // Use type assertion to handle the chain ID as a string key
+    const chainId = route.sourceAssetChainId as string;
+    return (
+      (chainAddresses as Record<string, { address: string }>)?.[chainId]
+        ?.address || ""
+    );
+  }, [route?.sourceAssetChainId, chainAddresses]);
+
+  // Check if we should show the fund buttons (only for PFM streams where intoAddress is different from user's address)
+  const shouldShowFundButtons = useMemo(() => {
+    return (
+      streamMessages?.intoAddress &&
+      streamMessages.intoAddress !== currentUserAddress
+    );
+  }, [streamMessages, currentUserAddress]);
+
+  // Check if we have INTO tokens to fund
+  const hasIntoToken = useMemo(() => {
+    return expectedStreamFees?.some((coin) => coin.denom === "uinto");
+  }, [expectedStreamFees]);
+
+  // Handlers for fund buttons
+  const onClickFundAtom = useSetAtom(msgTransferAtomToIntentoAtom);
+  const onClickFundInto = useSetAtom(msgSendToIntentoAtom);
+
+  // Build messages response first
+  const { data: messagesResponse } = useQuery({
+    queryKey: [
+      "messages",
+      route?.sourceAssetChainId,
+      route?.destAssetChainId,
+      route?.amountIn,
+    ],
+    queryFn: async () => {
+      if (!route || !swapSettings) return null;
+
+      // Convert chain addresses to user addresses format
+      const userAddresses = Object.entries(chainAddresses)
+        .filter(([_, { address }]) => Boolean(address)) // Filter out undefined addresses
+        .map(([chainId, { address }]) => ({
+          chainId,
+          address: address || "", // Ensure address is always a string
+        }));
+
+      return buildMessagesResponse({
+        route,
+        userAddresses,
+        slippage: swapSettings.slippage,
+      });
+    },
+    enabled: !!route && !!swapSettings && !!chainAddresses,
+  });
+
+  // Get message type URLs from the built messages
+  const msgTypeUrls = useMemo(() => {
+    if (!messagesResponse?.txs?.[0]) return [];
+    const tx = messagesResponse.txs[0];
+    if (!("cosmosTx" in tx) || !tx.cosmosTx.msgs) return [];
+    return tx.cosmosTx.msgs
+      .map((msg) => {
+        // Handle both @type and typeUrl for message type
+        if (msg && typeof msg === "object") {
+          if ("@type" in msg) return String(msg["@type"]);
+          if ("typeUrl" in msg) return String(msg.typeUrl);
+        }
+        return "";
+      })
+      .filter(Boolean) as string[];
+  }, [messagesResponse]);
+
+  // Only check grants for supported chains
+  const isSupportedChain = route?.sourceAssetChainId
+    ? intentoHostedAccountSupportedChains.includes(route.sourceAssetChainId)
+    : false;
+
+  // Check grants using the first message type URL for supported chains
+  const shouldCheckGrants =
+    isSupportedChain && !!route?.sourceAssetChainId && msgTypeUrls.length > 0;
+  const { data: existingGrant, isLoading: isCheckingGrants } = useAuthzGrants(
+    shouldCheckGrants
+      ? {
+          granter: route.requiredChainAddresses?.[0],
+          chainId: route.sourceAssetChainId,
+          msgTypeUrl: msgTypeUrls[0] || "/cosmos.bank.v1beta1.MsgSend",
+        }
+      : { granter: undefined, chainId: undefined }
+  );
 
   const getDestinationAddreessUnsetText = useCallback(() => {
     const destinationChainIdHasSignRequired =
@@ -107,22 +207,88 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
     case SwapExecutionState.ready: {
       track("swap execution page: confirm button - clicked", { route });
 
+      const checkAndCreateStream = async () => {
+        if (!route) return;
+        try {
+          // Get the user's address for the source chain
+          // requiredChainAddresses is an array of chain IDs that need to be connected
+          // We assume the first address is the source chain address
+          const userAddress = route.requiredChainAddresses[0];
+
+          if (!userAddress) {
+            console.error("No user address found for source chain");
+            setErrorWarning({
+              errorWarningType: ErrorWarningType.Unexpected,
+              error: new Error("No user address found for source chain"),
+            });
+            return;
+          }
+
+          if (isCheckingGrants) {
+            console.log("Checking for existing grants...");
+            return;
+          }
+
+          if (existingGrant) {
+            console.log("Found existing grant:", {
+              expiration: existingGrant.expiration?.toISOString(),
+              granter: existingGrant.granter,
+              grantee: existingGrant.grantee,
+              msgTypeUrl: existingGrant.msgTypeUrl,
+            });
+          } else {
+            console.log("No existing grant found, will create a new one");
+          }
+
+          try {
+            // Trigger stream message creation with the existing grant if available
+            // Note: triggerCreateStreamMessages doesn't expect any arguments
+            await triggerCreateStreamMessages();
+
+            // Submit the route for execution
+            submitExecuteRouteMutation();
+          } catch (error) {
+            console.error("Error in stream creation:", error);
+            throw error; // This will be caught by the outer catch block
+          }
+        } catch (error) {
+          console.error("Error in checkAndCreateStream:", error);
+          setErrorWarning({
+            errorWarningType: ErrorWarningType.Unexpected,
+            error:
+              error instanceof Error
+                ? error
+                : new Error("Failed to execute stream"),
+          });
+          // Fallback to normal flow if there's an error
+          try {
+            await triggerCreateStreamMessages();
+            submitExecuteRouteMutation();
+          } catch (fallbackError) {
+            console.error("Fallback flow failed:", fallbackError);
+            setErrorWarning({
+              errorWarningType: ErrorWarningType.Unexpected,
+              error:
+                fallbackError instanceof Error
+                  ? fallbackError
+                  : new Error("Failed to execute stream"),
+            });
+          }
+        }
+      };
+
       const onClickConfirmSwap = async () => {
         if (route?.txsRequired && route.txsRequired > 1) {
           track("error page: additional signing required", { route });
           setErrorWarning({
             errorWarningType: ErrorWarningType.AdditionalSigningRequired,
-            onClickContinue: async () => {
-              await triggerCreateStreamMessages(); // ⬅ await here
-              submitExecuteRouteMutation();
-            },
+            onClickContinue: checkAndCreateStream,
             signaturesRequired: route.txsRequired,
           });
           return;
         }
 
-        await triggerCreateStreamMessages(); // ⬅ await here
-        submitExecuteRouteMutation();
+        await checkAndCreateStream();
       };
 
       return (
@@ -134,7 +300,13 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
       );
     }
     case SwapExecutionState.validatingGasBalance:
-      return <MainButton label="Validating" icon={ICONS.rightArrow} loading />;
+      return (
+        <MainButton
+          label={isCheckingGrants ? "Checking grants..." : "Validating"}
+          icon={ICONS.rightArrow}
+          loading
+        />
+      );
     case SwapExecutionState.waitingForSigning:
       return <MainButton label="Confirming" icon={ICONS.rightArrow} loading />;
     case SwapExecutionState.approving:
@@ -183,32 +355,49 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
         );
       } else {
         return (
-          <>
-            {/* <Row
-              justify="center"
-              align="center"
-              // gap={20}
-              style={{ marginTop: "10px" }}
-            > */}
-            <MainButton
-              label="Fund ATOM"
-              icon={ICONS.rightArrow}
-              onClick={() => {
-                track("swap execution page: fund atom button - clicked");
-                onClickFund();
-              }}
-            />
-            {/* <MainButton
-              label="Fund INTO"
-              icon={ICONS.rightArrow}
-              onClick={() => {
-                track("swap execution page: fund button - clicked");
-                clearAssetInputAmounts();
-                setCurrentPage(Routes.SwapPage);
-              }}
-            /> */}
-            {/* </Row> */}
-          </>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "12px",
+              width: "100%",
+            }}
+          >
+            {shouldShowFundButtons ? (
+              <>
+                <div style={{ width: "100%" }}>
+                  <MainButton
+                    label="Fund ATOM"
+                    icon={ICONS.rightArrow}
+                    onClick={() => {
+                      track("swap execution page: fund atom button - clicked");
+                      onClickFundAtom();
+                    }}
+                  />
+                </div>
+                {hasIntoToken && (
+                  <div style={{ width: "100%" }}>
+                    <MainButton
+                      label="Fund INTO"
+                      icon={ICONS.rightArrow}
+                      onClick={() => {
+                        track(
+                          "swap execution page: fund into button - clicked"
+                        );
+                        onClickFundInto();
+                      }}
+                    />
+                  </div>
+                )}
+              </>
+            ) : (
+              <div
+                style={{ width: "100%", textAlign: "center", padding: "16px" }}
+              >
+                No funding required for this transaction
+              </div>
+            )}
+          </div>
         );
       }
     case SwapExecutionState.pendingGettingAddresses:

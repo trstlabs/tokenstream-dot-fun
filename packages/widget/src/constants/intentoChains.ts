@@ -38,8 +38,8 @@ export const chainChannelConfigs: Record<string, ChainChannelConfig> = {
     isTestnet: false,
     denom: "uosmo",
     denomOnIntento: import.meta.env.VITE_IBC_DENOM_OSMO || "",
-    hostedICAAddress: import.meta.env.VITE_HOSTED_ICA_ADDRESS || "",
-    hostedAddress: import.meta.env.VITE_HOSTED_ADDRESS || "",
+    hostedICAAddress: import.meta.env.VITE_HOSTED_ICA_ADDRESS_OSMO || "",
+    hostedAddress: import.meta.env.VITE_HOSTED_ADDRESS_OSMO || "",
   },
   "osmo-test-5": {
     chainId: "osmo-test-5",
@@ -49,8 +49,8 @@ export const chainChannelConfigs: Record<string, ChainChannelConfig> = {
     isTestnet: true,
     denom: "uosmo",
     denomOnIntento: import.meta.env.VITE_IBC_DENOM_OSMO || "",
-    hostedICAAddress: import.meta.env.VITE_HOSTED_ICA_ADDRESS || "",
-    hostedAddress: import.meta.env.VITE_HOSTED_ADDRESS || "",
+    hostedICAAddress: import.meta.env.VITE_HOSTED_ICA_ADDRESS_OSMO || "",
+    hostedAddress: import.meta.env.VITE_HOSTED_ADDRESS_OSMO || "",
   },
 };
 
