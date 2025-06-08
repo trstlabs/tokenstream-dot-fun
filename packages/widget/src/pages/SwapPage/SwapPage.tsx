@@ -50,6 +50,7 @@ import { useStreamSettingsDrawer } from "@/hooks/useStreamSettingsDrawer";
 import { streamSettingsAtom } from "@/state/streamSettings";
 import { startAmplitudeSessionReplay } from "@/widget/initAmplitude";
 import { SwapPageHeader } from "./SwapPageHeader";
+import { intentoHostedAccountSupportedChains } from "@/constants/intentoChains";
 
 export const SwapPage = () => {
   const { SettingsFooter, drawerOpen } = useSettingsDrawer();
@@ -96,14 +97,18 @@ export const SwapPage = () => {
   const isSwapOperation = useIsSwapOperation(route);
 
   const [nextPage, setNextPage] = useState(Routes.SwapExecutionPage);
-  // Check for 'transfer' in route.operations[0] and navigate to StreamPage
+
+  // Handle route-based navigation and Intento hosted account support
   useEffect(() => {
+    // Check if source chain supports Intento hosted accounts
     if (
-      route?.operations &&
-      "transfer" in route.operations[0] &&
-      route.operations[0].transfer?.toChainId == route.swapVenues?.[0].chainId
+      (sourceAsset?.chainId &&
+        intentoHostedAccountSupportedChains.includes(sourceAsset.chainId)) ||
+      (route?.operations &&
+        "transfer" in route.operations[0] &&
+        route.operations[0].transfer?.toChainId ==
+          route.swapVenues?.[0]?.chainId)
     ) {
-      // Redirect to StreamPage if "transfer" is found
       setNextPage(Routes.StreamPage);
     } else {
       setStreamSettingsAtom((prev) => ({ ...prev, shouldStream: false }));

@@ -64,8 +64,8 @@ export const Router = () => {
           fallback={null}
           onError={(error) => {
             track("error page: unexpected error from stream page", { error });
-            captureException(error);
-            setError({ errorType: ErrorType.Unexpected, error });
+            console.error(error);
+            setErrorWarning({ errorWarningType: ErrorWarningType.Unexpected, error });
           }}
         >
           <StreamPage />

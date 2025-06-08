@@ -1,21 +1,24 @@
-import { ICONS } from "@/icons";
-
-import { StreamPageHeader } from "./StreamPageHeader";
+import { useEffect, useState } from "react";
+import { useAtom, useSetAtom } from "jotai";
 import { track } from "@amplitude/analytics-browser";
-import { MainButton } from "@/components/MainButton";
 import styled, { useTheme } from "styled-components";
+import { Coin } from "@cosmjs/amino";
+
+import { MainButton } from "@/components/MainButton";
 import { Row, Column } from "@/components/Layout";
 import { SmallText } from "@/components/Typography";
 import { WaveIcon } from "@/icons/WaveIcon";
+import { ICONS } from "@/icons";
+import { StreamPageHeader } from "./StreamPageHeader";
 import { currentPageAtom, Routes } from "@/state/router";
-import { useAtom, useSetAtom } from "jotai";
-import { streamSettingsAtom } from "@/state/streamSettings";
-import { expectedStreamFeesAtom } from "@/state/streamSettings";
+import {
+  streamSettingsAtom,
+  expectedStreamFeesAtom,
+} from "@/state/streamSettings";
 import { useStreamFeeParams } from "@/hooks/useStreamFeeParams";
-import { useEffect, useState } from "react";
-import { Coin } from "@cosmjs/amino";
 import { convertTokenAmountToHumanReadableAmount } from "@/utils/crypto";
 import { swapExecutionStateAtom } from "@/state/swapExecutionPage";
+import { useStreamSettingsDrawer } from "@/hooks/useStreamSettingsDrawer";
 
 export type StreamPageProps = {};
 
@@ -52,33 +55,37 @@ export const StreamPage = ({}: StreamPageProps) => {
   useEffect(() => {
     const getExpectedStreamFees = async () => {
       if (!streamFeeParams || streamFeeParams.gasFeeCoins.length === 0) return;
+
       const gasUsed = 100_000;
       const lenMsgs = 1;
 
-      let fees: Coin[] = [];
+      const recurrences = Math.floor(
+        Number(streamSettings.duration) / Number(streamSettings.interval)
+      );
+
+      const fees: Coin[] = [];
 
       for (const coin of streamFeeParams.gasFeeCoins) {
         const denom = coin.denom;
+        const denomPrice = Number(coin.amount); // denom-specific gas price (e.g. INTO=30, ATOM=5)
 
-        const flexFeeForPeriod =
-          (Number(streamFeeParams.flexFeeMul) / 1000) * gasUsed;
+        // Gas fee in raw units: (gasUsed * flexFeeMul) / 1000
+        const gasFeeUnits =
+          (gasUsed * Number(streamFeeParams.flexFeeMul)) / 1000;
+        const gasFee = gasFeeUnits * denomPrice;
 
-        const recurrences = Math.floor(
-          Number(streamSettings.duration) / Number(streamSettings.interval)
-        );
+        // Burn fee (only if denom is INTO)
+        const applyBurnFee = denom === "INTO";
+        const burnFeePerRun = applyBurnFee
+          ? Number(streamFeeParams.burnFeePerMsg) * lenMsgs
+          : 0;
 
-        const flowFee =
-          recurrences * flexFeeForPeriod +
-          recurrences * Number(streamFeeParams.burnFeePerMsg) * lenMsgs;
+        const totalFee = recurrences * (gasFee + burnFeePerRun);
 
-        const denomCoin = streamFeeParams.gasFeeCoins.find(
-          (c) => c.denom === denom
-        );
-        if (!denomCoin) continue;
-
-        const flowFeeForDenom = flowFee * Number(denomCoin.amount);
-        fees = [...fees, { denom, amount: flowFeeForDenom.toString() }];
-        //fees[coin.denom] = Number(flowFeeNormalized.toFixed(4));
+        fees.push({
+          denom,
+          amount: Math.round(totalFee).toString(), // keep it in microdenom (no decimals)
+        });
       }
 
       setExpectedStreamFees(fees);
@@ -88,6 +95,8 @@ export const StreamPage = ({}: StreamPageProps) => {
   }, [streamFeeParams, setExpectedStreamFees]);
 
   const [hasTriggeredSwap, setHasTriggeredSwap] = useState(false);
+  const { StreamSettingsFooterSwapPage: StreamSettingsFooter } =
+    useStreamSettingsDrawer();
 
   useEffect(() => {
     if (hasTriggeredSwap) {
@@ -110,34 +119,28 @@ export const StreamPage = ({}: StreamPageProps) => {
 
       <StyledStreamPageRoute justify="space-between" align="center">
         <WaveIcon width={77} height={77} color={theme.primary.text.normal} />
-        <Row justify="center" align="center" gap={15}>
-          {/* Stream Icon */}
-
+        <Row justify="center" align="center" gap={5}>
           <div>
             <SmallText textAlign="center" color={theme.primary.text.normal}>
               Stream Settings
             </SmallText>
             <SmallText textAlign="center">
-              Interval is every {formatDuration(streamSettings.interval)}
+              Every {formatDuration(streamSettings.interval)} for{" "}
+              {formatDuration(streamSettings.duration)}
             </SmallText>
             <SmallText textAlign="center">
-              The total recurrences is{" "}
-              {Math.floor(streamSettings.duration / streamSettings.interval)}
+              {Math.floor(streamSettings.duration / streamSettings.interval)}{" "}
+              total recurrences
             </SmallText>
-            {streamSettings.startAt != 0 && (
-              <SmallText textAlign="center">
-                Starts in {formatDuration(streamSettings.startAt)}
-              </SmallText>
-            )}
           </div>
         </Row>
 
-        <div style={{ marginTop: "10px" }}>
+        <div>
           <SmallText color={theme.brandColor} textAlign="center">
             Do you want to go once or stream?
           </SmallText>
           {expectedStreamFees && (
-            <SmallText style={{ marginTop: "10px" }} textAlign="center">
+            <SmallText style={{ marginTop: "5px" }} textAlign="center">
               Total streaming fees are ~{" "}
               {convertTokenAmountToHumanReadableAmount(
                 expectedStreamFees?.find((fee) => fee.denom === "uinto")
@@ -161,9 +164,8 @@ export const StreamPage = ({}: StreamPageProps) => {
           justify="center"
           align="center"
           gap={20}
-          style={{ marginTop: "10px" }}
+          style={{ marginBottom: "10px" }}
         >
-          {/* Button to go back to swap */}
           <div style={{ width: "100%" }}>
             <MainButton
               label="Go Once"
@@ -178,7 +180,6 @@ export const StreamPage = ({}: StreamPageProps) => {
               icon={ICONS.swap}
             />
           </div>
-          {/* Button to continue */}
           <div style={{ width: "100%" }}>
             <MainButton
               label="Stream"
@@ -191,10 +192,12 @@ export const StreamPage = ({}: StreamPageProps) => {
                 setHasTriggeredSwap(true);
               }}
               icon={ICONS.checkmark}
-            />{" "}
+            />
           </div>
         </Row>
       )}
+
+      <StreamSettingsFooter />
       {/* <div style={{ marginTop: '20px' }}>
        <GhostButton
          gap={5}
@@ -212,10 +215,13 @@ export const StreamPage = ({}: StreamPageProps) => {
 };
 
 const StyledStreamPageRoute = styled(Column)`
-  padding: 30px;
+  padding: 10px;
   background: ${({ theme }) => theme.primary.background.normal};
   border-radius: 25px;
-  min-height: 225px;
+  margin-bottom: 10px;
+  min-height: 22px;
+  opacity: ${({ theme }) => ((theme as any).drawerOpen ? 0.3 : 1)};
+  transition: opacity 0.2s ease;
 `;
 
 const formatDuration = (seconds: number) => {
