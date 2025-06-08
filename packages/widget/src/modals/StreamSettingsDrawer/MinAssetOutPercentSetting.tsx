@@ -95,7 +95,7 @@ const StyledSlider = styled.input.attrs({ type: "range" })`
   accent-color: ${({ theme }) => theme.brandColor || "#007aff"};
   height: 3px;
   border-radius: 6px;
-  background: ${({ theme }) => theme.primary.background.lighter || "#f1f1f1"};
+  background: ${({ theme }) => theme.primary.background.normal || "#f1f1f1"};
   margin-bottom: 2px;
 `;
 const CurrentValuePill = styled.span`
@@ -103,7 +103,7 @@ const CurrentValuePill = styled.span`
   margin-top: 6px;
   padding: 3px 14px;
   border-radius: 14px;
-  background: ${({ theme }) => theme.primary.background.lighter || "#f1f1f1"};
+  background: ${({ theme }) => theme.primary.background.normal || "#f1f1f1"};
   color: ${({ theme }) => theme.brandColor || "#007aff"};
   font-size: 13px;
   font-weight: 600;
