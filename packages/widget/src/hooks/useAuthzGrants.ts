@@ -26,19 +26,20 @@ export const useAuthzGrants = ({
   msgTypeUrl?: string;
 }) => {
   const skipClientConfig = useAtomValue(skipClientConfigAtom);
-  
+
   return useQuery({
     queryKey: ["authzGrants", { granter, chainId, msgTypeUrl }],
     queryFn: async () => {
       if (!chainId) throw new Error("Chain ID not found");
       if (!granter) throw new Error("Granter address not found");
-      
+      console.log("useAuthzGrants", msgTypeUrl);
       const rpcURL =
-        (await skipClientConfig.endpointOptions?.getRpcEndpointForChain?.(chainId)) ||
-        getChainInfo({ chainId })?.rpc;
-      
+        (await skipClientConfig.endpointOptions?.getRpcEndpointForChain?.(
+          chainId
+        )) || getChainInfo({ chainId })?.rpc;
+
       if (!rpcURL) throw new Error("RPC URL not found");
-      
+
       return getAuthzGrants(rpcURL, granter, chainId, msgTypeUrl);
     },
     enabled: !!granter && !!chainId,
@@ -74,15 +75,18 @@ async function getAuthzGrants(
       msgTypeUrl,
       undefined // pagination (optional)
     );
-
     if (!response.grants || response.grants.length === 0) {
       return null;
     }
 
     // Sort grants by expiration date (newest first)
     const sortedGrants = [...response.grants].sort((a, b) => {
-      const aExpiry = a.expiration ? new Date(Number(a.expiration.seconds) * 1000) : new Date(0);
-      const bExpiry = b.expiration ? new Date(Number(b.expiration.seconds) * 1000) : new Date(0);
+      const aExpiry = a.expiration
+        ? new Date(Number(a.expiration.seconds) * 1000)
+        : new Date(0);
+      const bExpiry = b.expiration
+        ? new Date(Number(b.expiration.seconds) * 1000)
+        : new Date(0);
       return bExpiry.getTime() - aExpiry.getTime();
     });
 
@@ -91,12 +95,12 @@ async function getAuthzGrants(
       granter,
       grantee: chainConfig?.hostedAddress || "",
       msgTypeUrl,
-      expiration: latestGrant.expiration 
-        ? new Date(Number(latestGrant.expiration.seconds) * 1000) 
+      expiration: latestGrant.expiration
+        ? new Date(Number(latestGrant.expiration.seconds) * 1000)
         : null,
     };
   } catch (error) {
-    console.error('Error getting authz grants:', error);
+    console.error("Error getting authz grants:", error);
     throw error;
   }
 }

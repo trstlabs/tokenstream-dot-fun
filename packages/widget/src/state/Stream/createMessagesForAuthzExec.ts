@@ -3,7 +3,10 @@ import {
   expectedStreamFeesAtom,
   IntentoStreamSettings,
 } from "@/state/streamSettings";
-import { StreamMessagesResult } from "./converters";
+import {
+  StreamMessagesResult,
+  constructWasmMsgSkipContractForStream,
+} from "./helpers";
 import { MsgTransfer } from "cosmjs-types/ibc/applications/transfer/v1/tx";
 import { EncodeObject } from "@cosmjs/proto-signing";
 import {
@@ -14,7 +17,6 @@ import { atomWithMutation } from "jotai-tanstack-query";
 import { GenericAuthorization } from "cosmjs-types/cosmos/authz/v1beta1/authz";
 import { MsgGrant } from "cosmjs-types/cosmos/authz/v1beta1/tx";
 import { Timestamp } from "cosmjs-types/google/protobuf/timestamp";
-import { wasmMsgDivideSkipContractSwapAmount } from "./memoDivideSkipContractSwapAmount";
 import { fromBech32, toBech32 } from "@cosmjs/encoding";
 
 const GRANT_EXPIRATION_BUFFER_SECONDS = 600; // 10 min buffer
@@ -71,13 +73,18 @@ function buildMsgGrants(
       grant: {
         authorization: {
           typeUrl: "/cosmos.authz.v1beta1.GenericAuthorization",
-          value: GenericAuthorization.encode({ msg: typeUrl || "" }).finish(),
+          value: GenericAuthorization.encode(
+            GenericAuthorization.fromPartial({
+              msg: typeUrl,
+            })
+          ).finish(),
         },
         expiration,
       },
     }),
   }));
 }
+
 export async function createMessagesForAuthzExec({
   route,
   userAddresses,
@@ -155,9 +162,13 @@ export async function createMessagesForAuthzExec({
       if (msg.msg) {
         const cosmosMsgObject = JSON.parse(msg.msg);
         if (cosmosMsgObject.msg) {
-          const wasmMsg = wasmMsgDivideSkipContractSwapAmount(
+          const streamEndSec =
+            Math.floor(Date.now() / 1000) + Number(streamSettings.duration);
+          const wasmMsg = constructWasmMsgSkipContractForStream(
             cosmosMsgObject.msg,
-            recurrences
+            recurrences,
+            streamEndSec,
+            streamSettings.minAssetOutPercent
           );
           cosmosMsgObject.msg = wasmMsg;
           cosmosMsgObject.funds[0].amount = streamAmount;

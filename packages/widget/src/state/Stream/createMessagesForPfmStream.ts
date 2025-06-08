@@ -1,6 +1,6 @@
 import { messages, RouteResponse, UserAddress } from "@skip-go/client";
 import { hash } from "@stablelib/sha256";
-import { wasmMsgDivideSkipContractSwapAmount } from "./memoDivideSkipContractSwapAmount";
+
 import { IntentoStreamSettings } from "@/state/streamSettings";
 
 import { atomWithMutation } from "jotai-tanstack-query";
@@ -8,7 +8,8 @@ import {
   StreamMessagesResult,
   getCounterpartyChannelId,
   getForwardAddress,
-} from "./converters";
+  constructWasmMsgSkipContractForStream,
+} from "./helpers";
 
 import { MsgTransfer } from "cosmjs-types/ibc/applications/transfer/v1/tx";
 import { EncodeObject } from "@cosmjs/proto-signing";
@@ -128,9 +129,13 @@ export async function createMessagesForPfmStream({
     JSON.parse(originalRouteMsgs.txs?.[0].cosmosTx.msgs?.[0].msg || "")["memo"]
   );
   if (!memoOG.wasm.contract) throw new Error("skip wasm contract not found");
-  const wasmMsg = wasmMsgDivideSkipContractSwapAmount(
+  const streamEndSec =
+    Math.floor(Date.now() / 1000) + Number(streamSettings.duration);
+  const wasmMsg = constructWasmMsgSkipContractForStream(
     memoOG.wasm.msg,
-    recurrences
+    recurrences,
+    streamEndSec,
+    streamSettings.minAssetOutPercent
   );
 
   memoOG.wasm.msg = wasmMsg;

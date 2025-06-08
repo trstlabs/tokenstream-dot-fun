@@ -11,7 +11,7 @@ import { createMessagesForAuthzExec } from "./Stream/createMessagesForAuthzExec"
 import { intentoHostedAccountSupportedChains } from "@/constants/intentoChains";
 import { Coin } from "@cosmjs/amino";
 import { fromBech32, toBech32 } from "@cosmjs/encoding";
-import { StreamMessagesResult } from "./Stream/converters";
+import { StreamMessagesResult } from "./Stream/helpers";
 import {
   submitSwapExecutionCallbacksAtom,
   swapExecutionStateAtom,
@@ -25,6 +25,10 @@ import { getWallet, WalletType } from "graz";
 export type StreamMode = "EQUAL_PARTS" | "RECURRING";
 
 export interface IntentoStreamSettings {
+  /**
+   * Minimum asset out percent for WASM Skip contract (-20, 0, +5, etc), or -1 for zero
+   */
+  minAssetOutPercent: number;
   customGasAmount: string;
   interval: number;
   duration: number;
@@ -36,6 +40,7 @@ export interface IntentoStreamSettings {
 
 // Default values (same as before)
 export const defaultStreamSettings: IntentoStreamSettings = {
+  minAssetOutPercent: -1,
   customGasAmount: "200000",
   interval: 600, // 10 minutes
   duration: 86400, // 1 day

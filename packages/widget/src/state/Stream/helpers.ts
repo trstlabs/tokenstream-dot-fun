@@ -6,6 +6,55 @@ import { sha256 } from "@cosmjs/crypto";
 import { atomWithMutation } from "jotai-tanstack-query";
 import { EncodeObject } from "@cosmjs/proto-signing";
 
+/**
+ * Construct a WASM message for Skip contract streaming with updated timestamp and minAssetOut.
+ * @param wasmMsg The original WASM message object
+ * @param recurrences Number of recurrences for DCA (ignored if not EQUAL_PARTS)
+ * @param streamEndSec The stream end timestamp (in seconds)
+ * @param minAssetOutPercent Percentage for min_asset.native.amount (-20, 0, +5, etc), or -1 for zero
+ * @returns The mutated WASM message
+ */
+export function constructWasmMsgSkipContractForStream(
+  wasmMsg: any,
+  recurrences: number,
+  streamEndSec: number,
+  minAssetOutPercent: number
+): any {
+  // Defensive copy (if needed)
+  // const msg = JSON.parse(JSON.stringify(wasmMsg));
+  const msg = wasmMsg;
+
+  // Set the timestamp in nanoseconds: stream end + 10 minutes (600 seconds)
+  msg.swap_and_action.timestamp = (streamEndSec + 600) * 1_000_000_000;
+
+  // Calculate original amount
+  const originalAmount = parseInt(
+    msg.swap_and_action.min_asset.native.amount,
+    10
+  );
+
+  // DCA: divide amount by recurrences if recurrences > 1
+  let dividedAmount = originalAmount;
+  if (recurrences > 1) {
+    dividedAmount = Math.floor(originalAmount / recurrences);
+  }
+
+  // Set min_asset.native.amount based on minAssetOutPercent
+  let minAssetOut: number;
+  if (minAssetOutPercent === -1) {
+    minAssetOut = 0;
+  } else {
+    minAssetOut = Math.floor(dividedAmount * (1 + minAssetOutPercent / 100));
+  }
+  msg.swap_and_action.min_asset.native.amount = String(minAssetOut);
+
+  if (minAssetOut < 0) {
+    throw new Error("min_asset.native.amount calculated as negative");
+  }
+
+  return msg;
+}
+
 // Constants (this would need to be the equivalent of `types.ModuleName` in Go)
 const ModuleName = "packetfowardmiddleware";
 
