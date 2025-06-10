@@ -21,6 +21,10 @@ export const useStreamSettingsDrawer = () => {
     ...props
   }: SwapPageFooterItemsProps) => {
     const openSettingsDrawer = () => {
+      // Only open if streaming is possible
+      if (isRouteError || isWaitingForNewRoute || route === undefined) {
+        return;
+      }
       track("streamsettings drawer - clicked");
       setShowGoFastErrorAtom(false);
       NiceModal.show(Modals.StreamSettingsDrawer, {
@@ -37,9 +41,13 @@ export const useStreamSettingsDrawer = () => {
       });
     };
 
+
+    // Only render the trigger if streaming is possible
+    if (isRouteError || isWaitingForNewRoute || route === undefined) {
+      return null;
+    }
     return (
       <StreamSettingsFooter
-        disabled={isRouteError || isWaitingForNewRoute || route === undefined}
         onClick={openSettingsDrawer}
         {...props}
       />
