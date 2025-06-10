@@ -25,7 +25,7 @@ export function constructWasmMsgSkipContractForStream(
   const msg = wasmMsg;
 
   // Set the timestamp in nanoseconds: stream end + 10 minutes (600 seconds)
-  msg.swap_and_action.timestamp = (streamEndSec + 600) * 1_000_000_000;
+  msg.swap_and_action.timeout_timestamp = (streamEndSec + 600) * 1_000_000_000;
 
   // Calculate original amount
   const originalAmount = parseInt(
