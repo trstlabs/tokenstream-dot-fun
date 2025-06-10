@@ -28,7 +28,7 @@ const DevMode = () => {
       theme: {
         ...(theme === "dark" ? defaultTheme : lightTheme),
         brandTextColor: "black",
-        brandColor: "#FF66FF",
+        brandColor: "#2578ce",
       },
       settings: {
         useUnlimitedApproval: true,

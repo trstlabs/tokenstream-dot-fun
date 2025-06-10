@@ -2,7 +2,6 @@ import { Column } from "@/components/Layout";
 import { useAtom } from "jotai";
 import { streamSettingsAtom, StreamMode } from "@/state/streamSettings";
 import RadioGroup from "@/components/RadioGroup/RadioGroup";
-import { Label } from "@/components/Form/Label";
 
 export const StreamModeSetting = () => {
   const [streamSettings, setStreamSettings] = useAtom(streamSettingsAtom);
@@ -16,18 +15,18 @@ export const StreamModeSetting = () => {
 
   return (
     <Column gap={8}>
-      <Label>Stream Mode</Label>
       <RadioGroup
         options={[
           {
-            value: 'EQUAL_PARTS',
-            label: 'Stream input amount in equal parts',
-            description: 'Splits the total amount into equal parts over the duration',
+            value: "EQUAL_PARTS",
+            label: "Stream input amount in equal parts",
+            description:
+              "Splits the total amount into equal parts over the duration",
           },
           {
-            value: 'RECURRING',
-            label: 'Stream input amount recurringly',
-            description: 'Uses the full amount for each stream interval',
+            value: "RECURRING",
+            label: "Stream input amount recurringly",
+            description: "Uses the full amount for each stream interval",
           },
         ]}
         value={streamSettings.streamMode}

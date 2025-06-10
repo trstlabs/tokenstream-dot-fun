@@ -26,7 +26,7 @@ export const EmailSetting = () => {
 
   return (
     <Column gap={10}>
-      <SmallText>Email for flow alerts (optional)</SmallText>
+      <SmallText>Email for Flow Alerts (optional)</SmallText>
       <Row>
         <StyledInput
           type="email-address"
@@ -47,7 +47,8 @@ const StyledInput = styled.input<{ validEmail?: boolean }>`
   width: 100%;
   box-sizing: border-box;
   outline: none;
-  padding: 8px 12px;
+  padding: 12px 12px 12px 12px;
+  margin: 6px;
   border: 1px solid ${({ theme }) => theme.primary.text.ultraLowContrast};
   background: ${({ theme }) => theme.secondary.background.normal};
   color: ${({ theme }) => theme.primary.text.normal};

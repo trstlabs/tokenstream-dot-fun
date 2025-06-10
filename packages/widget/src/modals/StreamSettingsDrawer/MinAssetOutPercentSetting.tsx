@@ -32,15 +32,17 @@ export const MinAssetOutPercentSetting: React.FC = () => {
   return (
     <Column gap={8}>
       <Row gap={6} align="center">
-        <SmallText>Min Asset Out %</SmallText>
+        <SmallText>Minimal tokens</SmallText>
         <Tooltip
           content={
             <SmallText normalTextColor textWrap="nowrap">
-              The minimum amount of asset you want to receive after slippage.
+              The minimum amount of tokens you want to receive in current
+              prices.
               <br />
               <b>No change</b>: disables min asset out check.
               <br />
               Choose a percentage to require at least that much output.
+              <br /> Or else your stream will skip the execution.
               <br />
               Useful for protecting against MEV or price swings.
             </SmallText>
