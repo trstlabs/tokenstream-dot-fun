@@ -34,11 +34,6 @@ export default function Home() {
   }, [otherParams, loaded]);
 
   useEffect(() => {
-    const initEruda = async () => {
-      const eruda = (await import("eruda")).default;
-      eruda.init();
-    };
-
     const loadRemoteDebuggingScript = () => {
       const ipAddress = window.location.hostname;
       // assume local ip addresses start with 192*
@@ -60,15 +55,9 @@ export default function Home() {
 
       document.head.appendChild(script);
     };
-    initEruda();
+
     loadRemoteDebuggingScript();
   }, []);
-
-  const toggleTheme = () => {
-    const newTheme = theme === "dark" ? "light" : "dark";
-    setTheme(newTheme);
-    updateURLParam("theme", newTheme);
-  };
 
   return (
     <div
@@ -86,66 +75,6 @@ export default function Home() {
         backgroundPosition: "center",
       }}
     >
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          right: 0,
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <button
-          onClick={() => {
-            toggleTheme();
-          }}
-        >
-          Toggle theme (current theme: {theme})
-        </button>
-        <button
-          onClick={() => {
-            openAssetAndChainSelectorModal({
-              context: "source",
-              onSelect: (asset) => {
-                console.log("Selected asset:", asset);
-              },
-            });
-          }}
-        >
-          open selector
-        </button>
-        <button onClick={() => resetWidget()}>Reset state</button>
-        <button onClick={() => resetWidget({ onlyClearInputValues: true })}>
-          Reset state only clear input values
-        </button>
-        <button
-          onClick={() => {
-            const newDisableShadowDom = !disableShadowDom;
-            setDisableShadowDom(newDisableShadowDom);
-            updateURLParam("shadowDom", (!newDisableShadowDom).toString());
-          }}
-        >
-          shadow dom:{(!disableShadowDom).toString()}
-        </button>
-        <button
-          onClick={() => {
-            const newTestnet = !testnet;
-            setTestnet(newTestnet);
-            updateURLParam("testnet", newTestnet.toString());
-          }}
-        >
-          {testnet ? "testnet" : "mainnet"}
-        </button>
-        <button
-          onClick={() => {
-            const newApiUrl = apiUrl === "prod" ? "dev" : "prod";
-            setApiUrl(newApiUrl);
-            updateURLParam("api", newApiUrl);
-          }}
-        >
-          {apiUrl}
-        </button>
-      </div>
       <div
         style={{
           position: "absolute",
@@ -184,6 +113,7 @@ export default function Home() {
         >
           {urlParamsLoaded && (
             <Widget
+              brandColor="#2578ce"
               theme={theme}
               defaultRoute={defaultRoute}
               onWalletConnected={(props) =>
@@ -233,16 +163,4 @@ export default function Home() {
       </div>
     </div>
   );
-}
-
-function updateURLParam(key: string, value: string | null) {
-  const url = new URL(window.location.href);
-
-  if (value === null) {
-    url.searchParams.delete(key);
-  } else {
-    url.searchParams.set(key, value);
-  }
-
-  window.history.replaceState({}, "", url.toString());
 }
