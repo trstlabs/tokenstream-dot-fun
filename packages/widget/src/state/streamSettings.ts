@@ -2,7 +2,7 @@
 
 import { atom } from "jotai";
 
-import { atomWithStorageNoCrossTabSync } from "@/utils/misc";
+import { atomWithStorageNoCrossTabSync } from "@/utils/storage";
 
 import { swapSettingsAtom } from "./swapPage";
 

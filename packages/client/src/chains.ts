@@ -124,10 +124,10 @@ const additionalChains = [
   lombardMainnet,
 ] as Chain[];
 const existingChainIds = new Set(
-  chainRegistryChains.map((chain) => chain.chain_id),
+  chainRegistryChains.map((chain) => chain.chain_id)
 );
 const newChains = additionalChains.filter(
-  (chain) => !existingChainIds.has(chain.chain_id),
+  (chain) => !existingChainIds.has(chain.chain_id)
 );
 
 export function chains(): Chain[] {
@@ -156,7 +156,7 @@ export const getIsInitia = (chainId: string) => {
 
 export async function findFirstWorkingEndpoint(
   endpoints: string[],
-  type: "rpc" | "rest",
+  type: "rpc" | "rest"
 ): Promise<string | null> {
   for (const endpoint of endpoints) {
     try {
@@ -169,7 +169,7 @@ export async function findFirstWorkingEndpoint(
           case "rest": {
             const url = new URL(
               "cosmos/base/tendermint/v1beta1/node_info",
-              endpoint,
+              endpoint
             );
             return url.toString();
           }
@@ -183,7 +183,7 @@ export async function findFirstWorkingEndpoint(
         return endpoint;
       } else {
         console.error(
-          `Error: ${endpoint} responded with status ${response.status}`,
+          `Error: ${endpoint} responded with status ${response.status}`
         );
       }
     } catch (error) {

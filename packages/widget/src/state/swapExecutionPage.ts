@@ -24,7 +24,7 @@ import { createExplorerLink } from "@/utils/explorerLink";
 import { callbacksAtom } from "./callbacks";
 import { setUser, setTag } from "@sentry/react";
 import { track } from "@amplitude/analytics-browser";
-import { streamMessagesAtom, streamSettingsAtom } from "./streamSettings";
+import { streamMessagesAtom, streamSettingsAtom, type IntentoStreamSettings } from "./streamSettings";
 import {
   ChainType,
   executeRoute,
@@ -345,15 +345,7 @@ type SetTransactionDetailsProps = {
 
 export const setTransactionDetailsAtom = atom(
   null,
-  (
-    get,
-    set,
-    {
-      transactionDetails,
-      transactionHistoryIndex,
-      status,
-    }: SetTransactionDetailsProps
-  ) => {
+  (get, set, { transactionDetails, status }: SetTransactionDetailsProps) => {
     const swapExecutionState = get(swapExecutionStateAtom);
     const { transactionDetailsArray, route } = swapExecutionState;
 
@@ -439,7 +431,7 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
   const simulateTx = get(simulateTxAtom);
   const batchSignTxs = get(batchSignTxsAtom);
   const swapSettings = get(swapSettingsAtom);
-  const streamSettings = get(streamSettingsAtom);
+  const streamSettings = get(streamSettingsAtom) as IntentoStreamSettings;
   const getSigners = get(getConnectedSignersAtom);
   const wallets = get(walletsAtom);
 

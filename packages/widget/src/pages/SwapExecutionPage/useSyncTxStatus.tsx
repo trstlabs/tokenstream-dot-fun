@@ -36,7 +36,7 @@ export const useSyncTxStatus = ({
   const setTransactionHistory = useSetAtom(setTransactionHistoryAtom);
 
   const transactionHistoryItems = useAtomValue(transactionHistoryAtom);
-
+  const streamSettings = useAtomValue(streamSettingsAtom);
   const { isPending } = useAtomValue(skipSubmitSwapExecutionAtom);
 
   const clientOperations = useMemo(() => {

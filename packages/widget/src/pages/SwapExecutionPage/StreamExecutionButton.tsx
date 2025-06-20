@@ -31,6 +31,10 @@ import { useQuery } from "@tanstack/react-query";
 import { swapSettingsAtom } from "@/state/swapPage";
 import { chainAddressesAtom } from "@/state/swapExecutionPage";
 import { intentoHostedAccountSupportedChains } from "@/constants/intentoChains";
+import { MutateFunction } from "jotai-tanstack-query";
+import { Adapter } from "@solana/wallet-adapter-base";
+import { svmWalletAtom } from "@/state/wallets";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 type SwapExecutionButtonProps = {
   swapExecutionState: SwapExecutionState | undefined;
@@ -38,7 +42,14 @@ type SwapExecutionButtonProps = {
   signaturesRemaining: number;
   lastOperation: ClientOperation;
   connectRequiredChains: (openModal?: boolean) => Promise<void>;
-  submitExecuteRouteMutation: () => void;
+  submitExecuteRouteMutation: MutateFunction<
+    null | undefined,
+    unknown,
+    {
+      getSvmSigner: () => Promise<Adapter>;
+    },
+    unknown
+  >;
 };
 
 export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
@@ -51,8 +62,11 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
 }) => {
   const countdown = useCountdown({
     estimatedRouteDurationSeconds: route?.estimatedRouteDurationSeconds,
-    swapExecutionState,
+    enabled: swapExecutionState === SwapExecutionState.pending,
   });
+
+  const { wallets: solanaWallets } = useWallet();
+  const svmWallet = useAtomValue(svmWalletAtom);
 
   const theme = useTheme();
   const setErrorWarning = useSetAtom(errorWarningAtom);
@@ -246,7 +260,17 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
             await triggerCreateStreamMessages();
 
             // Submit the route for execution
-            submitExecuteRouteMutation();
+            submitExecuteRouteMutation({
+              getSvmSigner: async () => {
+                const wallet = solanaWallets.find(
+                  (w) => w.adapter.name === svmWallet?.walletName
+                );
+                if (!wallet) {
+                  throw new Error("SVM wallet not found");
+                }
+                return wallet.adapter as Adapter;
+              },
+            });
           } catch (error) {
             console.error("Error in stream creation:", error);
             throw error; // This will be caught by the outer catch block
@@ -263,7 +287,17 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
           // Fallback to normal flow if there's an error
           try {
             await triggerCreateStreamMessages();
-            submitExecuteRouteMutation();
+            submitExecuteRouteMutation({
+              getSvmSigner: async () => {
+                const wallet = solanaWallets.find(
+                  (w) => w.adapter.name === svmWallet?.walletName
+                );
+                if (!wallet) {
+                  throw new Error("SVM wallet not found");
+                }
+                return wallet.adapter as Adapter;
+              },
+            });
           } catch (fallbackError) {
             console.error("Fallback flow failed:", fallbackError);
             setErrorWarning({

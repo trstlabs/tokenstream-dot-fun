@@ -7,7 +7,11 @@ export type GetFeeInfoForChainProps = {
   chainId: string;
 } & SkipApiOptions;
 
-export const getFeeInfoForChain = async ({ chainId, apiUrl, apiKey }: GetFeeInfoForChainProps) => {
+export const getFeeInfoForChain = async ({
+  chainId,
+  apiUrl,
+  apiKey,
+}: GetFeeInfoForChainProps) => {
   const skipChains = await ClientState.getSkipChains({ apiUrl, apiKey });
 
   const skipChain = skipChains.find((chain) => chain.chainId === chainId);
@@ -43,7 +47,7 @@ export const getFeeInfoForChain = async ({ chainId, apiUrl, apiKey }: GetFeeInfo
   }
 
   const registryFeeInfo = chain.fees.feeTokens.find(
-    (feeToken) => feeToken.denom === defaultGasToken,
+    (feeToken) => feeToken.denom === defaultGasToken
   );
 
   if (!registryFeeInfo) {
@@ -54,8 +58,12 @@ export const getFeeInfoForChain = async ({ chainId, apiUrl, apiKey }: GetFeeInfo
     denom: registryFeeInfo.denom,
     gasPrice: {
       low: registryFeeInfo.lowGasPrice ? `${registryFeeInfo.lowGasPrice}` : "",
-      average: registryFeeInfo.averageGasPrice ? `${registryFeeInfo.averageGasPrice}` : "",
-      high: registryFeeInfo.highGasPrice ? `${registryFeeInfo.highGasPrice}` : "",
+      average: registryFeeInfo.averageGasPrice
+        ? `${registryFeeInfo.averageGasPrice}`
+        : "",
+      high: registryFeeInfo.highGasPrice
+        ? `${registryFeeInfo.highGasPrice}`
+        : "",
     },
   };
 };
