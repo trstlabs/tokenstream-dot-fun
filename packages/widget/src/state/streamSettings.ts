@@ -71,10 +71,6 @@ const createTransferAtom = (isDirect: boolean) =>
     const wallets = get(walletsAtom);
 
     try {
-      if (!getSigners?.getCosmosSigner) {
-        throw new Error("Cosmos wallet is not connected");
-      }
-
       const getOfflineSigner = async (chainId: string) => {
         if (getSigners?.getCosmosSigner) {
           return getSigners.getCosmosSigner(chainId);
@@ -119,7 +115,7 @@ const createTransferAtom = (isDirect: boolean) =>
         const res = await stargateClient.signAndBroadcast(
           intoAddress,
           [msgSend],
-          "auto"
+          { amount: [], gas: "180000" }
         );
 
         console.log("Direct MsgSend result:", res);
@@ -162,7 +158,7 @@ const createTransferAtom = (isDirect: boolean) =>
         const res = await stargateClient.signAndBroadcast(
           cosmosAddress,
           [msgTransferEncodeObject],
-          "auto"
+          { amount: [], gas: "180000" }
         );
 
         console.log("IBC MsgTransfer result:", res);

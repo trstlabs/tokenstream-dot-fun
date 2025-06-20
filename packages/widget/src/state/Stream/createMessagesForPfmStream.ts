@@ -64,7 +64,7 @@ export async function createMessagesForPfmStream({
   )
     return;
   //!("cosmosTx" in routeMsgsFromDex.txs[0])
-  let ibcDenomHash = null;
+  let ibcDenomHash: string;
   let intentoChannelToDest = "";
   let channelDestToIntento = "";
 

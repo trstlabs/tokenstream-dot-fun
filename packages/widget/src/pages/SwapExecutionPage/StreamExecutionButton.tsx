@@ -16,7 +16,7 @@ import { GoFastSymbol } from "@/components/GoFastSymbol";
 import { useIsGoFast } from "@/hooks/useIsGoFast";
 import { useCountdown } from "./useCountdown";
 import { track } from "@amplitude/analytics-browser";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTheme } from "styled-components";
 import { useAuthzGrants } from "@/hooks/useAuthzGrants";
 import {
@@ -35,6 +35,9 @@ import { MutateFunction } from "jotai-tanstack-query";
 import { Adapter } from "@solana/wallet-adapter-base";
 import { svmWalletAtom } from "@/state/wallets";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { useCreateCosmosWallets } from "@/hooks/useCreateCosmosWallets";
+import { fromBech32, toBech32 } from "@cosmjs/encoding";
+import { SmallText } from "@/components/Typography";
 
 type SwapExecutionButtonProps = {
   swapExecutionState: SwapExecutionState | undefined;
@@ -82,14 +85,15 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
 
   // Get the current user's address for the source chain
   const currentUserAddress = useMemo(() => {
-    if (!route?.sourceAssetChainId) return "";
+    if (!streamMessages) return "";
     // Use type assertion to handle the chain ID as a string key
-    const chainId = route.sourceAssetChainId as string;
-    return (
-      (chainAddresses as Record<string, { address: string }>)?.[chainId]
-        ?.address || ""
+
+    const intoAddressSigner = toBech32(
+      "into", // Intento's bech32 prefix
+      fromBech32(streamMessages?.signerAddress).data
     );
-  }, [route?.sourceAssetChainId, chainAddresses]);
+    return intoAddressSigner;
+  }, [streamMessages]);
 
   // Check if we should show the fund buttons (only for PFM streams where intoAddress is different from user's address)
   const shouldShowFundButtons = useMemo(() => {
@@ -105,8 +109,51 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
   }, [expectedStreamFees]);
 
   // Handlers for fund buttons
-  const onClickFundAtom = useSetAtom(msgTransferAtomToIntentoAtom);
-  const onClickFundInto = useSetAtom(msgSendToIntentoAtom);
+  const [isFunding, setIsFunding] = useState(false);
+  const setFundAtom = useSetAtom(msgTransferAtomToIntentoAtom);
+  const setFundInto = useSetAtom(msgSendToIntentoAtom);
+  const { createCosmosWallets } = useCreateCosmosWallets();
+  const handleFundAtom = useCallback(async () => {
+    if (isFunding) return;
+
+    setIsFunding(true);
+    try {
+      track("swap execution page: fund atom button - clicked");
+      // Connect to the required chains first
+      const wallet = await createCosmosWallets(
+        import.meta.env.VITE_CHAIN_ID_ATOM
+      );
+      console.log(wallet);
+      // Then trigger the funding
+      await setFundAtom();
+    } catch (error) {
+      console.error("Failed to fund ATOM:", error);
+      // You might want to show an error toast here
+    } finally {
+      setIsFunding(false);
+    }
+  }, [isFunding, connectRequiredChains, setFundAtom]);
+
+  const handleFundInto = useCallback(async () => {
+    if (isFunding) return;
+
+    setIsFunding(true);
+    try {
+      track("swap execution page: fund into button - clicked");
+      // Connect to the required chains first
+      const wallet = await createCosmosWallets(
+        import.meta.env.VITE_CHAIN_ID_INTO
+      );
+      console.log(wallet);
+      // Then trigger the funding
+      await setFundInto();
+    } catch (error) {
+      console.error("Failed to fund INTO:", error);
+      // You might want to show an error toast here
+    } finally {
+      setIsFunding(false);
+    }
+  }, [isFunding, connectRequiredChains, setFundInto]);
 
   // Build messages response first
   const { data: messagesResponse } = useQuery({
@@ -401,35 +448,27 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
               <>
                 <div style={{ width: "100%" }}>
                   <MainButton
-                    label="Fund ATOM"
+                    label={isFunding ? "Awaiting..." : "Fund ATOM"}
                     icon={ICONS.rightArrow}
-                    onClick={() => {
-                      track("swap execution page: fund atom button - clicked");
-                      onClickFundAtom();
-                    }}
+                    onClick={handleFundAtom}
+                    disabled={isFunding}
                   />
                 </div>
                 {hasIntoToken && (
                   <div style={{ width: "100%" }}>
                     <MainButton
-                      label="Fund INTO"
+                      label={isFunding ? "Awaiting..." : "Fund INTO"}
                       icon={ICONS.rightArrow}
-                      onClick={() => {
-                        track(
-                          "swap execution page: fund into button - clicked"
-                        );
-                        onClickFundInto();
-                      }}
+                      onClick={handleFundInto}
+                      disabled={isFunding}
                     />
                   </div>
                 )}
               </>
             ) : (
-              <div
-                style={{ width: "100%", textAlign: "center", padding: "16px" }}
-              >
-                No funding required for this transaction
-              </div>
+              <SmallText normalTextColor style={{ textAlign: "center" }}>
+                All set, no additional funding required for this transaction
+              </SmallText>
             )}
           </div>
         );

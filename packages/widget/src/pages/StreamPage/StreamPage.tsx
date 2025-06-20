@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import { track } from "@amplitude/analytics-browser";
 import styled, { useTheme } from "styled-components";
-import { Coin } from "@cosmjs/amino";
 
 import { MainButton } from "@/components/MainButton";
 import { Row, Column } from "@/components/Layout";
@@ -30,12 +29,63 @@ export const StreamPage = ({}: StreamPageProps) => {
     expectedStreamFeesAtom
   );
 
-  const streamFeeParams = useStreamFeeParams();
-
+  const {
+    data: streamFeeParams,
+    isLoading: isLoadingFees,
+    isError,
+  } = useStreamFeeParams();
   const [swapExecutionState, setSwapExecutionState] = useAtom(
     swapExecutionStateAtom
   );
 
+  // Memoize the fees calculation
+  const fees = useMemo(() => {
+    if (!streamFeeParams?.gasFeeCoins?.length) return [];
+
+    const gasUsed = 100_000;
+    const lenMsgs = 1;
+    const recurrences = Math.max(
+      1,
+      Math.floor(
+        Number(streamSettings.duration) / Number(streamSettings.interval)
+      )
+    );
+
+    return streamFeeParams.gasFeeCoins
+      .map((coin) => {
+        try {
+          const denom = coin.denom;
+          const denomPrice = Number(coin.amount);
+          const gasFeeUnits =
+            (gasUsed * Number(streamFeeParams.flexFeeMul || 1)) / 1000;
+          const gasFee = gasFeeUnits * denomPrice;
+          const applyBurnFee = denom === "uinto"; // Changed to match denom format
+          const burnFeePerRun = applyBurnFee
+            ? Number(streamFeeParams.burnFeePerMsg || 0) * lenMsgs
+            : 0;
+
+          const totalFee = recurrences * (gasFee + burnFeePerRun);
+
+          return {
+            denom,
+            amount: Math.round(totalFee).toString(),
+          };
+        } catch (error) {
+          console.error("Error calculating fee for coin:", coin, error);
+          return null;
+        }
+      })
+      .filter(Boolean) as { denom: string; amount: string }[]; // Filter out any nulls from errors
+  }, [streamFeeParams, streamSettings.duration, streamSettings.interval]);
+
+  // Update expected fees when calculation changes
+  useEffect(() => {
+    if (fees.length > 0) {
+      setExpectedStreamFees(fees);
+    }
+  }, [fees, setExpectedStreamFees]);
+
+  // Reset swap execution state when needed
   useEffect(() => {
     if (
       streamSettings.shouldStream &&
@@ -51,48 +101,6 @@ export const StreamPage = ({}: StreamPageProps) => {
     swapExecutionState.overallStatus,
     setSwapExecutionState,
   ]);
-
-  useEffect(() => {
-    const getExpectedStreamFees = async () => {
-      if (!streamFeeParams || streamFeeParams.gasFeeCoins.length === 0) return;
-
-      const gasUsed = 100_000;
-      const lenMsgs = 1;
-
-      const recurrences = Math.floor(
-        Number(streamSettings.duration) / Number(streamSettings.interval)
-      );
-
-      const fees: Coin[] = [];
-
-      for (const coin of streamFeeParams.gasFeeCoins) {
-        const denom = coin.denom;
-        const denomPrice = Number(coin.amount); // denom-specific gas price (e.g. INTO=30, ATOM=5)
-
-        // Gas fee in raw units: (gasUsed * flexFeeMul) / 1000
-        const gasFeeUnits =
-          (gasUsed * Number(streamFeeParams.flexFeeMul)) / 1000;
-        const gasFee = gasFeeUnits * denomPrice;
-
-        // Burn fee (only if denom is INTO)
-        const applyBurnFee = denom === "INTO";
-        const burnFeePerRun = applyBurnFee
-          ? Number(streamFeeParams.burnFeePerMsg) * lenMsgs
-          : 0;
-
-        const totalFee = recurrences * (gasFee + burnFeePerRun);
-
-        fees.push({
-          denom,
-          amount: Math.round(totalFee).toString(), // keep it in microdenom (no decimals)
-        });
-      }
-
-      setExpectedStreamFees(fees);
-    };
-
-    getExpectedStreamFees();
-  }, [streamFeeParams, setExpectedStreamFees]);
 
   const [hasTriggeredSwap, setHasTriggeredSwap] = useState(false);
   const { StreamSettingsFooterSwapPage: StreamSettingsFooter } =
@@ -136,25 +144,45 @@ export const StreamPage = ({}: StreamPageProps) => {
         </Row>
 
         <div>
-          <SmallText color={theme.brandColor} textAlign="center">
-            Do you want to go once or stream?
-          </SmallText>
-          {expectedStreamFees && (
+          {isLoadingFees ? (
             <SmallText style={{ marginTop: "5px" }} textAlign="center">
-              Total streaming fees are ~{" "}
-              {convertTokenAmountToHumanReadableAmount(
-                expectedStreamFees?.find((fee) => fee.denom === "uinto")
-                  ?.amount ?? "0"
-              )}{" "}
-              INTO or{" "}
-              {convertTokenAmountToHumanReadableAmount(
-                expectedStreamFees.find(
-                  (fee) =>
-                    fee.denom === import.meta.env.VITE_IBC_DENOM_ATOM ||
-                    fee.denom != "uinto"
-                )?.amount ?? "0"
-              )}{" "}
-              ATOM
+              Loading fees...
+            </SmallText>
+          ) : isError ? (
+            <SmallText
+              style={{ marginTop: "5px" }}
+              textAlign="center"
+              color="warning"
+            >
+              Failed to load fees. Using default values.
+            </SmallText>
+          ) : fees.length > 0 ? (
+            <div style={{ textAlign: "center", marginTop: "5px" }}>
+              <SmallText textAlign="center" fontWeight="bold">
+                Streaming Fee
+              </SmallText>
+              <SmallText textAlign="center">
+                {fees.map((fee, index) => (
+                  <span key={index}>
+                    {fee.denom === "uinto" &&
+                      convertTokenAmountToHumanReadableAmount(fee.amount, 6) +
+                        " INTO"}
+                    {fee.denom === import.meta.env.VITE_IBC_DENOM_ATOM &&
+                      convertTokenAmountToHumanReadableAmount(fee.amount, 6) +
+                        " ATOM or "}
+                    {fee.denom === import.meta.env.VITE_IBC_DENOM_OSMO &&
+                      convertTokenAmountToHumanReadableAmount(fee.amount, 6) +
+                        " OSMO "}
+                  </span>
+                ))}
+              </SmallText>
+              <SmallText color={theme.brandColor} textAlign="center">
+                Do you want to go once or stream?
+              </SmallText>
+            </div>
+          ) : (
+            <SmallText style={{ marginTop: "5px" }} textAlign="center">
+              No fees data available
             </SmallText>
           )}
         </div>
