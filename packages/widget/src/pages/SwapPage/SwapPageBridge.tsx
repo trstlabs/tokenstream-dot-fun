@@ -23,13 +23,19 @@ export const SwapPageBridge = () => {
     invertSwap();
     switchEvmChainId(destinationAsset?.chainId);
 
-    let spinTimeout = undefined;
-    clearTimeout(spinTimeout);
-    setIsSpinning(true);
-
-    spinTimeout = setTimeout(() => {
+    // Clear any existing timeout
+    const spinTimeout = setTimeout(() => {
       setIsSpinning(false);
     }, 500);
+
+    // Store the timeout ID to clear it if the component unmounts
+    const timeoutId = spinTimeout as unknown as number;
+    
+    // Set spinning to true after scheduling the timeout
+    setIsSpinning(true);
+
+    // Return cleanup function to clear timeout if component unmounts
+    return () => clearTimeout(timeoutId);
   };
 
   return (

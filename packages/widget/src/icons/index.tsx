@@ -33,10 +33,12 @@ export enum ICONS {
   wave,
 }
 
-type IconProps = SVGProps<SVGSVGElement> & {
+type IconProps = Omit<SVGProps<SVGSVGElement>, 'width' | 'height'> & {
   color?: string;
   direction?: "right" | "left";
   backgroundColor?: string;
+  width?: number;
+  height?: number;
 };
 
 type IconMap = Record<ICONS, (props: IconProps) => ReactElement | null>;
