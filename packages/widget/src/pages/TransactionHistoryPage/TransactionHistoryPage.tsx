@@ -11,6 +11,7 @@ import { transactionHistoryAtom } from "@/state/history";
 import { TransactionHistoryPageHistoryItem } from "./TransactionHistoryPageHistoryItem";
 import { currentPageAtom, Routes } from "@/state/router";
 import { track } from "@amplitude/analytics-browser";
+import { convertToPxValue } from "@/utils/style";
 
 export const TransactionHistoryPage = () => {
   const theme = useTheme();
@@ -69,10 +70,10 @@ export const TransactionHistoryPage = () => {
               }}
             />
           )}
-          itemKey={(item) => item?.transactionDetails?.[0]?.txHash ?? item.timestamp}
+          itemKey={(item) => item.timestamp?.toString()}
           expandedItemKey={
             itemIndexToShowDetail
-              ? historyList[itemIndexToShowDetail]?.transactionDetails?.[0]?.txHash
+              ? historyList[itemIndexToShowDetail]?.timestamp?.toString()
               : undefined
           }
         />
@@ -87,6 +88,6 @@ const StyledContainer = styled(Column)`
   padding: 20px;
   width: 100%;
   min-height: 300px;
-  border-radius: 25px;
+  border-radius: ${({ theme }) => convertToPxValue(theme.borderRadius?.main)};
   background: ${({ theme }) => theme.primary.background.normal};
 `;

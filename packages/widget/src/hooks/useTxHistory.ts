@@ -10,20 +10,16 @@ import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 
 type useTxHistoryProps = {
-  index: number;
   txHistoryItem?: TransactionHistoryItem;
 };
 
-export const useTxHistory = ({ txHistoryItem, index }: useTxHistoryProps) => {
+export const useTxHistory = ({ txHistoryItem }: useTxHistoryProps) => {
   const { data: chains } = useAtomValue(skipChainsAtom);
 
-  const txs = txHistoryItem?.transactionDetails?.map((tx) => ({
-    chainId: tx.chainId,
-    txHash: tx.txHash,
-  }));
+  const transactionDetails = txHistoryItem?.transactionDetails;
 
-  const chainIdFound = chains?.some((chain) =>
-    txs?.map((tx) => tx.chainId).includes(chain.chainId ?? "")
+  const chainIdFound = chains?.some((chain: any) =>
+    transactionDetails?.map((tx) => tx.chainId).includes(chain.chainId ?? "")
   );
 
   const txsRequired = txHistoryItem?.route?.txsRequired;
@@ -33,14 +29,17 @@ export const useTxHistory = ({ txHistoryItem, index }: useTxHistoryProps) => {
     isSettled: false,
     transferEvents: [],
     ...txHistoryItem,
+    transactionDetails: transactionDetails ?? [],
   };
 
   const shouldFetchStatus =
-    !txHistoryItem?.isSettled && txs !== undefined && chainIdFound;
+    !txHistoryItem?.isSettled &&
+    transactionDetails !== undefined &&
+    chainIdFound;
 
   const { data, isFetching, isPending } = useBroadcastedTxsStatus({
     txsRequired,
-    txs,
+    transactionDetails,
     enabled: shouldFetchStatus,
   });
 
@@ -50,7 +49,7 @@ export const useTxHistory = ({ txHistoryItem, index }: useTxHistoryProps) => {
 
   useSyncTxStatus({
     statusData,
-    historyIndex: index,
+    timestamp: txHistoryItem?.timestamp,
   });
 
   const explorerLinks = new Set();
@@ -60,10 +59,13 @@ export const useTxHistory = ({ txHistoryItem, index }: useTxHistoryProps) => {
   });
 
   const query = useQuery({
-    queryKey: ["tx-history-status", { txs, txsRequired, statusData }],
+    queryKey: [
+      "tx-history-status",
+      { transactionDetails, txsRequired, statusData },
+    ],
     queryFn: () => {
       // Incomplete is when multiple transactions are required but not all txs are signed/tracked
-      if (txs?.length !== txsRequired) return "incomplete";
+      if (transactionDetails?.length !== txsRequired) return "incomplete";
       if (isFetching && isPending) return "unconfirmed";
       if (statusData?.isSettled && statusData?.isSuccess) return "completed";
       if ((statusData?.isSettled && !statusData?.isSuccess) || !chainIdFound)
@@ -71,7 +73,7 @@ export const useTxHistory = ({ txHistoryItem, index }: useTxHistoryProps) => {
       return "pending";
     },
     enabled:
-      txs !== undefined &&
+      transactionDetails !== undefined &&
       txsRequired !== undefined &&
       statusData !== undefined,
   });

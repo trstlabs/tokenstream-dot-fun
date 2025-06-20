@@ -6,16 +6,23 @@ import { wait } from "./timer";
 import { ApiState } from "../state/apiState";
 import type { SkipApiOptions } from "../state/apiState";
 
-type RequestClientOptions = {
-  baseUrl: string;
-  apiKey?: string;
-};
-
-export const createRequestClient = ({ baseUrl, apiKey }: RequestClientOptions) => {
-  const defaultHeaders: HeadersInit = {
+export const createRequestClient = ({ apiUrl, apiKey, apiHeaders }: SkipApiOptions) => {
+  if (!apiUrl?.endsWith('/')) {
+    apiUrl += "/";
+  }
+  const headers = new Headers({
     "content-type": "application/json",
-    ...(apiKey ? { authorization: apiKey } : {}),
-  };
+  });
+
+  if (apiKey) {
+    headers.set("authorization", apiKey);
+  }
+
+  if (apiHeaders) {
+    new Headers(apiHeaders).forEach((value, key) => {
+      headers.set(key, value);
+    });
+  }
 
   const handleResponse = async (response: Response) => {
     const contentType = response.headers.get("content-type");
@@ -36,7 +43,10 @@ export const createRequestClient = ({ baseUrl, apiKey }: RequestClientOptions) =
     params?: RequestParams,
     signal?: AbortSignal,
   ): Promise<ResponseType> => {
-    const url = new URL(baseUrl + (path ?? ""));
+    if (path?.startsWith('/')) {
+      console.warn('paths that start with / are treated as absolute paths, please remove the leading / if this path is intended to be a relative path');
+    }
+    const url = new URL(path ?? "", apiUrl);
 
     if (params && typeof params === "object") {
       Object.entries(params as Record<string, any>).forEach(([key, value]) => {
@@ -48,7 +58,7 @@ export const createRequestClient = ({ baseUrl, apiKey }: RequestClientOptions) =
 
     const response = await fetch(url.toString(), {
       method: "GET",
-      headers: defaultHeaders,
+      headers,
       signal,
     });
 
@@ -60,9 +70,13 @@ export const createRequestClient = ({ baseUrl, apiKey }: RequestClientOptions) =
     data: Body = {} as Body,
     signal?: AbortSignal,
   ): Promise<ResponseType> => {
-    const response = await fetch(new URL(baseUrl + path).toString(), {
+    if (path?.startsWith('/')) {
+      console.warn('paths that start with / are treated as absolute paths, please remove the leading / if this path is intended to be a relative path');
+    }
+
+    const response = await fetch(new URL(path, apiUrl).toString(), {
       method: "POST",
-      headers: defaultHeaders,
+      headers,
       body: JSON.stringify(data),
       signal,
     });
@@ -94,12 +108,13 @@ export function createRequest<Request, Response, TransformedResponse>({
     };
 
   const request = async (options?: RequestType): Promise<TransformedResponse | undefined> => {
-    const { apiKey, apiUrl, abortDuplicateRequests, ...requestParams } = options ?? {};
+    const { apiKey, apiUrl, apiHeaders, abortDuplicateRequests, ...requestParams } = options ?? {};
     let fetchClient = ApiState.client;
     if (apiUrl || apiKey) {
       fetchClient = createRequestClient({
-        baseUrl: apiUrl || "https://api.skip.build",
-        apiKey: apiKey,
+        apiUrl: apiUrl || "https://api.skip.build",
+        apiKey,
+        apiHeaders,
       });
     } else {
       await ApiState.clientInitialized;
@@ -207,7 +222,7 @@ export function api<K extends ValidApiMethodKeys, TransformedResponse = ApiRespo
   });
 }
 
-type PollingApiProps<K extends ValidApiMethodKeys> = Omit<ApiProps<K>, "options"> & {
+export type PollingProps<K extends ValidApiMethodKeys> = {
   isSuccess?: (result: ApiResponse<K>) => boolean;
   /**
    * Maximum number of retries
@@ -239,7 +254,10 @@ type PollingApiProps<K extends ValidApiMethodKeys> = Omit<ApiProps<K>, "options"
   backoffMultiplier?: number;
   onError?: (error: unknown, attempt: number) => void;
   onSuccess?: (result: ApiResponse<K>, attempt: number) => void;
-};
+  throwOnError?: boolean;
+}
+
+export type PollingApiProps<K extends ValidApiMethodKeys> = Omit<ApiProps<K>, "options"> & PollingProps<K>;
 
 export function pollingApi<K extends ValidApiMethodKeys>({
   methodName,
@@ -251,6 +269,7 @@ export function pollingApi<K extends ValidApiMethodKeys>({
   maxRetries = 5,
   retryInterval = 1000,
   backoffMultiplier = 2,
+  throwOnError = false,
 }: PollingApiProps<K>) {
   type Request = ApiRequest<K>;
   type Response = ApiResponse<K>;
@@ -274,6 +293,9 @@ export function pollingApi<K extends ValidApiMethodKeys>({
       } catch (err) {
         lastError = err;
         onError?.(err, attempt);
+        if (throwOnError) {
+          throw err;
+        }
       }
 
       const delay = retryInterval * Math.pow(backoffMultiplier, attempt);

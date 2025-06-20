@@ -34,6 +34,8 @@ async executeRoute(options: ExecuteRouteOptions): Promise<void>
 
 ```batchSimulate``` If true, simulate all transactions in a batch before execution; if false, simulate each transaction individually. (defaults to true).
 
+```batchSignTxs``` If true, all transactions in a multi-transaction route will be signed upfront before broadcasting; if false, each transaction will be signed individually just before broadcasting. (defaults to true).
+
 ```beforeMsg / afterMsg``` Optional Cosmos messages to inject at the beginning or end of the route execution.
 
 ```useUnlimitedApproval``` If true, sets Evm token allowances to MAX_UINT256. (defaults to false).
@@ -48,14 +50,36 @@ async executeRoute(options: ExecuteRouteOptions): Promise<void>
 
 ```gasAmountMultiplier``` Overrides the default simulation multiplier (default is 1.5).
 
-## Lifecycle callbacks
+```getCosmosPriorityFeeDenom``` function that takes a chainId and returns a ```Promise<string>``` for the priority fee denom to use for Cosmos transactions.
+
+example:
+```ts
+await executeRoute({
+  // ...executeRoute params
+  getCosmosPriorityFeeDenom: async (chainId) => {
+      // this will set the priority fee as ATOM for noble-1 chain
+      if (chainId === "noble-1")
+        return "ibc/EF48E6B1A1A19F47ECAEA62F5670C37C0580E86A9E88498B7E393EB6F49F33C0";
+      return undefined;
+    },
+});
+  ```
+
+
+## Callbacks
 You can optionally provide the following callbacks:
+
+```onTransactionSignRequested``` Called when a transaction is ready to be signed on the wallet.
 
 ```onTransactionBroadcast``` Called after each transaction is broadcasted.
 
 ```onTransactionCompleted``` Called after each transaction is confirmed.
 
 ```onTransactionTracked``` Called during confirmation polling, useful for progress tracking uis.
+
+```onValidateGasBalance``` Called while the transaction is calculating the gas and balance validation
+
+```onApproveAllownace``` Called when the allowance tx is being executed (only in evm txs).
 
 ```ts
 await executeRoute({
@@ -65,6 +89,7 @@ await executeRoute({
     { chainId: "ethereum", address: evmAddress },
   ],
   simulate: true,
+  batchSignTxs: true,
   slippageTolerancePercent: "0.5",
   beforeMsg: cosmosMsg1,
   afterMsg: cosmosMsg2,
@@ -76,6 +101,12 @@ await executeRoute({
   },
   onTransactionCompleted: ({ chainId, txHash, status }) => {
     console.log(`Completed on ${chainId}: ${txHash} (Status: ${status})`);
+  },
+  onTransactionTracked: ({ chainId, txHash, status }) => {
+    console.log(`Tracking ${chainId}: ${txHash} (Status: ${status})`);
+  },
+  onTransactionSignRequested: ({ chainId, signerAddress }) => {
+    console.log(`Sign requested for ${chainId}`, signerAddress);
   },
 });
 ```

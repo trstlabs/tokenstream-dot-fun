@@ -1,5 +1,100 @@
 ## 0.0.15
 
+## 3.12.1
+
+### Patch Changes
+
+- add29a3: update confirming to confirming in walet
+- 5e4b704: update types
+- ded5434: auto detect solana wallets
+- 415ab64: pill button and slippage input border radius
+- da13834: Fix typescript errors and UnexpectedErrorPageTimeout
+- f32de07: update registries
+- 6589b7b: Add consistent 1.5 line height on error and warning page descriptions.
+- 1202564: update hover background on chevron icon
+- 4bf11ac: Store history in indexedDB instead of localStorage
+- Updated dependencies [5e4b704]
+- Updated dependencies [f32de07]
+- Updated dependencies [78d4061]
+  - @skip-go/client@1.3.0
+
+## 3.12.0
+
+### Minor Changes
+
+- b212844: Add borderRadius theme prop and apply it to SwapPageAssetChainInput and MainButton.
+
+### Patch Changes
+
+- 5c0f84e: Add tests for removeTrailingZeros utility.
+- 355110a: Add hover effect to the back arrow in the wallet selector modal.
+- 01630cf: Add autocropping padding from images, Add shimmer animation when loading images
+- bf84dff: add borderRadius theme configuration
+- eb8471b: Use timestamp as unique id for transactionHistoryItem
+- 50554f5: remove trailing zeros from output route amount
+- 95a6314: bump registries
+- 4ccf15b: Increase line height for the subtext on the incomplete price data warning page to match other warning pages.
+- 1c906d4: add apiHeaders in webcomponent types
+- 1a16dc1: Refactored useUpdateAmountWhenRouteChanges to only run if route differes from prevRoute
+- Updated dependencies [95a6314]
+  - @skip-go/client@1.2.3
+
+## 3.11.2
+
+### Patch Changes
+
+- 203ac07: wallet disable balance check
+- Updated dependencies [bb09717]
+  - @skip-go/client@1.2.2
+
+## 3.11.1
+
+### Patch Changes
+
+- Updated dependencies [f138746]
+  - @skip-go/client@1.2.1
+
+## 3.11.0
+
+### Minor Changes
+
+- 71979b6: batchSignTxs added to sign all txs upfront
+
+### Patch Changes
+
+- 32f5f7b: Save list of extra chainIds connected per wallet so that we automatically connect to those chains in the future, clear list if theres an error when connecting (in case chain was removed from wallet)
+- b338a30: Update widget to allow getCosmosSigner/getEvmSigner to fallback to default if no signer is found for given chainId
+- 871bec1: Added setAsset that enables setting the source/destination asset manually and onSource/DestinationAssetUpdated callbacks
+- 0dd5d25: change error page explorer link to skip explorer
+- df56981: Add fallback to checking lastHistoryItem isSettled for isFetchingLastTransactionStatusAtom
+- 38200ac: Fix infinite setState caused by erroneously setting amount to formattedDisplayAmount
+- 6a6bb61: Fix overallStatus logic
+- cde6a0c: Fix set destination address to allow manual address entry if the last operation has sign required but fromChainId !== destinationChainId
+- 9cc8751: fix error text line height in bad price warning
+- 24b17d6: Fix infinite spinner if last tx item is 2tx route with only 1 tx in transactionDetails, Add deleting history items that have no chainId and txHash in transactionDetails
+- a14f13d: default sessions replays to on
+- Updated dependencies [c502e19]
+- Updated dependencies [71979b6]
+- Updated dependencies [cc391ab]
+- Updated dependencies [dffca8c]
+- Updated dependencies [fbc22f6]
+- Updated dependencies [0aab36a]
+  - @skip-go/client@1.2.0
+
+## 3.10.11
+
+### Patch Changes
+
+- Updated dependencies [4e97e19]
+  - @skip-go/client@1.1.9
+
+## 3.10.10
+
+### Patch Changes
+
+- Updated dependencies [de97a32]
+  - @skip-go/client@1.1.8
+
 ## 3.10.9
 
 ### Patch Changes

@@ -34,6 +34,7 @@ const widgetPropTypes: Required<PropDescriptors> = {
   hideAssetsUnlessWalletTypeConnected: "any",
   apiUrl: "any",
   apiKey: "any",
+  apiHeaders: "any",
   endpointOptions: "any",
   aminoTypes: "any",
   registryTypes: "any",
@@ -49,6 +50,9 @@ const widgetPropTypes: Required<PropDescriptors> = {
   onTransactionFailed: "any",
   onRouteUpdated: "any",
   onSourceAndDestinationSwapped: "any",
+  batchSignTxs: "any",
+  onDestinationAssetUpdated: "any",
+  onSourceAssetUpdated: "any",
 };
 
 const WebComponent = toWebComponent(Widget, {

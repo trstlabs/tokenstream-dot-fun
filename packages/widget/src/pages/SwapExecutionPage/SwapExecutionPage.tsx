@@ -26,6 +26,7 @@ import { streamSettingsAtom } from "@/state/streamSettings";
 import { StreamExecutionButton } from "./StreamExecutionButton";
 import { createSkipExplorerLink } from "@/utils/explorerLink";
 import { usePreventPageUnload } from "@/hooks/usePreventPageUnload";
+import { lastTransactionInTimeAtom } from "@/state/history";
 
 export enum SwapExecutionState {
   recoveryAddressUnset,
@@ -50,6 +51,7 @@ export const SwapExecutionPage = () => {
     isValidatingGasBalance,
     transactionsSigned,
   } = useAtomValue(swapExecutionStateAtom);
+  const lastTransactionInTime = useAtomValue(lastTransactionInTimeAtom);
   const chainAddresses = useAtomValue(chainAddressesAtom);
   const { connectRequiredChains, isLoading } = useAutoSetAddress();
   const [simpleRoute, setSimpleRoute] = useState(true);
@@ -67,7 +69,7 @@ export const SwapExecutionPage = () => {
 
   const { data: statusData } = useBroadcastedTxsStatus({
     txsRequired: route?.txsRequired,
-    txs: transactionDetailsArray,
+    transactionDetails: transactionDetailsArray,
   });
 
   const lastTransaction = transactionDetailsArray.at(-1);
@@ -76,6 +78,7 @@ export const SwapExecutionPage = () => {
 
   useSyncTxStatus({
     statusData,
+    timestamp: lastTransactionInTime?.transactionHistoryItem?.timestamp,
   });
 
   const lastOperation = clientOperations[clientOperations.length - 1];
@@ -89,12 +92,16 @@ export const SwapExecutionPage = () => {
     isLoading,
   });
 
+  const isSafeToleave = route?.txsRequired === transactionDetailsArray.length;
+
   usePreventPageUnload(
     swapExecutionState === SwapExecutionState.signaturesRemaining ||
       swapExecutionState === SwapExecutionState.waitingForSigning ||
       swapExecutionState === SwapExecutionState.approving ||
-      swapExecutionState === SwapExecutionState.validatingGasBalance
+      swapExecutionState === SwapExecutionState.validatingGasBalance ||
+      !isSafeToleave
   );
+
   useHandleTransactionFailed(error as Error, statusData);
   useHandleTransactionTimeout(swapExecutionState);
 
@@ -143,13 +150,21 @@ export const SwapExecutionPage = () => {
 
     return () => {
       NiceModal.show(Modals.SetAddressModal, {
+        signRequired:
+          lastOperation.signRequired &&
+          lastOperation.fromChain === route?.destAssetChainId,
         chainId: route?.destAssetChainId,
         chainAddressIndex: route
           ? route?.requiredChainAddresses.length - 1
           : undefined,
       });
     };
-  }, [swapExecutionState, route]);
+  }, [
+    swapExecutionState,
+    lastOperation.signRequired,
+    lastOperation.fromChain,
+    route,
+  ]);
 
   const SwapExecutionPageRoute = simpleRoute
     ? SwapExecutionPageRouteSimple

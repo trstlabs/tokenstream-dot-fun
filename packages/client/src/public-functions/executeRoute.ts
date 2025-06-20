@@ -2,14 +2,23 @@ import { PublicKey } from "@solana/web3.js";
 import { ClientState } from "../state/clientState";
 import type { TransactionCallbacks } from "../types/callbacks";
 import { ChainType } from "../types/swaggerTypes";
-import type { CosmosMsg, RouteResponse } from "../types/swaggerTypes";
+import type {
+  CosmosMsg,
+  RouteResponse,
+  PostHandler,
+} from "../types/swaggerTypes";
 import type { ApiRequest } from "../utils/generateApi";
 import { bech32m, bech32 } from "bech32";
 import { executeTransactions } from "../private-functions/executeTransactions";
 import { messages } from "../api/postMessages";
 import { isAddress } from "viem";
-import type { SignerGetters, GasOptions, UserAddress } from "src/types/client-types";
+import type {
+  SignerGetters,
+  GasOptions,
+  UserAddress,
+} from "src/types/client-types";
 import { ApiState } from "src/state/apiState";
+import type { TrackTxPollingProps } from "src/api/postTrackTransaction";
 
 /** Execute Route Options */
 export type ExecuteRouteOptions = SignerGetters &
@@ -45,6 +54,29 @@ export type ExecuteRouteOptions = SignerGetters &
      * If `batchSimulate` is set to `false`, it will simulate each message one by one.
      */
     batchSimulate?: boolean;
+    /**
+     * Optional configuration for transaction polling behavior.
+     * - `maxRetries`: Maximum number of polling attempts (default: 5)
+     * - `retryInterval`: Retry interval in milliseconds (default: 1000)
+     * - `backoffMultiplier`: Exponential backoff multiplier for increasing delay between retries (default: 2.5)
+     * Example backoff with retryInterval = 1000 and backoffMultiplier = 2:
+     * 1st retry: 1000ms → 2nd: 2000ms → 3rd: 4000ms → 4th: 8000ms ...
+     */
+    trackTxPollingOptions?: TrackTxPollingProps;
+    /**
+     * If `batchSignTxs` is set to `true`, it will sign all transactions in a batch up front.
+     * If `batchSignTxs` is set to `false`, it will sign each transaction one by one.
+     */
+    batchSignTxs?: boolean;
+    /**
+     * Specify actions to perform after the route is completed
+     */
+    postRouteHandler?: PostHandler;
+    /**
+     * If `cosmosPriorityFeeDenom` is provided, it will be used to set the priority fee for Cosmos transactions.
+     * It should be a function that takes a chainId and returns the denom for the priority fee.
+     */
+    getCosmosPriorityFeeDenom?: (chainId: string) => Promise<string | undefined>
   };
 
 export const executeRoute = async (options: ExecuteRouteOptions) => {
@@ -89,6 +121,7 @@ export const executeRoute = async (options: ExecuteRouteOptions) => {
     addressList: addressList,
     slippageTolerancePercent: options.slippageTolerancePercent || "1",
     chainIdsToAffiliates: ApiState.chainIdsToAffiliates,
+    postRouteHandler: options.postRouteHandler,
   });
 
   if (beforeMsg && (response?.txs?.length ?? 0) > 0) {
@@ -118,16 +151,22 @@ const validateUserAddresses = async (userAddresses: UserAddress[]) => {
         try {
           if (chain.chainId?.includes("penumbra")) {
             try {
-              return chain.bech32Prefix === bech32m.decode(userAddress.address, 143)?.prefix;
+              return (
+                chain.bech32Prefix ===
+                bech32m.decode(userAddress.address, 143)?.prefix
+              );
             } catch {
               // The temporary solution to route around Noble address breakage.
               // This can be entirely removed once `noble-1` upgrades.
               return ["penumbracompat1", "tpenumbra"].includes(
-                bech32.decode(userAddress.address, 1023).prefix,
+                bech32.decode(userAddress.address, 1023).prefix
               );
             }
           }
-          return chain.bech32Prefix === bech32.decode(userAddress.address, 1023).prefix;
+          return (
+            chain.bech32Prefix ===
+            bech32.decode(userAddress.address, 1023).prefix
+          );
         } catch {
           return false;
         }

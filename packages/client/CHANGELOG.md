@@ -1,5 +1,60 @@
 # @skip-go/client
 
+## 1.3.0
+
+### Minor Changes
+
+- 78d4061: Add optional fee payer address field to msgs and msgsdirect v2 endpoints
+
+### Patch Changes
+
+- 5e4b704: update types
+- f32de07: update registries
+
+## 1.2.3
+
+### Patch Changes
+
+- 95a6314: bump registries
+
+## 1.2.2
+
+### Patch Changes
+
+- bb09717: export validateCosmosGasBalance, introduce getCosmosPriorityFeeDenom on executeRoute
+
+## 1.2.1
+
+### Patch Changes
+
+- f138746: fix track path
+
+## 1.2.0
+
+### Minor Changes
+
+- c502e19: Add min_amount_out field to msg and msgdirect v2 endpoint resps
+- 71979b6: batchSignTxs added to sign all txs upfront
+
+### Patch Changes
+
+- cc391ab: remove unused type and fix validation state
+- dffca8c: Add trackTxPollingOptions to ExecuteRouteOptions and waitForTransaction
+- fbc22f6: improve error message copy
+- 0aab36a: Add postRouteHandler as an option to executeRoute
+
+## 1.1.9
+
+### Patch Changes
+
+- 4e97e19: Add apiHeaders to SkipApiOptions
+
+## 1.1.8
+
+### Patch Changes
+
+- de97a32: Fix usage of URL constructor
+
 ## 1.1.7
 
 ### Patch Changes

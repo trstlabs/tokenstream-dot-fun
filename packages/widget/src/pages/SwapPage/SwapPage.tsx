@@ -16,8 +16,8 @@ import {
   onRouteUpdatedEffect,
   routePreferenceAtom,
   slippageAtom,
-  onSourceAssetUpdatedEffect,
   isInvertingSwapAtom,
+  preloadSigningStargateClientEffect,
 } from "@/state/swapPage";
 import {
   setSwapExecutionStateAtom,
@@ -48,16 +48,19 @@ import { useSwitchEvmChain } from "@/hooks/useSwitchEvmChain";
 import { useGetBalance } from "@/hooks/useGetBalance";
 import { useStreamSettingsDrawer } from "@/hooks/useStreamSettingsDrawer";
 import { streamSettingsAtom } from "@/state/streamSettings";
-import { startAmplitudeSessionReplay } from "@/widget/initAmplitude";
-import { SwapPageHeader } from "./SwapPageHeader";
+
 import { intentoHostedAccountSupportedChains } from "@/constants/intentoChains";
+import { SwapPageHeader } from "./SwapPageHeader";
+import { useConnectToMissingCosmosChain } from "./useConnectToMissingCosmosChain";
+import { callbacksAtom } from "@/state/callbacks";
 
 export const SwapPage = () => {
   const { SettingsFooter, drawerOpen } = useSettingsDrawer();
   const { StreamSettingsFooterSwapPage, drawerOpen: streamDrawerOpen } =
     useStreamSettingsDrawer();
   useAtom(onRouteUpdatedEffect);
-  useAtom(onSourceAssetUpdatedEffect);
+  useAtom(preloadSigningStargateClientEffect);
+  const { isAskingToApproveConnection } = useConnectToMissingCosmosChain();
 
   const [sourceAsset, setSourceAsset] = useAtom(sourceAssetAtom);
   const setSourceAssetAmount = useSetAtom(sourceAssetAmountAtom);
@@ -86,6 +89,7 @@ export const SwapPage = () => {
   const slippage = useAtomValue(slippageAtom);
   const maxAmountMinusFees = useMaxAmountTokenMinusFees();
   const getBalance = useGetBalance();
+  const callbacks = useAtomValue(callbacksAtom);
 
   const setChainAddresses = useSetAtom(chainAddressesAtom);
   useFetchAllBalances();
@@ -138,6 +142,12 @@ export const SwapPage = () => {
           ...old,
           ...asset,
         }));
+
+        callbacks?.onSourceAssetUpdated?.({
+          chainId: asset?.chainId,
+          denom: asset?.denom,
+        });
+
         switchEvmchainId(asset?.chainId);
         setSourceAssetAmount("");
         setDestinationAssetAmount("");
@@ -145,6 +155,7 @@ export const SwapPage = () => {
       },
     });
   }, [
+    callbacks,
     setDestinationAssetAmount,
     setSourceAsset,
     setSourceAssetAmount,
@@ -161,6 +172,12 @@ export const SwapPage = () => {
           ...old,
           ...asset,
         }));
+
+        callbacks?.onSourceAssetUpdated?.({
+          chainId: asset?.chainId,
+          denom: asset?.denom,
+        });
+
         switchEvmchainId(asset?.chainId);
         NiceModal.hide(Modals.AssetAndChainSelectorModal);
       },
@@ -168,6 +185,7 @@ export const SwapPage = () => {
       selectChain: true,
     });
   }, [
+    callbacks,
     getClientAsset,
     setSourceAsset,
     sourceAsset?.chainId,
@@ -185,10 +203,16 @@ export const SwapPage = () => {
           ...old,
           ...asset,
         }));
+
+        callbacks?.onDestinationAssetUpdated?.({
+          chainId: asset?.chainId,
+          denom: asset?.denom,
+        });
+
         NiceModal.hide(Modals.AssetAndChainSelectorModal);
       },
     });
-  }, [setDestinationAsset]);
+  }, [callbacks, setDestinationAsset]);
 
   const handleChangeDestinationChain = useCallback(() => {
     track("swap page: destination chain button - clicked");
@@ -200,6 +224,12 @@ export const SwapPage = () => {
           ...old,
           ...asset,
         }));
+
+        callbacks?.onDestinationAssetUpdated?.({
+          chainId: asset?.chainId,
+          denom: asset?.denom,
+        });
+
         NiceModal.hide(Modals.AssetAndChainSelectorModal);
       },
       selectedAsset: getClientAsset(
@@ -209,6 +239,7 @@ export const SwapPage = () => {
       selectChain: true,
     });
   }, [
+    callbacks,
     destinationAsset?.chainId,
     destinationAsset?.denom,
     getClientAsset,
@@ -225,6 +256,10 @@ export const SwapPage = () => {
 
   const swapButton = useMemo(() => {
     const computeFontSize = (label: string) => (label.length > 36 ? 18 : 24);
+
+    if (isAskingToApproveConnection) {
+      return <MainButton label="Approving connection..." loading />;
+    }
 
     if (!sourceAccount?.address && !isInvertingSwap) {
       return (
@@ -403,7 +438,6 @@ export const SwapPage = () => {
       setCurrentPage(nextPage);
       setUser({ username: sourceAccount?.address });
       if (sourceAccount?.address) {
-        startAmplitudeSessionReplay();
         const replay = getReplay();
         replay?.start();
       }
@@ -419,11 +453,12 @@ export const SwapPage = () => {
       />
     );
   }, [
+    isAskingToApproveConnection,
+    sourceAccount?.address,
+    isInvertingSwap,
     sourceAsset?.chainId,
     sourceAsset?.amount,
     sourceAsset?.denom,
-    sourceAccount?.address,
-    isInvertingSwap,
     destinationAsset?.chainId,
     destinationAsset?.amount,
     isWaitingForNewRoute,
@@ -433,14 +468,14 @@ export const SwapPage = () => {
     isSwapOperation,
     route,
     routeError?.message,
+    getBalance,
+    maxAmountMinusFees,
     routePreference,
     slippage,
     showCosmosLedgerWarning,
     showGoFastWarning,
     isGoFast,
-    maxAmountMinusFees,
     setChainAddresses,
-    getBalance,
     setCurrentPage,
     setSwapExecutionState,
     setError,

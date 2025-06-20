@@ -1,14 +1,19 @@
 import type { ExecuteRouteOptions } from "src/public-functions/executeRoute";
 import { ClientState } from "src/state/clientState";
-import type { GetFallbackGasAmount, SignerGetters, ValidateGasResult } from "src/types/client-types";
+import type {
+  GetFallbackGasAmount,
+  SignerGetters,
+  ValidateGasResult,
+} from "src/types/client-types";
 import type { Tx } from "../types/swaggerTypes";
-import { validateCosmosGasBalance } from "./cosmos/validateCosmosGasBalance";
+import { validateCosmosGasBalance } from "../public-functions/validateCosmosGasBalance";
 import { validateEvmGasBalance } from "./evm/validateEvmGasBalance";
 import { validateSvmGasBalance } from "./svm/validateSvmGasBalance";
 
 export type ValidateGasBalancesProps = {
   txs: Tx[];
   onValidateGasBalance?: ExecuteRouteOptions["onValidateGasBalance"];
+  getCosmosPriorityFeeDenom?: ExecuteRouteOptions["getCosmosPriorityFeeDenom"];
   getFallbackGasAmount?: GetFallbackGasAmount;
   simulate?: ExecuteRouteOptions["simulate"];
   // skip gas validation for specific chainId
@@ -28,11 +33,8 @@ export const validateGasBalances = async ({
   disabledChainIds,
   enabledChainIds,
   useUnlimitedApproval,
+  getCosmosPriorityFeeDenom
 }: ValidateGasBalancesProps) => {
-  onValidateGasBalance?.({
-    status: "pending",
-  });
-
   const validateResult = await Promise.all(
     txs.map(async (tx, i) => {
       if (!tx) {
@@ -41,8 +43,12 @@ export const validateGasBalances = async ({
       if (
         "cosmosTx" in tx &&
         !disabledChainIds?.includes(tx?.cosmosTx?.chainId ?? "") &&
-        (enabledChainIds === undefined || enabledChainIds.includes(tx?.cosmosTx?.chainId ?? ""))
+        (enabledChainIds === undefined ||
+          enabledChainIds.includes(tx?.cosmosTx?.chainId ?? ""))
       ) {
+        onValidateGasBalance?.({
+          status: "pending",
+        });
         if (!tx?.cosmosTx?.msgs) {
           throw new Error(`invalid msgs ${tx?.cosmosTx?.msgs}`);
         }
@@ -56,6 +62,7 @@ export const validateGasBalances = async ({
             getOfflineSigner: getCosmosSigner,
             txIndex: i,
             simulate,
+            getCosmosPriorityFeeDenom: getCosmosPriorityFeeDenom,
           });
 
           return res;
@@ -72,11 +79,17 @@ export const validateGasBalances = async ({
       if (
         "evmTx" in tx &&
         !disabledChainIds?.includes(tx?.evmTx?.chainId ?? "") &&
-        (enabledChainIds === undefined || enabledChainIds.includes(tx?.evmTx?.chainId ?? ""))
+        (enabledChainIds === undefined ||
+          enabledChainIds.includes(tx?.evmTx?.chainId ?? ""))
       ) {
+        onValidateGasBalance?.({
+          status: "pending",
+        });
         const signer = await getEvmSigner?.(tx?.evmTx?.chainId ?? "");
         if (!signer) {
-          throw new Error(`failed to get signer for chain ${tx?.evmTx?.chainId}`);
+          throw new Error(
+            `failed to get signer for chain ${tx?.evmTx?.chainId}`
+          );
         }
         try {
           const res = await validateEvmGasBalance({
@@ -99,8 +112,12 @@ export const validateGasBalances = async ({
       if (
         "svmTx" in tx &&
         !disabledChainIds?.includes(tx?.svmTx?.chainId ?? "") &&
-        (enabledChainIds === undefined || enabledChainIds.includes(tx?.svmTx?.chainId ?? ""))
+        (enabledChainIds === undefined ||
+          enabledChainIds.includes(tx?.svmTx?.chainId ?? ""))
       ) {
+        onValidateGasBalance?.({
+          status: "pending",
+        });
         try {
           const res = await validateSvmGasBalance({
             tx: tx.svmTx,
@@ -115,7 +132,7 @@ export const validateGasBalances = async ({
           };
         }
       }
-    }),
+    })
   );
 
   if (validateResult.filter(Boolean).length === 0) {

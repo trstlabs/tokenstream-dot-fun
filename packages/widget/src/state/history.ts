@@ -1,12 +1,14 @@
-import { TxStatusResponse } from "@skip-go/client";
-import { atomWithStorage } from "jotai/utils";
 import { TransactionDetails } from "./swapExecutionPage";
 import { SimpleStatus } from "@/utils/clientType";
 import { atom } from "jotai";
-import { atomWithQuery } from "jotai-tanstack-query";
 import { TxsStatus } from "@/pages/SwapExecutionPage/useBroadcastedTxs";
-import { RouteResponse, transactionStatus } from "@skip-go/client";
+import { RouteResponse } from "@skip-go/client";
 import { LOCAL_STORAGE_KEYS } from "./localStorageKeys";
+import { atomWithStorage } from "jotai/utils";
+
+export enum HISTORY_VERSION {
+  "camelCase",
+}
 
 export type TransactionHistoryItem = {
   route: RouteResponse;
@@ -16,75 +18,67 @@ export type TransactionHistoryItem = {
   signatures: number;
 } & Partial<TxsStatus>;
 
+export const transactionHistoryVersionAtom = atomWithStorage<
+  number | undefined
+>(LOCAL_STORAGE_KEYS.transactionHistoryVersion, undefined);
+
 export const transactionHistoryAtom = atomWithStorage<TransactionHistoryItem[]>(
   LOCAL_STORAGE_KEYS.transactionHistory,
-  [],
-  undefined
+  []
 );
 
 export const setTransactionHistoryAtom = atom(
   null,
-  (get, set, index: number, historyItem: TransactionHistoryItem) => {
+  (
+    get,
+    set,
+    historyItem: Partial<TransactionHistoryItem> &
+      Pick<TransactionHistoryItem, "timestamp">
+  ) => {
     const history = get(transactionHistoryAtom);
+
+    const index = history.findIndex(
+      (item) => item.timestamp === historyItem.timestamp
+    );
 
     const newHistory = [...history];
 
-    const oldHistoryItem = newHistory[index] ?? {};
-
-    newHistory[index] = { ...oldHistoryItem, ...historyItem };
-
-    set(transactionHistoryAtom, newHistory);
-  }
-);
-export const removeTransactionHistoryItemAtom = atom(
-  null,
-  (get, set, index: number) => {
-    const history = get(transactionHistoryAtom);
-    if (!history) return;
-    if (index < 0) return;
-    if (index >= history.length) return;
-
-    // Create a new array without mutating the original
-    const newHistory = history.filter((_, i) => i !== index);
+    if (index !== -1) {
+      const oldItem = newHistory[index];
+      newHistory[index] = { ...oldItem, ...historyItem };
+    } else {
+      newHistory.push(historyItem as TransactionHistoryItem);
+    }
 
     set(transactionHistoryAtom, newHistory);
   }
 );
 
-export const skipFetchPendingTransactionHistoryStatus = atomWithQuery((get) => {
-  const transactionHistory = get(transactionHistoryAtom);
+export const lastTransactionInTimeAtom = atom((get) => {
+  const history = get(transactionHistoryAtom);
+  if (history.length === 0) return;
 
-  const pendingTransactionHistoryItemsFound = transactionHistory.find(
-    (transactionHistoryItem) =>
-      transactionHistoryItem.status !== "completed" &&
-      transactionHistoryItem.status !== "failed"
+  const sorted = [...history].sort((a, b) => b.timestamp - a.timestamp);
+  const lastTx = sorted[0];
+
+  const originalIndex = history.findIndex(
+    (tx) => tx.timestamp === lastTx.timestamp
   );
 
   return {
-    queryKey: ["skipPendingTxHistoryStatus", transactionHistory],
-    queryFn: async () => {
-      const nestedTransactionHistoryPromises = transactionHistory.map(
-        async (transactionHistoryItem) => {
-          const transactionDetailsPromises = await Promise.all(
-            transactionHistoryItem.transactionDetails?.map(
-              async (transactionDetail) => {
-                if (
-                  transactionHistoryItem.status !== "completed" &&
-                  transactionHistoryItem.status !== "failed"
-                ) {
-                  return await transactionStatus(transactionDetail);
-                }
-                return new Promise((resolve) => resolve(null));
-              }
-            ) as Promise<TxStatusResponse | null>[]
-          );
-          return transactionDetailsPromises;
-        }
-      );
-      return nestedTransactionHistoryPromises;
-    },
-    enabled: !!pendingTransactionHistoryItemsFound,
-    refetchInterval: 1000 * 2,
-    keepPreviousData: true,
+    transactionHistoryItem: lastTx,
+    index: originalIndex,
   };
 });
+
+export const removeTransactionHistoryItemAtom = atom(
+  null,
+  (get, set, timestamp: number) => {
+    const history = get(transactionHistoryAtom);
+    if (!history || isNaN(timestamp)) return;
+
+    const newHistory = history.filter((item) => item.timestamp !== timestamp);
+
+    set(transactionHistoryAtom, newHistory);
+  }
+);

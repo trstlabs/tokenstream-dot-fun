@@ -3,6 +3,9 @@ title: "Configuration"
 description: "This page details your widget configuration options. Tweak it to fit your exact user experience needs!"
 ---
 
+<Note>
+**Visual Configuration Tool:** Want to see how your configuration options look before implementing them? Try [studio.skip.build](https://studio.skip.build) - our interactive widget builder that lets you customize themes, assets, routes, and more with a live preview.
+</Note>
 
 # Component Props
 
@@ -56,6 +59,27 @@ routeConfig?: {
 - `swapVenues`: Restrict routing to specific swap venues. Default: empty (all venues).
 - `goFast`: Enable Go Fast transfers. Default: false. [More info](../advanced-transfer/go-fast).
 - `smartSwapOptions`: Advanced swapping features like EVM Swaps and split trade routes. [More info](../advanced-swapping/smart-swap-options).
+
+### `batchSignTxs`
+
+Controls whether all transactions in a multi-transaction route should be signed upfront or individually as they are executed.
+
+```ts
+batchSignTxs?: boolean;
+```
+
+- **Default:** `true`
+- When enabled, all transactions in the route will be requested for signature at the beginning of the execution. They will then be broadcast one by one in sequence.
+- When disabled, each transaction will be signed individually just before it is broadcast.
+
+**Example scenario with `batchSignTxs: true`:**
+For a route: Solana → Noble → Cosmos (3 transactions requiring signatures)
+- All 3 transactions will be prompted for signature upfront
+- After signing, they will be broadcast sequentially: Solana first, then Noble, then Cosmos
+
+<Note>
+**EVM Transaction Limitation:** If an EVM transaction appears as the second or later transaction in a route, batch signing cannot be performed upfront. In such cases, the EVM transaction and any subsequent transactions will need to be signed individually when they are ready to be executed.
+</Note>
 
 ### `filter`
 
@@ -154,6 +178,10 @@ String to override default Skip Go API proxied endpoints. Whitelisting required,
 
 Customizes the main highlight color of the widget
 
+### `borderRadius`
+
+Controls the corner roundness of cards and buttons in the widget
+
 ### `theme`
 
 Advanced widget appearance customization options
@@ -161,6 +189,13 @@ Advanced widget appearance customization options
 ```tsx
   theme? = {
     brandColor: string;
+    borderRadius: {
+      main?: string | number;
+      selectionButton?: string | number;
+      ghostButton?: string | number;
+      modalContainer?: string | number;
+      rowItem?: string | number;
+    };
     primary: {
       background: {
         normal: string;
@@ -257,17 +292,14 @@ onWalletDisconnected?: (params: {
   chainType?: string;
 }) => void;
 
+onTransactionSignRequested?: (props: onTransactionSignRequestedProps) => void;
+
 onTransactionBroadcasted?: (params: {
-  txHash: string;
   chainId: string;
-  explorerLink?: string;
-  sourceAddress: string;
-  destinationAddress: string;
-  sourceAssetDenom: string;
-  sourceAssetChainID: string;
-  destAssetDenom: string;
-  destAssetChainID: string;
+  signerAddress?: string;
+  txIndex: number;
 }) => void;
+
 onTransactionComplete?: (params: {
   txHash: string;
   chainId: string;
@@ -279,7 +311,37 @@ onTransactionComplete?: (params: {
   destAssetDenom: string;
   destAssetChainID: string;
 }) => void;
+
 onTransactionFailed?: (params: { error: Error }) => void;
+
+onRouteUpdated?: (props: {
+  srcChainId?: string;
+  srcAssetDenom?: string;
+  destChainId?: string;
+  destAssetDenom?: string;
+  amountIn?: string;
+  amountOut?: string;
+  requiredChainAddresses?: string[];
+}) => void;
+
+onSourceAndDestinationSwapped?: (props: {
+  srcChainId?: string;
+  srcAssetDenom?: string;
+  destChainId?: string;
+  destAssetDenom?: string;
+  amountIn?: string;
+  amountOut?: string;
+}) => void;
+
+onSourceAssetUpdated?: (props: {
+  chainId?: string;
+  denom?: string;
+}) => void;
+
+onDestinationAssetUpdated?: (props: {
+  chainId?: string;
+  denom?: string;
+}) => void;
 ```
 
 - `onWalletConnected`: Called when a wallet is connected.
@@ -290,7 +352,7 @@ onTransactionFailed?: (params: { error: Error }) => void;
 
 ### `connectedAddresses` & `signers`
 
-If your application has already connected to a user's wallet (e.g., via MetaMask for EVM networks, Phantom for Solana, or Keplr for Cosmos), you **must provide both** the `connectedAddresses` and corresponding signer functions in order to enable the widget’s injected wallet functionality.
+If your application has already connected to a user's wallet (e.g., via MetaMask for EVM networks, Phantom for Solana, or Keplr for Cosmos), you **must provide both** the `connectedAddresses` and corresponding signer functions in order to enable the widget's injected wallet functionality.
 See an implementation example [here](https://github.com/skip-mev/skip-go/tree/staging/examples/nextjs/src/app/injected/page.tsx).
 
 `WalletClient` comes from the [`viem` package](https://viem.sh/docs/clients/wallet.html). `Adapter` comes from the [`@solana/wallet-adapter-base` package](https://solana.com/developers/cookbook/wallets/connect-wallet-react). And `OfflineSigner` comes from the [`@cosmjs` package](https://docs.keplr.app/api/cosmjs.html).

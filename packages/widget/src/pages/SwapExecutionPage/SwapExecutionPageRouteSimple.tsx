@@ -11,6 +11,7 @@ import { SwapExecutionState } from "./SwapExecutionPage";
 import { useMemo } from "react";
 import { streamSettingsAtom } from "@/state/streamSettings";
 import { SwapExecutionPageRouteSimpleRowIntento } from "./SwapExecutionPageRouteSimpleRowIntento";
+import { convertToPxValue } from "@/utils/style";
 
 export type SwapExecutionPageRouteProps = {
   operations: ClientOperation[];
@@ -131,6 +132,6 @@ const StyledBridgeArrowIcon = styled(BridgeArrowIcon)`
 const StyledSwapExecutionPageRoute = styled(Column)`
   padding: 30px;
   background: ${({ theme }) => theme.primary.background.normal};
-  border-radius: 25px;
+  border-radius: ${({ theme }) => convertToPxValue(theme.borderRadius?.main)};
   min-height: 225px;
 `;

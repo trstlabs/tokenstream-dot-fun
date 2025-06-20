@@ -4,13 +4,17 @@ import { ICONS } from "@/icons";
 import { sourceAssetAtom } from "@/state/swapPage";
 import { currentPageAtom, Routes } from "@/state/router";
 import { ConnectedWalletContent } from "./ConnectedWalletContent";
-import { transactionHistoryAtom } from "@/state/history";
+import { lastTransactionInTimeAtom, transactionHistoryAtom } from "@/state/history";
 import { track } from "@amplitude/analytics-browser";
 import { SpinnerIcon } from "@/icons/SpinnerIcon";
 import { useGetAccount } from "@/hooks/useGetAccount";
 import { useTxHistory } from "@/hooks/useTxHistory";
 import { PageHeader } from "@/components/PageHeader";
-import { swapExecutionStateAtom } from "@/state/swapExecutionPage";
+import {
+  setOverallStatusAtom,
+  skipSubmitSwapExecutionAtom,
+  swapExecutionStateAtom,
+} from "@/state/swapExecutionPage";
 
 export const SwapPageHeader = memo(() => {
   const setCurrentPage = useSetAtom(currentPageAtom);
@@ -70,13 +74,18 @@ export const SwapPageHeader = memo(() => {
 });
 
 export const TrackLatestTxHistoryItemStatus = memo(() => {
-  const transactionhistory = useAtomValue(transactionHistoryAtom);
-  const lastTxHistoryItem = transactionhistory.at(-1);
+  const lastTxHistoryItemInTime = useAtomValue(lastTransactionInTimeAtom);
+  const setOverallStatus = useSetAtom(setOverallStatusAtom);
+  const { transactionsSigned, transactionDetailsArray } = useAtomValue(swapExecutionStateAtom);
+  const { isPending } = useAtomValue(skipSubmitSwapExecutionAtom);
 
-  useTxHistory({
-    txHistoryItem: lastTxHistoryItem,
-    index: transactionhistory.length - 1,
+  const { transferAssetRelease } = useTxHistory({
+    txHistoryItem: lastTxHistoryItemInTime?.transactionHistoryItem,
   });
+
+  if (transferAssetRelease && transactionsSigned !== transactionDetailsArray.length && !isPending) {
+    setOverallStatus("failed");
+  }
 
   return null;
 });
@@ -89,6 +98,11 @@ const noHistoryItemsAtom = atom((get) => {
 
 const isFetchingLastTransactionStatusAtom = atom((get) => {
   const { overallStatus, route, transactionsSigned } = get(swapExecutionStateAtom);
+  const lastTxHistoryItemInTime = get(lastTransactionInTimeAtom);
 
-  return overallStatus === "pending" && transactionsSigned === route?.txsRequired;
+  return (
+    (overallStatus === "pending" && transactionsSigned === route?.txsRequired) ||
+    (lastTxHistoryItemInTime?.transactionHistoryItem?.isSettled !== true &&
+      lastTxHistoryItemInTime?.transactionHistoryItem?.route?.txsRequired === 1)
+  );
 });

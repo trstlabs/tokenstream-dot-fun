@@ -873,6 +873,7 @@ export interface OptionalAsset {
 export interface LayerZeroTransferTransactions {
   sendTx?: ChainTransaction;
   receiveTx?: ChainTransaction;
+  composeTx?: ChainTransaction;
   errorTx?: ChainTransaction;
 }
 
@@ -1179,7 +1180,7 @@ export enum TransactionState {
   STATE_PENDING_ERROR = "STATE_PENDING_ERROR",
 }
 
-/** A transfer facilitated by the CCTP bridge */
+/** A transfer facilitated by the OP Init bridge */
 export interface OPInitTransfer {
   /** Canonical chain-id of the source chain of the bridge transaction */
   fromChainId?: string;
@@ -1208,7 +1209,7 @@ export interface OPInitTransfer {
 }
 
 export interface OPInitTransferWrapper {
-  /** A transfer facilitated by the CCTP bridge */
+  /** A transfer facilitated by the OP Init bridge */
   opInitTransfer?: OPInitTransfer;
 }
 
@@ -1248,12 +1249,14 @@ export enum OPInitTransferState {
  * LayerZero transfer state:
  * * `LAYER_ZERO_TRANSFER_UNKNOWN` - Unknown error
  * * `LAYER_ZERO_TRANSFER_SENT` - The transaction on the source chain has executed
+ * * `LAYER_ZERO_TRANSFER_WAITING_FOR_COMPOSE` - The transfer has been delivered to the destination chain but there is an additional lz_compose transaction that still needs to be delivered before marking this transfer as LAYER_ZERO_TRANSFER_RECEIVED
  * * `LAYER_ZERO_TRANSFER_RECEIVED` - The transfer has been received at the destination chain
  * * `LAYER_ZERO_TRANSFER_FAILED` - The transfer has failed
  */
 export enum LayerZeroTransferState {
   LAYER_ZERO_TRANSFER_UNKNOWN = "LAYER_ZERO_TRANSFER_UNKNOWN",
   LAYER_ZERO_TRANSFER_SENT = "LAYER_ZERO_TRANSFER_SENT",
+  LAYER_ZERO_TRANSFER_WAITING_FOR_COMPOSE = "LAYER_ZERO_TRANSFER_WAITING_FOR_COMPOSE",
   LAYER_ZERO_TRANSFER_RECEIVED = "LAYER_ZERO_TRANSFER_RECEIVED",
   LAYER_ZERO_TRANSFER_FAILED = "LAYER_ZERO_TRANSFER_FAILED",
 }
@@ -1475,6 +1478,7 @@ export interface LayerZeroTransferInfo {
    * LayerZero transfer state:
    * * `LAYER_ZERO_TRANSFER_UNKNOWN` - Unknown error
    * * `LAYER_ZERO_TRANSFER_SENT` - The transaction on the source chain has executed
+   * * `LAYER_ZERO_TRANSFER_WAITING_FOR_COMPOSE` - The transfer has been delivered to the destination chain but there is an additional lz_compose transaction that still needs to be delivered before marking this transfer as LAYER_ZERO_TRANSFER_RECEIVED
    * * `LAYER_ZERO_TRANSFER_RECEIVED` - The transfer has been received at the destination chain
    * * `LAYER_ZERO_TRANSFER_FAILED` - The transfer has failed
    */
@@ -1524,6 +1528,16 @@ export enum FeeType {
   SMART_RELAY = "SMART_RELAY",
 }
 
+/**
+ * Indicates whether the fee is deducted from the transfer amount or charged additionally.
+ * - FEE_BEHAVIOR_DEDUCTED: Fee is subtracted from the transfer amount (default, typical for Cosmos chains)
+ * - FEE_BEHAVIOR_ADDITIONAL: Fee is charged on top of the transfer amount (typical for EVM chains with native tokens)
+ */
+export enum FeeBehavior {
+  FEE_BEHAVIOR_DEDUCTED = "FEE_BEHAVIOR_DEDUCTED",
+  FEE_BEHAVIOR_ADDITIONAL = "FEE_BEHAVIOR_ADDITIONAL",
+}
+
 export interface Fee {
   /**
    * Fee type:
@@ -1553,6 +1567,8 @@ export interface Fee {
   txIndex?: number;
   /** The index of the operation in the returned operations list which incurs the fee */
   operationIndex?: number;
+  /** Indicates whether this fee is deducted from the transfer amount or charged additionally */
+  feeBehavior?: FeeBehavior;
 }
 
 export interface ChainsRequest {
@@ -1644,6 +1660,8 @@ export type RouteResponse = Route;
 export interface MsgsResponse {
   msgs?: Msg[];
   txs?: Tx[];
+  /** Minimum possible output after all operations, including fees and slippage */
+  minAmountOut?: string;
   /** Indicates fees incurred in the execution of the transfer */
   estimatedFees?: Fee[];
 }
@@ -1651,6 +1669,8 @@ export interface MsgsResponse {
 export interface MsgsDirectResponse {
   msgs?: Msg[];
   txs?: Tx[];
+  /** Minimum possible output after all operations, including fees and slippage */
+  minAmountOut?: string;
   route?: Route;
 }
 
@@ -2166,6 +2186,8 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
        * @default false
        */
       enable_gas_warnings?: boolean;
+      /** Alternative address to use for paying for fees, currently only for SVM source CCTP transfers, in b58 format. */
+      fee_payer_address?: string;
     },
     params: RequestParams = {},
   ) =>
@@ -2233,6 +2255,8 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
        * @default false
        */
       enable_gas_warnings?: boolean;
+      /** Alternative address to use for paying for fees, currently only for SVM source CCTP transfers, in b58 format. */
+      fee_payer_address?: string;
     },
     params: RequestParams = {},
   ) =>

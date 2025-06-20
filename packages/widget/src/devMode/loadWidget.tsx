@@ -4,7 +4,7 @@ import { createRoot } from "react-dom/client";
 import "../web-component";
 import { Column, Row } from "@/components/Layout";
 import "./global.css";
-import { resetWidget } from "@/state/swapPage";
+import { resetWidget, setAsset } from "@/state/swapPage";
 import { defaultTheme, lightTheme } from "@/widget/theme";
 import { Widget, WidgetProps } from "@/widget/Widget";
 
@@ -36,9 +36,6 @@ const DevMode = () => {
       enableAmplitudeAnalytics: true,
       disableShadowDom,
       onlyTestnet: testnet,
-      routeConfig: {
-        experimentalFeatures: ["eureka"],
-      },
       apiUrl:
         apiUrl === "prod"
           ? "https://go.skip.build/api/skip"
@@ -73,7 +70,16 @@ const DevMode = () => {
         },
       },
       onSourceAndDestinationSwapped(props) {
-        console.log(props);
+        console.log("onSourceAndDestinationSwapped", props);
+      },
+      onSourceAssetUpdated(props) {
+        console.log("onSourceAssetUpdated", props);
+      },
+      onDestinationAssetUpdated(props) {
+        console.log("onDestinationAssetUpdated", props);
+      },
+      onTransactionSignRequested: (props) => {
+        console.log("onTransactionSignRequested", props);
       },
     };
   }, [apiUrl, disableShadowDom, testnet, theme]);

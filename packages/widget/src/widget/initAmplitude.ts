@@ -15,7 +15,9 @@ export const initAmplitude = () => {
 
 export const startAmplitudeSessionReplay = () => {
   if (isAmplitudeInitialized) {
-    const plugin = sessionReplayPlugin({});
+    const plugin = sessionReplayPlugin({
+      sampleRate: 1,
+    });
     add(plugin);
   }
 };

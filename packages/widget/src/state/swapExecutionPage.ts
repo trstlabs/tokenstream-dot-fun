@@ -18,7 +18,6 @@ import {
   SimpleStatus,
 } from "@/utils/clientType";
 import { errorWarningAtom, ErrorWarningType } from "./errorWarning";
-import { atomWithStorageNoCrossTabSync } from "@/utils/misc";
 import { isUserRejectedRequestError } from "@/utils/error";
 import { sourceAssetAtom, swapSettingsAtom } from "./swapPage";
 import { createExplorerLink } from "@/utils/explorerLink";
@@ -38,12 +37,13 @@ import {
 } from "@skip-go/client";
 import { currentPageAtom, Routes } from "./router";
 import { LOCAL_STORAGE_KEYS } from "./localStorageKeys";
-import { solanaWallets } from "@/constants/solana";
 import { getWallet, WalletType } from "graz";
 import { config } from "@/constants/wagmi";
 import { WalletClient } from "viem";
 import { getWalletClient } from "@wagmi/core";
 import { Uint64 } from "@cosmjs/math";
+import { atomWithStorageNoCrossTabSync } from "@/utils/storage";
+import { Adapter } from "@solana/wallet-adapter-base";
 
 type ValidatingGasBalanceData = {
   chainId?: string;
@@ -60,6 +60,7 @@ type SwapExecutionState = {
   overallStatus: SimpleStatus;
   isValidatingGasBalance?: ValidatingGasBalanceData;
   transactionsSigned: number;
+  timestamp: number;
 };
 
 export type ChainAddress = {
@@ -92,6 +93,7 @@ export const swapExecutionStateAtom =
       overallStatus: "unconfirmed",
       isValidatingGasBalance: undefined,
       transactionsSigned: 0,
+      timestamp: -1,
     }
   );
 
@@ -117,7 +119,10 @@ export const setSwapExecutionStateAtom = atom(null, (get, set) => {
   const { data: chains } = get(skipChainsAtom);
   const transactionHistory = get(transactionHistoryAtom);
   const callbacks = get(callbacksAtom);
-  const transactionHistoryIndex = transactionHistory.length;
+  const transactionHistoryIndex = Array.isArray(transactionHistory)
+    ? transactionHistory.length
+    : 0;
+
   if (!route) return;
 
   const {
@@ -151,14 +156,19 @@ export const setSwapExecutionStateAtom = atom(null, (get, set) => {
     overallStatus: "unconfirmed",
     isValidatingGasBalance: undefined,
     transactionsSigned: 0,
+    timestamp: Date.now(),
   });
+
   set(submitSwapExecutionCallbacksAtom, {
+    onTransactionSignRequested: async (props) => {
+      track("execute route: transaction sign requested", { props });
+      callbacks?.onTransactionSignRequested?.(props);
+    },
     onTransactionUpdated: (txInfo) => {
       track("execute route: transaction updated", { txInfo });
       if (txInfo.status?.status !== "STATE_COMPLETED") {
         set(setTransactionDetailsAtom, {
           transactionDetails: txInfo,
-          transactionHistoryIndex,
         });
       }
     },
@@ -170,7 +180,6 @@ export const setSwapExecutionStateAtom = atom(null, (get, set) => {
     },
     onTransactionBroadcast: async (txInfo) => {
       track("execute route: transaction broadcasted", { txInfo });
-      set(setValidatingGasBalanceAtom, { status: "completed" });
       setUser({ id: txInfo?.txHash });
       const chain = chains?.find((chain) => chain.chainId === txInfo.chainId);
       const explorerLink = createExplorerLink({
@@ -181,7 +190,6 @@ export const setSwapExecutionStateAtom = atom(null, (get, set) => {
 
       set(setTransactionDetailsAtom, {
         transactionDetails: { ...txInfo, explorerLink, status: undefined },
-        transactionHistoryIndex,
       });
 
       callbacks?.onTransactionBroadcasted?.({
@@ -253,12 +261,10 @@ export const setSwapExecutionStateAtom = atom(null, (get, set) => {
         };
       });
 
-      const transactionHistoryItem = get(transactionHistoryAtom)[
-        transactionHistoryIndex
-      ];
+      const { timestamp } = get(swapExecutionStateAtom);
 
-      set(setTransactionHistoryAtom, transactionHistoryIndex, {
-        ...transactionHistoryItem,
+      set(setTransactionHistoryAtom, {
+        timestamp: timestamp,
         signatures: transactionsSigned,
       });
 
@@ -312,7 +318,12 @@ export const setSwapExecutionStateAtom = atom(null, (get, set) => {
     },
     onValidateGasBalance: async (props) => {
       track("execute route: validate gas balance", { props });
-      set(setValidatingGasBalanceAtom, props);
+      if (props.status === "pending") {
+        set(setValidatingGasBalanceAtom, { status: "pending" });
+      } else if (props.status === "completed") {
+        set(setValidatingGasBalanceAtom, { status: "completed" });
+        set(setOverallStatusAtom, "signing");
+      }
     },
   });
 });
@@ -329,7 +340,6 @@ export const setValidatingGasBalanceAtom = atom(
 
 type SetTransactionDetailsProps = {
   transactionDetails: TransactionDetails;
-  transactionHistoryIndex: number;
   status?: SimpleStatus;
 };
 
@@ -367,18 +377,13 @@ export const setTransactionDetailsAtom = atom(
       transactionDetailsArray: newTransactionDetailsArray,
     });
 
-    const transactionHistoryItem = get(transactionHistoryAtom)[
-      transactionHistoryIndex
-    ];
-
-    set(setTransactionHistoryAtom, transactionHistoryIndex, {
-      ...transactionHistoryItem,
+    set(setTransactionHistoryAtom, {
       route: route as RouteResponse,
       transactionDetails: newTransactionDetailsArray,
       transferEvents: [],
-      timestamp: Date.now(),
       isSettled: false,
       isSuccess: false,
+      timestamp: swapExecutionState?.timestamp,
       ...(status && { status }),
     });
   }
@@ -424,6 +429,7 @@ export const submitSwapExecutionCallbacksAtom = atom<
 >();
 
 export const simulateTxAtom = atom<boolean>();
+export const batchSignTxsAtom = atom<boolean>(true);
 
 export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
   const { route, userAddresses, transactionDetailsArray } = get(
@@ -431,6 +437,7 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
   );
   const submitSwapExecutionCallbacks = get(submitSwapExecutionCallbacksAtom);
   const simulateTx = get(simulateTxAtom);
+  const batchSignTxs = get(batchSignTxsAtom);
   const swapSettings = get(swapSettingsAtom);
   const streamSettings = get(streamSettingsAtom);
   const getSigners = get(getConnectedSignersAtom);
@@ -462,11 +469,13 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
 
   return {
     gcTime: Infinity,
-    mutationFn: async (): Promise<any | null> => {
-      // Adjusted return type
-      if (!route) return null;
-      if (!userAddresses.length) return null;
-
+    mutationFn: async ({
+      getSvmSigner,
+    }: {
+      getSvmSigner: () => Promise<Adapter>;
+    }) => {
+      if (!route) return;
+      if (!userAddresses.length) return;
       try {
         if (streamSettings.shouldStream) {
           if (!streamMesages) throw new Error("stream messages not found");
@@ -570,9 +579,10 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
             simulateTx !== undefined
               ? simulateTx
               : route.sourceAssetChainId !== "984122",
+          batchSignTxs: batchSignTxs !== undefined ? batchSignTxs : true,
           ...submitSwapExecutionCallbacks,
           getCosmosSigner: async (chainId) => {
-            if (getSigners?.getCosmosSigner) {
+            if (getSigners?.getCosmosSigner?.(chainId)) {
               return getSigners.getCosmosSigner(chainId);
             }
             if (!wallets.cosmos) {
@@ -589,7 +599,7 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
               : wallet.getOfflineSigner(chainId);
           },
           getEvmSigner: async (chainId) => {
-            if (getSigners?.getEvmSigner) {
+            if (getSigners?.getEvmSigner?.(chainId)) {
               return getSigners.getEvmSigner(chainId);
             }
             const evmWalletClient = (await getWalletClient(config, {
@@ -602,15 +612,11 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
             if (getSigners?.getSvmSigner) {
               return getSigners.getSvmSigner();
             }
-            const walletName = wallets.svm?.walletName;
-            if (!walletName)
-              throw new Error("getSvmSigner error: no svm wallet");
-            const solanaWallet = solanaWallets.find(
-              (w) => w.name === walletName
-            );
-            if (!solanaWallet)
-              throw new Error("getSvmSigner error: wallet not found");
-            return solanaWallet;
+            const adapter = await getSvmSigner();
+            if (!adapter) {
+              throw new Error("getSvmSigner error: no SVM wallet");
+            }
+            return adapter;
           },
         });
       } catch (error: unknown) {

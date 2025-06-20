@@ -19,10 +19,10 @@ import { streamSettingsAtom } from "@/state/streamSettings";
 
 export const useSyncTxStatus = ({
   statusData,
-  historyIndex,
+  timestamp,
 }: {
   statusData?: TxsStatus;
-  historyIndex?: number;
+  timestamp?: number;
 }) => {
   const transferEvents = statusData?.transferEvents;
   const setOverallStatus = useSetAtom(setOverallStatusAtom);
@@ -32,10 +32,11 @@ export const useSyncTxStatus = ({
     overallStatus,
     transactionHistoryIndex: currentTransactionHistoryIndex,
   } = useAtomValue(swapExecutionStateAtom);
+
   const setTransactionHistory = useSetAtom(setTransactionHistoryAtom);
 
-  const txHistory = useAtomValue(transactionHistoryAtom);
-  const streamSettings = useAtomValue(streamSettingsAtom);
+  const transactionHistoryItems = useAtomValue(transactionHistoryAtom);
+
   const { isPending } = useAtomValue(skipSubmitSwapExecutionAtom);
 
   const clientOperations = useMemo(() => {
@@ -48,19 +49,7 @@ export const useSyncTxStatus = ({
       if (isPending) {
         setOverallStatus("pending");
       }
-
       return "pending";
-    }
-
-    if (transferEvents?.length === 0 && !statusData?.isSettled) {
-      if (
-        isPending &&
-        overallStatus !== "pending" &&
-        overallStatus !== "completed"
-      ) {
-        setOverallStatus("signing");
-      }
-      return;
     }
 
     if (
@@ -88,29 +77,32 @@ export const useSyncTxStatus = ({
       return "unconfirmed";
     }
   }, [
-    isPending,
+    statusData?.lastTxStatus,
     statusData?.isSettled,
     statusData?.isSuccess,
-    statusData?.lastTxStatus,
     transferEvents,
-    overallStatus,
+    isPending,
+    setOverallStatus,
   ]);
 
   useEffect(() => {
-    if (computedSwapStatus) {
-      console.log("computedSwapStatus", computedSwapStatus);
-      const index = historyIndex ?? currentTransactionHistoryIndex;
+    if (computedSwapStatus && timestamp !== undefined) {
+      const index = transactionHistoryItems.findIndex(
+        (txHistoryItem) => txHistoryItem.timestamp === timestamp
+      );
+
+      const oldTxHistoryItem = transactionHistoryItems[index];
+
       const newTxHistoryItem = {
-        ...txHistory[index],
+        ...oldTxHistoryItem,
         ...statusData,
         status: computedSwapStatus as SimpleStatus,
       };
-      const oldTxHistoryItem = txHistory[index];
 
       if (
         JSON.stringify(newTxHistoryItem) !== JSON.stringify(oldTxHistoryItem)
       ) {
-        setTransactionHistory(index, newTxHistoryItem);
+        setTransactionHistory(newTxHistoryItem);
         setOverallStatus(computedSwapStatus);
       }
     }
@@ -120,10 +112,10 @@ export const useSyncTxStatus = ({
     computedSwapStatus,
     setOverallStatus,
     transactionDetailsArray.length,
-    txHistory,
+    transactionHistoryItems,
     statusData,
     setTransactionHistory,
-    historyIndex,
     currentTransactionHistoryIndex,
+    timestamp,
   ]);
 };
