@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 const MAX_CACHE_ENTRIES = 20;
 
@@ -40,66 +40,89 @@ const setCache = (url: string, value: string) => {
 export function useCroppedImage(imageUrl?: string): string | undefined {
   const [croppedSrc, setCroppedSrc] = useState<string | undefined>(undefined);
 
-  useEffect(() => {
-    if (!imageUrl) {
-      setCroppedSrc(undefined);
-      return;
+  const safeSetCroppedSrc = useCallback((url: string | undefined) => {
+    try {
+      setCroppedSrc(url);
+    } catch (error) {
+      console.error('Error setting cropped source:', error);
     }
+  }, []);
 
-    if (croppedImageCache.has(imageUrl)) {
-      setCroppedSrc(getCache(imageUrl));
-      return;
-    }
-
-    let isCancelled = false;
-
-    const loadImage = (url: string): Promise<HTMLImageElement> =>
-      new Promise((resolve, reject) => {
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.onload = () => resolve(img);
-        img.onerror = () => reject(new Error("Failed to load image"));
-        img.src = url;
-      });
-
-    const cropImage = (img: HTMLImageElement): string | null => {
+  const safeCropImage = useCallback((img: HTMLImageElement): string | null => {
+    try {
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
       if (!ctx) return null;
 
       const { naturalWidth: width, naturalHeight: height } = img;
+      
+      // Skip processing if the image is not properly loaded
+      if (width === 0 || height === 0) {
+        return null;
+      }
+
       canvas.width = width;
       canvas.height = height;
-      ctx.drawImage(img, 0, 0);
+      
+      try {
+        ctx.drawImage(img, 0, 0);
+      } catch (e) {
+        console.error('Error drawing image to canvas:', e);
+        return null;
+      }
 
-      const imageData = ctx.getImageData(0, 0, width, height);
+      let imageData;
+      try {
+        imageData = ctx.getImageData(0, 0, width, height);
+      } catch (e) {
+        console.error('Error getting image data:', e);
+        return null;
+      }
+      
       const pixels = imageData.data;
-
       let top: number | null = null;
       let left: number | null = null;
       let right: number | null = null;
       let bottom: number | null = null;
 
-      for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-          const alpha = pixels[(y * width + x) * 4 + 3];
-          if (alpha !== 0) {
-            if (top === null) top = y;
-            if (left === null || x < left) left = x;
-            if (right === null || x > right) right = x;
-            bottom = y;
+      try {
+        for (let y = 0; y < height; y++) {
+          for (let x = 0; x < width; x++) {
+            const alpha = pixels[(y * width + x) * 4 + 3];
+            if (alpha !== 0) {
+              if (top === null) top = y;
+              if (left === null || x < left) left = x;
+              if (right === null || x > right) right = x;
+              bottom = y;
+            }
           }
         }
+      } catch (e) {
+        console.error('Error processing image pixels:', e);
+        return null;
       }
 
       if (top === null || left === null || right === null || bottom === null) {
-        console.warn("Image is fully transparent.");
+        console.warn("Image is fully transparent or could not be processed");
         return null;
       }
 
       const trimmedWidth = right - left + 1;
       const trimmedHeight = bottom - top + 1;
-      const trimmed = ctx.getImageData(left, top, trimmedWidth, trimmedHeight);
+      
+      // Ensure dimensions are valid
+      if (trimmedWidth <= 0 || trimmedHeight <= 0) {
+        console.warn('Invalid image dimensions after trimming');
+        return null;
+      }
+
+      let trimmed;
+      try {
+        trimmed = ctx.getImageData(left, top, trimmedWidth, trimmedHeight);
+      } catch (e) {
+        console.error('Error getting trimmed image data:', e);
+        return null;
+      }
 
       canvas.width = trimmedWidth;
       canvas.height = trimmedHeight;
@@ -107,31 +130,107 @@ export function useCroppedImage(imageUrl?: string): string | undefined {
       const newCtx = canvas.getContext("2d");
       if (!newCtx) return null;
 
-      newCtx.putImageData(trimmed, 0, 0);
+      try {
+        newCtx.putImageData(trimmed, 0, 0);
+        return canvas.toDataURL();
+      } catch (e) {
+        console.error('Error creating cropped image:', e);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error in safeCropImage:', error);
+      return null;
+    }
+  }, []);
 
-      return canvas.toDataURL();
-    };
+  useEffect(() => {
+    if (!imageUrl) {
+      safeSetCroppedSrc(undefined);
+      return;
+    }
 
-    setCroppedSrc(undefined);
+    // Skip processing data URLs as they might cause CORS issues
+    if (imageUrl.startsWith('data:')) {
+      safeSetCroppedSrc(imageUrl);
+      return;
+    }
 
-    loadImage(imageUrl)
-      .then((img) => {
-        if (isCancelled) return;
-        const cropped = cropImage(img) ?? imageUrl;
-        setCache(imageUrl, cropped);
-        setCroppedSrc(cropped);
-      })
-      .catch((err) => {
-        console.error("Image cropping failed:", err);
-        if (!isCancelled) {
-          setCroppedSrc(imageUrl);
+    if (croppedImageCache.has(imageUrl)) {
+      safeSetCroppedSrc(getCache(imageUrl));
+      return;
+    }
+
+    let isCancelled = false;
+    let img: HTMLImageElement | null = null;
+
+    const loadImage = (url: string): Promise<HTMLImageElement> =>
+      new Promise((resolve, reject) => {
+        try {
+          img = new Image();
+          img.crossOrigin = "anonymous";
+          
+          const onLoad = () => {
+            cleanup();
+            resolve(img!);
+          };
+          
+          const onError = (error: ErrorEvent) => {
+            cleanup();
+            reject(error || new Error(`Failed to load image: ${url}`));
+          };
+          
+          const cleanup = () => {
+            if (img) {
+              img.removeEventListener('load', onLoad);
+              img.removeEventListener('error', onError as any);
+            }
+          };
+          
+          img.addEventListener('load', onLoad);
+          img.addEventListener('error', onError as any);
+          
+          try {
+            img.src = url;
+          } catch (e) {
+            cleanup();
+            reject(e);
+          }
+        } catch (e) {
+          reject(e);
         }
       });
 
+    const processImage = async () => {
+      if (isCancelled) return;
+      
+      try {
+        const img = await loadImage(imageUrl);
+        if (isCancelled) return;
+        
+        const cropped = safeCropImage(img) ?? imageUrl;
+        if (isCancelled) return;
+        
+        setCache(imageUrl, cropped);
+        safeSetCroppedSrc(cropped);
+      } catch (error) {
+        console.error('Error processing image:', error);
+        if (!isCancelled) {
+          safeSetCroppedSrc(imageUrl);
+        }
+      }
+    };
+
+    safeSetCroppedSrc(undefined);
+    processImage();
+
     return () => {
       isCancelled = true;
+      // Clean up any pending image loads
+      if (img) {
+        img.src = '';
+      }
     };
-  }, [imageUrl]);
+  }, [imageUrl, safeCropImage, safeSetCroppedSrc]);
 
   return croppedSrc;
 }
