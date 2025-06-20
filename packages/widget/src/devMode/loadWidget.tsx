@@ -4,7 +4,7 @@ import { createRoot } from "react-dom/client";
 import "../web-component";
 import { Column, Row } from "@/components/Layout";
 import "./global.css";
-import { resetWidget, setAsset } from "@/state/swapPage";
+import { resetWidget } from "@/state/swapPage";
 import { defaultTheme, lightTheme } from "@/widget/theme";
 import { Widget, WidgetProps } from "@/widget/Widget";
 

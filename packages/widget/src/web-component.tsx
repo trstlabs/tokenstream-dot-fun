@@ -46,13 +46,14 @@ const widgetPropTypes: Required<PropDescriptors> = {
   onWalletConnected: "any",
   onWalletDisconnected: "any",
   onTransactionBroadcasted: "any",
+  onTransactionSignRequested: "any",
   onTransactionComplete: "any",
   onTransactionFailed: "any",
   onRouteUpdated: "any",
+  onSourceAssetUpdated: "any",
+  onDestinationAssetUpdated: "any",
   onSourceAndDestinationSwapped: "any",
   batchSignTxs: "any",
-  onDestinationAssetUpdated: "any",
-  onSourceAssetUpdated: "any",
 };
 
 const WebComponent = toWebComponent(Widget, {

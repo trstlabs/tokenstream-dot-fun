@@ -30,7 +30,7 @@ export enum ICONS {
   hamburger,
   horizontalLine,
   goFast,
-  stream,
+  wave,
 }
 
 type IconProps = SVGProps<SVGSVGElement> & {
@@ -57,5 +57,5 @@ export const iconMap: IconMap = {
   [ICONS.hamburger]: HamburgerIcon,
   [ICONS.horizontalLine]: HorizontalLineIcon,
   [ICONS.goFast]: GoFastIcon,
-  [ICONS.stream]: WaveIcon,
+  [ICONS.wave]: WaveIcon,
 };
