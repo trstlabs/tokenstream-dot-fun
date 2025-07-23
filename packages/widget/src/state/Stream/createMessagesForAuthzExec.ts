@@ -151,9 +151,9 @@ export async function createMessagesForAuthzExec({
     return;
   }
 
-  // 2. DCA/EQUAL_PARTS logic
+  // 2. DCA/SPLIT_INPUT logic
   let streamAmount: string;
-  if (streamSettings.streamMode === "EQUAL_PARTS") {
+  if (streamSettings.streamMode === "SPLIT_INPUT") {
     const recurrences = Math.floor(
       Number(streamSettings.duration) / Number(streamSettings.interval)
     );
@@ -211,6 +211,7 @@ export async function createMessagesForAuthzExec({
   console.log(msgExec);
   // 6. Build MsgTransfer for flow
   const expectedStreamFees = get(expectedStreamFeesAtom);
+
   const memoIntentoFlow = {
     flow: {
       msgs: [
@@ -226,12 +227,12 @@ export async function createMessagesForAuthzExec({
           ? "0"
           : Math.floor(Date.now() / 1000 + streamSettings.startAt).toString(),
       stop_on_fail: "true",
-      label: "AuthZ DCA Flow",
+      label: "tokenstream.fun",
       owner: intoAddress,
       fallback: "true",
       hosted_address: channelConfig.hostedAddress,
       cid: "connection-2", //temporary fix,
-      hosted_fee_limit: "20uinto",
+      hosted_fee_limit: channelConfig.hostedAccountFee + channelConfig.denom, // host denom
     },
   };
 

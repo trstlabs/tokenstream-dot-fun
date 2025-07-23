@@ -9,7 +9,7 @@ import { EncodeObject } from "@cosmjs/proto-signing";
 /**
  * Construct a WASM message for Skip contract streaming with updated timestamp and minAssetOut.
  * @param wasmMsg The original WASM message object
- * @param recurrences Number of recurrences for DCA (ignored if not EQUAL_PARTS)
+ * @param recurrences Number of recurrences for DCA (ignored if not SPLIT_INPUT)
  * @param streamEndSec The stream end timestamp (in seconds)
  * @param minAssetOutPercent Percentage for min_asset.native.amount (-20, 0, +5, etc), or -1 for zero
  * @returns The mutated WASM message

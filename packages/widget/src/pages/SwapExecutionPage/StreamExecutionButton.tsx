@@ -109,14 +109,15 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
   }, [expectedStreamFees]);
 
   // Handlers for fund buttons
-  const [isFunding, setIsFunding] = useState(false);
+  const [isFundingAtom, setIsFundingAtom] = useState(false);
+  const [isFundingInto, setIsFundingInto] = useState(false);
   const setFundAtom = useSetAtom(msgTransferAtomToIntentoAtom);
   const setFundInto = useSetAtom(msgSendToIntentoAtom);
   const { createCosmosWallets } = useCreateCosmosWallets();
   const handleFundAtom = useCallback(async () => {
-    if (isFunding) return;
+    if (isFundingAtom) return;
 
-    setIsFunding(true);
+    setIsFundingAtom(true);
     try {
       track("swap execution page: fund atom button - clicked");
       // Connect to the required chains first
@@ -130,14 +131,14 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
       console.error("Failed to fund ATOM:", error);
       // You might want to show an error toast here
     } finally {
-      setIsFunding(false);
+      setIsFundingAtom(false);
     }
-  }, [isFunding, connectRequiredChains, setFundAtom]);
+  }, [isFundingAtom, connectRequiredChains, setFundAtom]);
 
   const handleFundInto = useCallback(async () => {
-    if (isFunding) return;
+    if (isFundingInto) return;
 
-    setIsFunding(true);
+    setIsFundingInto(true);
     try {
       track("swap execution page: fund into button - clicked");
       // Connect to the required chains first
@@ -151,9 +152,9 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
       console.error("Failed to fund INTO:", error);
       // You might want to show an error toast here
     } finally {
-      setIsFunding(false);
+      setIsFundingInto(false);
     }
-  }, [isFunding, connectRequiredChains, setFundInto]);
+  }, [isFundingInto, connectRequiredChains, setFundInto]);
 
   // Build messages response first
   const { data: messagesResponse } = useQuery({
@@ -446,21 +447,21 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
           >
             {shouldShowFundButtons ? (
               <>
-                <div style={{ width: "100%" }}>
+                {/* <div style={{ width: "100%" }}>
                   <MainButton
                     label={isFunding ? "Awaiting..." : "Fund ATOM"}
                     icon={ICONS.rightArrow}
                     onClick={handleFundAtom}
                     disabled={isFunding}
                   />
-                </div>
+                </div> */}
                 {hasIntoToken && (
                   <div style={{ width: "100%" }}>
                     <MainButton
-                      label={isFunding ? "Awaiting..." : "Fund INTO"}
+                      label={isFundingInto ? "Awaiting..." : "Fund INTO"}
                       icon={ICONS.rightArrow}
                       onClick={handleFundInto}
-                      disabled={isFunding}
+                      disabled={isFundingInto}
                     />
                   </div>
                 )}
