@@ -14,6 +14,7 @@ import {
 import { MsgTransfer } from "cosmjs-types/ibc/applications/transfer/v1/tx";
 import { EncodeObject } from "@cosmjs/proto-signing";
 import { fromBech32, toBech32 } from "@cosmjs/encoding";
+import { getChainInfo } from "@/constants/chains";
 
 export async function createMessagesForPfmStream({
   route,
@@ -84,15 +85,33 @@ export async function createMessagesForPfmStream({
       alert("Unsupported chain for tokenstream");
   }
 
-  ibcDenomHash = Buffer.from(
-    hash(
-      new TextEncoder().encode(
-        `transfer/${intentoChannelToDest}/${firstOp.transfer?.denomOut}`
-      )
+  if (firstOp.transfer?.denomOut?.startsWith("ibc/")) {
+    // Get the hash part
+    const hashOnly = firstOp.transfer.denomOut.split("ibc/")[1];
+
+    // Lookup denom trace from the LCD
+    const denomTrace = await fetch(
+      `${getChainInfo(firstOp.transfer?.toChainId || "")?.rest}/ibc/apps/transfer/v1/denom_traces/${hashOnly}`
     )
-  )
-    .toString("hex")
-    .toUpperCase();
+      .then((res) => res.json())
+      .then((res) => res.denom_trace);
+    console.log(denomTrace);
+    if (!denomTrace) throw new Error("Invalid IBC denom");
+
+    const fullPath = `transfer/${intentoChannelToDest}/${denomTrace.path}/${denomTrace.base_denom}`;
+    console.log(fullPath);
+    ibcDenomHash = Buffer.from(hash(new TextEncoder().encode(fullPath)))
+      .toString("hex")
+      .toUpperCase();
+  } else {
+    // single-hop fallback
+    const fullPath = `transfer/${intentoChannelToDest}/${firstOp.transfer?.denomOut}`;
+
+    ibcDenomHash = Buffer.from(hash(new TextEncoder().encode(fullPath)))
+      .toString("hex")
+      .toUpperCase();
+  }
+  console.log(ibcDenomHash);
 
   const counterpartyChannelId = await getCounterpartyChannelId({
     chainID: firstOp.transfer?.fromChainId || "",
@@ -185,7 +204,8 @@ export async function createMessagesForPfmStream({
                   Date.now() / 1000 + streamSettings.startAt
                 ).toString(),
           stop_on_fail: "true",
-          label: "test flow",
+          updating_disabled: "true",
+          label: "tokenstream.fun",
           owner: intoAddress,
           fallback: "true",
         },
@@ -199,7 +219,7 @@ export async function createMessagesForPfmStream({
     sourcePort: firstOp.transfer?.port,
     sender: userAddresses.map((user) => user.address)[0],
     token: { amount: route.amountIn, denom: route.sourceAssetDenom },
-    receiver: "pfm",
+    receiver: userAddresses.map((user) => user.address)[1],
     memo: JSON.stringify(memoSourceChain),
     timeoutTimestamp:
       BigInt(Math.floor(Date.now() / 1000) + 10 * 60) * 1_000_000_000n, // 10 minutes
