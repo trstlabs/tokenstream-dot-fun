@@ -14,6 +14,8 @@ import {
   streamSettingsAtom,
   expectedStreamFeesAtom,
 } from "@/state/streamSettings";
+import { sourceAssetAtom } from "@/state/swapPage";
+import { intentoHostedAccountSupportedChains } from "@/constants/intentoChains";
 import { useStreamFeeParams } from "@/hooks/useStreamFeeParams";
 import { convertTokenAmountToHumanReadableAmount } from "@/utils/crypto";
 import { swapExecutionStateAtom } from "@/state/swapExecutionPage";
@@ -28,6 +30,7 @@ export const StreamPage = ({}: StreamPageProps) => {
   const [expectedStreamFees, setExpectedStreamFees] = useAtom(
     expectedStreamFeesAtom
   );
+  const [sourceAsset] = useAtom(sourceAssetAtom);
 
   const {
     data: streamFeeParams,
@@ -42,7 +45,7 @@ export const StreamPage = ({}: StreamPageProps) => {
   const fees = useMemo(() => {
     if (!streamFeeParams?.gasFeeCoins?.length) return [];
 
-    const gasUsed = 100_000;
+    const expectedMaxGasUsed = 150_000;
     const lenMsgs = 1;
     const recurrences = Math.max(
       1,
@@ -51,20 +54,56 @@ export const StreamPage = ({}: StreamPageProps) => {
       )
     );
 
-    return streamFeeParams.gasFeeCoins
+    // Check if chain supports hosted accounts
+    const isHostedAccountSupported =
+      sourceAsset?.chainId &&
+      intentoHostedAccountSupportedChains.includes(sourceAsset.chainId);
+
+    let authzFee = 0;
+    if (isHostedAccountSupported && sourceAsset?.chainId) {
+      switch (sourceAsset.chainId) {
+        case import.meta.env.VITE_CHAIN_ID_OSMO:
+          authzFee = Number(
+            import.meta.env.VITE_HOSTED_ACCOUNT_FEE_OSMO || "0"
+          );
+          break;
+        // Add more cases for other chains here if needed
+        default:
+          authzFee = 0;
+      }
+    }
+
+    const fees = streamFeeParams.gasFeeCoins
       .map((coin) => {
         try {
           const denom = coin.denom;
+          // If hosted account is supported, only process the denom that matches the source asset's chain ID
+          if (
+            isHostedAccountSupported &&
+            sourceAsset?.denom &&
+            denom !== sourceAsset.denom
+          ) {
+            return null;
+          }
+
           const denomPrice = Number(coin.amount);
           const gasFeeUnits =
-            (gasUsed * Number(streamFeeParams.flexFeeMul || 1)) / 1000;
+            (expectedMaxGasUsed * Number(streamFeeParams.flexFeeMul || 1)) /
+            1000;
           const gasFee = gasFeeUnits * denomPrice;
-          const applyBurnFee = denom === "uinto"; // Changed to match denom format
+          const applyBurnFee = denom === "uinto";
           const burnFeePerRun = applyBurnFee
             ? Number(streamFeeParams.burnFeePerMsg || 0) * lenMsgs
             : 0;
 
-          const totalFee = recurrences * (gasFee + burnFeePerRun);
+          // Add authz fee for OSMO denom when using authz
+          const authzFeeForDenom =
+            denom === import.meta.env.VITE_IBC_DENOM_OSMO
+              ? authzFee * recurrences
+              : 0;
+
+          const totalFee =
+            recurrences * (gasFee + burnFeePerRun) + authzFeeForDenom;
 
           return {
             denom,
@@ -76,6 +115,14 @@ export const StreamPage = ({}: StreamPageProps) => {
         }
       })
       .filter(Boolean) as { denom: string; amount: string }[]; // Filter out any nulls from errors
+
+    // If no fees were found for the source asset's denom but hosted account is supported,
+    // return an empty array to indicate no valid fees
+    if (isHostedAccountSupported && sourceAsset?.denom && fees.length === 0) {
+      return [];
+    }
+
+    return fees;
   }, [streamFeeParams, streamSettings.duration, streamSettings.interval]);
 
   // Update expected fees when calculation changes
