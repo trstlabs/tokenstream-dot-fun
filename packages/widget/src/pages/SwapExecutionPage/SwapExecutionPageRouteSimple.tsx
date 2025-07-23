@@ -31,7 +31,8 @@ export const SwapExecutionPageRouteSimple = ({
 }: SwapExecutionPageRouteProps) => {
   const theme = useTheme();
   const { route } = useAtomValue(swapExecutionStateAtom);
-  const { interval, duration, shouldStream } = useAtomValue(streamSettingsAtom);
+  const { interval, duration, shouldStream, streamMode } =
+    useAtomValue(streamSettingsAtom);
   const firstOperation = operations[0];
   const lastOperation = operations[operations.length - 1];
   const status = statusData?.transferEvents;
@@ -69,24 +70,28 @@ export const SwapExecutionPageRouteSimple = ({
 
   const intento = {
     denom: firstOperation.denomIn,
-    tokenAmount: shouldStream
-      ? Math.floor(Number(firstOperation.amountOut) / recurrences).toString()
-      : firstOperation.amountOut,
+    tokenAmount:
+      shouldStream && streamMode === "SPLIT_INPUT"
+        ? Math.floor(Number(firstOperation.amountOut) / recurrences).toString()
+        : firstOperation.amountOut,
     chainId: firstOperation.fromChainId ?? firstOperation.chainId,
-    usdValue: shouldStream
-      ? safeDivide(Number(route?.usdAmountOut), recurrences)
-      : route?.usdAmountOut,
+    usdValue:
+      shouldStream && streamMode === "SPLIT_INPUT"
+        ? safeDivide(Number(route?.usdAmountOut), recurrences)
+        : route?.usdAmountOut,
   };
 
   const destination = {
     denom: lastOperation.denomOut,
-    tokenAmount: shouldStream
-      ? Math.floor(Number(lastOperation.amountOut) / recurrences).toString()
-      : lastOperation.amountOut,
+    tokenAmount:
+      shouldStream && streamMode === "SPLIT_INPUT"
+        ? Math.floor(Number(lastOperation.amountOut) / recurrences).toString()
+        : lastOperation.amountOut,
     chainId: lastOperation.toChainId ?? lastOperation.chainId,
-    usdValue: shouldStream
-      ? safeDivide(Number(route?.usdAmountOut), recurrences)
-      : route?.usdAmountOut,
+    usdValue:
+      shouldStream && streamMode === "SPLIT_INPUT"
+        ? safeDivide(Number(route?.usdAmountOut), recurrences)
+        : route?.usdAmountOut,
   };
 
   const sourceExplorerLink =

@@ -18,15 +18,16 @@ export const StreamModeSetting = () => {
       <RadioGroup
         options={[
           {
-            value: "EQUAL_PARTS",
-            label: "Stream input amount in equal parts",
+            value: "SPLIT_INPUT",
+            label: "Split input amount in equal parts",
             description:
-              "Splits the total amount into equal parts over the duration",
+              "Splits the total amount into equal parts and streams them over the duration",
           },
           {
-            value: "RECURRING",
-            label: "Stream input amount recurringly",
-            description: "Uses the full amount for each stream interval",
+            value: "RECUR_INPUT",
+            label: "Full input amount per flow execution",
+            description:
+              "Uses the full input amount for each stream flow execution",
           },
         ]}
         value={streamSettings.streamMode}

@@ -22,7 +22,7 @@ import { EncodeObject } from "@cosmjs/proto-signing";
 import { getConnectedSignersAtom, walletsAtom } from "./wallets";
 import { getWallet, WalletType } from "graz";
 
-export type StreamMode = "EQUAL_PARTS" | "RECURRING";
+export type StreamMode = "SPLIT_INPUT" | "RECUR_INPUT";
 
 export interface IntentoStreamSettings {
   /**
@@ -47,7 +47,7 @@ export const defaultStreamSettings: IntentoStreamSettings = {
   startAt: 0,
   shouldStream: false,
   emailAddress: "",
-  streamMode: "EQUAL_PARTS", // Default to equal parts mode
+  streamMode: "SPLIT_INPUT", // Default to equal parts mode
 };
 
 // Persisted atom

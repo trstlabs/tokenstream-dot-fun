@@ -104,7 +104,7 @@ export const SwapPage = () => {
 
   // Handle route-based navigation and Intento hosted account support
   useEffect(() => {
-    // Check if source chain supports Intento hosted accounts
+    // Check if source chain supports streaming
     if (
       (sourceAsset?.chainId &&
         intentoHostedAccountSupportedChains.includes(sourceAsset.chainId)) ||
