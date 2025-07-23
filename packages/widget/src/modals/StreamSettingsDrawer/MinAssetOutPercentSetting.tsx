@@ -32,25 +32,27 @@ export const MinAssetOutPercentSetting: React.FC = () => {
   return (
     <Column gap={8}>
       <Row gap={6} align="center">
-        <SmallText>Minimal tokens</SmallText>
+        <SmallText>Price Guard</SmallText>
         <Tooltip
           content={
             <SmallText normalTextColor textWrap="nowrap">
-              The minimum amount of tokens you want to receive in current
+              The minimum amount of tokens you want to receive based on current
               prices.
               <br />
-              <b>No change</b>: disables min asset out check.
+              <b>No change</b>: disables the Price Guard.
               <br />
-              Choose a percentage to require at least that much output.
-              <br /> Or else your stream will skip the execution.
+              Set a percentage to enforce a minimum output.
               <br />
-              Useful for protecting against MEV or price swings.
+              If the rate drops below this, the stream skips execution.
+              <br />
+              Protects against MEV, slippage, and sudden price swings.
             </SmallText>
           }
         >
           <span style={{ cursor: "help", color: "#888" }}>ⓘ</span>
         </Tooltip>
       </Row>
+
       <SliderWrap>
         <Labels>
           {options.map((opt, i) => (
