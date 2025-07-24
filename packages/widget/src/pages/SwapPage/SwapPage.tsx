@@ -49,7 +49,10 @@ import { useGetBalance } from "@/hooks/useGetBalance";
 import { useStreamSettingsDrawer } from "@/hooks/useStreamSettingsDrawer";
 import { streamSettingsAtom } from "@/state/streamSettings";
 
-import { intentoHostedAccountSupportedChains } from "@/constants/intentoChains";
+import {
+  getChainChannelConfig,
+  intentoHostedAccountSupportedChains,
+} from "@/constants/intentoChains";
 import { SwapPageHeader } from "./SwapPageHeader";
 import { useConnectToMissingCosmosChain } from "./useConnectToMissingCosmosChain";
 import { callbacksAtom } from "@/state/callbacks";
@@ -110,8 +113,8 @@ export const SwapPage = () => {
         intentoHostedAccountSupportedChains.includes(sourceAsset.chainId)) ||
       (route?.operations &&
         "transfer" in route.operations[0] &&
-        route.operations[0].transfer?.toChainId ==
-          route.swapVenues?.[0]?.chainId)
+        getChainChannelConfig(route.operations[0].transfer?.toChainId || "") !==
+          undefined)
     ) {
       setNextPage(Routes.StreamPage);
     } else {

@@ -4,7 +4,10 @@ import { ICONS } from "@/icons";
 import { sourceAssetAtom } from "@/state/swapPage";
 import { currentPageAtom, Routes } from "@/state/router";
 import { ConnectedWalletContent } from "./ConnectedWalletContent";
-import { lastTransactionInTimeAtom, transactionHistoryAtom } from "@/state/history";
+import {
+  lastTransactionInTimeAtom,
+  transactionHistoryAtom,
+} from "@/state/history";
 import { track } from "@amplitude/analytics-browser";
 import { SpinnerIcon } from "@/icons/SpinnerIcon";
 import { useGetAccount } from "@/hooks/useGetAccount";
@@ -23,7 +26,9 @@ export const SwapPageHeader = memo(() => {
   const getAccount = useGetAccount();
   const sourceAccount = getAccount(sourceAsset?.chainId);
   const noHistoryItems = useAtomValue(noHistoryItemsAtom);
-  const isFetchingLastTransactionStatus = useAtomValue(isFetchingLastTransactionStatusAtom);
+  const isFetchingLastTransactionStatus = useAtomValue(
+    isFetchingLastTransactionStatusAtom
+  );
 
   const historyPageButton = useMemo(() => {
     if (noHistoryItems) return;
@@ -66,7 +71,7 @@ export const SwapPageHeader = memo(() => {
     <>
       {isFetchingLastTransactionStatus && <TrackLatestTxHistoryItemStatus />}
       <PageHeader
-        leftButton={historyPageButton}
+        // leftButton={historyPageButton}
         rightContent={sourceAccount ? <ConnectedWalletContent /> : null}
       />
     </>
@@ -76,14 +81,20 @@ export const SwapPageHeader = memo(() => {
 export const TrackLatestTxHistoryItemStatus = memo(() => {
   const lastTxHistoryItemInTime = useAtomValue(lastTransactionInTimeAtom);
   const setOverallStatus = useSetAtom(setOverallStatusAtom);
-  const { transactionsSigned, transactionDetailsArray } = useAtomValue(swapExecutionStateAtom);
+  const { transactionsSigned, transactionDetailsArray } = useAtomValue(
+    swapExecutionStateAtom
+  );
   const { isPending } = useAtomValue(skipSubmitSwapExecutionAtom);
 
   const { transferAssetRelease } = useTxHistory({
     txHistoryItem: lastTxHistoryItemInTime?.transactionHistoryItem,
   });
 
-  if (transferAssetRelease && transactionsSigned !== transactionDetailsArray.length && !isPending) {
+  if (
+    transferAssetRelease &&
+    transactionsSigned !== transactionDetailsArray.length &&
+    !isPending
+  ) {
     setOverallStatus("failed");
   }
 
@@ -97,11 +108,14 @@ const noHistoryItemsAtom = atom((get) => {
 });
 
 const isFetchingLastTransactionStatusAtom = atom((get) => {
-  const { overallStatus, route, transactionsSigned } = get(swapExecutionStateAtom);
+  const { overallStatus, route, transactionsSigned } = get(
+    swapExecutionStateAtom
+  );
   const lastTxHistoryItemInTime = get(lastTransactionInTimeAtom);
 
   return (
-    (overallStatus === "pending" && transactionsSigned === route?.txsRequired) ||
+    (overallStatus === "pending" &&
+      transactionsSigned === route?.txsRequired) ||
     (lastTxHistoryItemInTime?.transactionHistoryItem?.isSettled !== true &&
       lastTxHistoryItemInTime?.transactionHistoryItem?.route?.txsRequired === 1)
   );

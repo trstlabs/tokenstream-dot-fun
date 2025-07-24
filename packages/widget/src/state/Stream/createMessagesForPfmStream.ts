@@ -8,7 +8,7 @@ import {
   StreamMessagesResult,
   getCounterpartyChannelId,
   getForwardAddress,
-  constructWasmMsgSkipContractForStream,
+  constructWasmMsgSkipContract,
 } from "./helpers";
 
 import { MsgTransfer } from "cosmjs-types/ibc/applications/transfer/v1/tx";
@@ -147,7 +147,7 @@ export async function createMessagesForPfmStream({
     if (!memoOG.wasm.contract) throw new Error("skip wasm contract not found");
     const streamEndSec =
       Math.floor(Date.now() / 1000) + Number(streamSettings.duration);
-    let wasmMsg = constructWasmMsgSkipContractForStream(
+    let wasmMsg = constructWasmMsgSkipContract(
       memoOG.wasm.msg,
       recurrences,
       streamEndSec,
