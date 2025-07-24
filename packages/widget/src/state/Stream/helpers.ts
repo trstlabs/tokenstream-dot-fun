@@ -14,7 +14,7 @@ import { EncodeObject } from "@cosmjs/proto-signing";
  * @param minAssetOutPercent Percentage for min_asset.native.amount (-20, 0, +5, etc), or -1 for zero
  * @returns The mutated WASM message
  */
-export function constructWasmMsgSkipContractForStream(
+export function constructWasmMsgSkipContract(
   wasmMsg: any,
   recurrences: number,
   streamEndSec: number,
@@ -145,6 +145,48 @@ export const getCounterpartyChannelId = async ({
 
   return counterpartyChannelId;
 };
+
+/**
+ * Construct a WASM message for contract call in post_swap_action
+ * @param wasmMsg The original WASM message object
+ * @param streamId The stream ID from environment variables
+ * @param contractAddress The contract address from environment variables
+ * @returns The updated WASM message with contract call
+ */
+export function constructWasmMsgContractCallForStreamSwap(
+  wasmMsg: any,
+  streamId: string,
+  contractAddress: string = import.meta.env.VITE_STREAMSWAP_CONTRACT_ADDRESS ||
+    ""
+): any {
+  if (!contractAddress) {
+    throw new Error("Contract address not found in environment variables");
+  }
+
+  if (!streamId) {
+    throw new Error("Stream ID not provided");
+  }
+
+  // Create a deep copy of the original message
+  const msg = JSON.parse(JSON.stringify(wasmMsg));
+  console.log("msg", msg);
+  // Update the post_swap_action to use contract call
+  msg.swap_and_action.post_swap_action = {
+    contract_call: {
+      contract_address: contractAddress,
+      msg: Buffer.from(
+        JSON.stringify({
+          subscribe: {
+            stream_id: streamId,
+          },
+        })
+      ).toString("base64"),
+    },
+  };
+
+  console.log("msg", msg);
+  return msg;
+}
 
 export type StreamMessagesResult = {
   chainID: string;

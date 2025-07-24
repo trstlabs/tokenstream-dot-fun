@@ -5,7 +5,8 @@ import {
 } from "@/state/streamSettings";
 import {
   StreamMessagesResult,
-  constructWasmMsgSkipContractForStream,
+  constructWasmMsgContractCallForStreamSwap,
+  constructWasmMsgSkipContract,
 } from "./helpers";
 import { MsgTransfer } from "cosmjs-types/ibc/applications/transfer/v1/tx";
 import { EncodeObject } from "@cosmjs/proto-signing";
@@ -160,16 +161,17 @@ export async function createMessagesForAuthzExec({
     streamAmount = Math.floor(Number(amountIn) / recurrences).toString();
     cosmosTx.msgs.forEach((msg) => {
       if (msg.msg) {
-        const cosmosMsgObject = JSON.parse(msg.msg);
+        let cosmosMsgObject = JSON.parse(msg.msg);
         if (cosmosMsgObject.msg) {
           const streamEndSec =
             Math.floor(Date.now() / 1000) + Number(streamSettings.duration);
-          const wasmMsg = constructWasmMsgSkipContractForStream(
+          let wasmMsg = constructWasmMsgSkipContract(
             cosmosMsgObject.msg,
             recurrences,
             streamEndSec,
             streamSettings.minAssetOutPercent
           );
+
           cosmosMsgObject.msg = wasmMsg;
           cosmosMsgObject.funds[0].amount = streamAmount;
           msg.msg = JSON.stringify(cosmosMsgObject);
@@ -178,6 +180,25 @@ export async function createMessagesForAuthzExec({
     });
   } else {
     streamAmount = amountIn;
+  }
+
+  if (streamSettings.streamIntoStreamSwapID != "") {
+    cosmosTx.msgs.forEach((msg) => {
+      if (msg.msg) {
+        let cosmosMsgObject = JSON.parse(msg.msg);
+        if (cosmosMsgObject.msg) {
+          let wasmMsg = constructWasmMsgContractCallForStreamSwap(
+            cosmosMsgObject.msg,
+            streamSettings.streamIntoStreamSwapID || "",
+            import.meta.env.VITE_STREAMSWAP_CONTRACT_ADDRESS || ""
+          );
+
+          cosmosMsgObject.msg = wasmMsg;
+          cosmosMsgObject.funds[0].amount = streamAmount;
+          msg.msg = JSON.stringify(cosmosMsgObject);
+        }
+      }
+    });
   }
 
   // 3. Grant expiration logic
@@ -247,7 +268,7 @@ export async function createMessagesForAuthzExec({
       )?.amount,
       denom: channelConfig.denom,
     },
-    receiver: "Intento Flows",
+    receiver: "Your Intento Address",
     memo: JSON.stringify(memoIntentoFlow),
     timeoutTimestamp:
       BigInt(Math.floor(Date.now() / 1000) + IBC_TIMEOUT_SECONDS) *

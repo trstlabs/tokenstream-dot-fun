@@ -15,7 +15,10 @@ import {
   expectedStreamFeesAtom,
 } from "@/state/streamSettings";
 import { sourceAssetAtom } from "@/state/swapPage";
-import { intentoHostedAccountSupportedChains } from "@/constants/intentoChains";
+import {
+  getChainChannelConfig,
+  intentoHostedAccountSupportedChains,
+} from "@/constants/intentoChains";
 import { useStreamFeeParams } from "@/hooks/useStreamFeeParams";
 import { convertTokenAmountToHumanReadableAmount } from "@/utils/crypto";
 import { swapExecutionStateAtom } from "@/state/swapExecutionPage";
@@ -64,7 +67,7 @@ export const StreamPage = ({}: StreamPageProps) => {
       switch (sourceAsset.chainId) {
         case import.meta.env.VITE_CHAIN_ID_OSMO:
           authzFee = Number(
-            import.meta.env.VITE_HOSTED_ACCOUNT_FEE_OSMO || "0"
+            import.meta.env.VITE_HOSTED_ACCOUNT_FEE_LIMIT_OSMO || "0"
           );
           break;
         // Add more cases for other chains here if needed
@@ -78,14 +81,13 @@ export const StreamPage = ({}: StreamPageProps) => {
         try {
           const denom = coin.denom;
           // If hosted account is supported, only process the denom that matches the source asset's chain ID
-          if (
-            isHostedAccountSupported &&
-            sourceAsset?.denom &&
-            denom !== sourceAsset.denom
-          ) {
-            return null;
+          if (isHostedAccountSupported) {
+            const chainConfig = getChainChannelConfig(
+              sourceAsset?.chainId || ""
+            );
+            if (!chainConfig) return null;
+            if (denom !== chainConfig.denomOnIntento) return null;
           }
-
           const denomPrice = Number(coin.amount);
           const gasFeeUnits =
             (expectedMaxGasUsed * Number(streamFeeParams.flexFeeMul || 1)) /
@@ -95,7 +97,6 @@ export const StreamPage = ({}: StreamPageProps) => {
           const burnFeePerRun = applyBurnFee
             ? Number(streamFeeParams.burnFeePerMsg || 0) * lenMsgs
             : 0;
-
           // Add authz fee for OSMO denom when using authz
           const authzFeeForDenom =
             denom === import.meta.env.VITE_IBC_DENOM_OSMO
@@ -104,7 +105,6 @@ export const StreamPage = ({}: StreamPageProps) => {
 
           const totalFee =
             recurrences * (gasFee + burnFeePerRun) + authzFeeForDenom;
-
           return {
             denom,
             amount: Math.round(totalFee).toString(),
@@ -121,7 +121,6 @@ export const StreamPage = ({}: StreamPageProps) => {
     if (isHostedAccountSupported && sourceAsset?.denom && fees.length === 0) {
       return [];
     }
-
     return fees;
   }, [streamFeeParams, streamSettings.duration, streamSettings.interval]);
 
@@ -229,47 +228,85 @@ export const StreamPage = ({}: StreamPageProps) => {
             </div>
           ) : (
             <SmallText style={{ marginTop: "5px" }} textAlign="center">
-              No fees data available
+              No fees data available {fees.length}
             </SmallText>
           )}
         </div>
       </StyledStreamPageRoute>
       {expectedStreamFees && (
-        <Row
-          justify="center"
-          align="center"
-          gap={20}
-          style={{ marginBottom: "10px" }}
-        >
-          <div style={{ width: "100%" }}>
-            <MainButton
-              label="Go Once"
-              onClick={async () => {
-                track("stream page: swap button clicked");
-                setStreamSettings((prev) => ({
-                  ...prev,
-                  shouldStream: false,
-                }));
-                setHasTriggeredSwap(true);
-              }}
-              icon={ICONS.swap}
-            />
-          </div>
-          <div style={{ width: "100%" }}>
-            <MainButton
-              label="Stream"
-              onClick={() => {
-                track("stream page: continue button clicked");
-                setStreamSettings((prev) => ({
-                  ...prev,
-                  shouldStream: true,
-                }));
-                setHasTriggeredSwap(true);
-              }}
-              icon={ICONS.checkmark}
-            />
-          </div>
-        </Row>
+        <>
+          <Row
+            justify="center"
+            align="center"
+            gap={20}
+            style={{ marginBottom: "10px" }}
+          >
+            <div style={{ width: "100%" }}>
+              <MainButton
+                label="Go Once"
+                onClick={async () => {
+                  track("stream page: swap button clicked");
+                  setStreamSettings((prev) => ({
+                    ...prev,
+                    shouldStream: false,
+                    streamIntoStreamSwapID: undefined,
+                  }));
+                  setHasTriggeredSwap(true);
+                }}
+                icon={ICONS.swap}
+              />
+            </div>
+            <div style={{ width: "100%" }}>
+              <MainButton
+                label="Stream"
+                onClick={() => {
+                  track("stream page: continue button clicked");
+                  setStreamSettings((prev) => ({
+                    ...prev,
+                    shouldStream: true,
+                    streamIntoStreamSwapID: undefined,
+                  }));
+                  setHasTriggeredSwap(true);
+                }}
+                icon={ICONS.checkmark}
+              />
+            </div>
+          </Row>
+
+          {/* Stream into StreamSwap button - only shown for USDC destination on Osmosis from a token on Osmosis or Osmosis Testnet */}
+          {import.meta.env.VITE_STREAM_SWAP_IDS &&
+            ((swapExecutionState?.route?.sourceAssetChainId == "osmosis-1" &&
+              swapExecutionState?.route?.destAssetChainId == "osmosis-1") ||
+              (swapExecutionState?.route?.destAssetChainId == "osmo-test-5" &&
+                swapExecutionState?.route?.sourceAssetChainId ==
+                  "osmo-test-5")) &&
+            swapExecutionState?.route?.destAssetDenom?.includes(
+              import.meta.env.VITE_OSMOSIS_USDC_DENOM
+            ) &&
+            !swapExecutionState?.route?.sourceAssetDenom
+              ?.toLowerCase()
+              .includes("usdc") && (
+              <div style={{ marginTop: "10px", width: "100%" }}>
+                <MainButton
+                  label={`✨ Stream into $${Object.keys(JSON.parse(import.meta.env.VITE_STREAM_SWAP_IDS || "{}"))[0]} StreamSwap`}
+                  onClick={() => {
+                    track("stream page: stream into streamswap clicked");
+                    const streamId = Object.values(
+                      JSON.parse(import.meta.env.VITE_STREAM_SWAP_IDS || "{}")
+                    )[0] as string;
+
+                    setStreamSettings((prev) => ({
+                      ...prev,
+                      shouldStream: true,
+                      streamIntoStreamSwapID: streamId,
+                    }));
+                    setHasTriggeredSwap(true);
+                  }}
+                  backgroundColor="#8a2be2"
+                />
+              </div>
+            )}
+        </>
       )}
 
       <StreamSettingsFooter />

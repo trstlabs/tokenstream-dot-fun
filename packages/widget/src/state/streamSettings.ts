@@ -36,6 +36,7 @@ export interface IntentoStreamSettings {
   shouldStream: boolean;
   emailAddress: string;
   streamMode: StreamMode;
+  streamIntoStreamSwapID?: string;
 }
 
 // Default values (same as before)

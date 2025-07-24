@@ -213,19 +213,19 @@ export const SwapExecutionPage = () => {
               }
             : undefined
         }
-        rightButton={{
-          label: simpleRoute ? "Details" : "Hide details",
-          icon: simpleRoute ? ICONS.hamburger : ICONS.horizontalLine,
-          onClick: () => {
-            track(
-              "swap execution page: toggle route details button - clicked",
-              {
-                shown: simpleRoute ? "simple" : "detailed",
-              }
-            );
-            setSimpleRoute(!simpleRoute);
-          },
-        }}
+        // rightButton={{
+        //   label: simpleRoute ? "Details" : "Hide details",
+        //   icon: simpleRoute ? ICONS.hamburger : ICONS.horizontalLine,
+        //   onClick: () => {
+        //     track(
+        //       "swap execution page: toggle route details button - clicked",
+        //       {
+        //         shown: simpleRoute ? "simple" : "detailed",
+        //       }
+        //     );
+        //     setSimpleRoute(!simpleRoute);
+        //   },
+        // }}
       />
       <SwapExecutionPageRoute
         onClickEditDestinationWallet={onClickEditDestinationWallet}
