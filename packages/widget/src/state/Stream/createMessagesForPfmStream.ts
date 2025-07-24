@@ -15,6 +15,7 @@ import { MsgTransfer } from "cosmjs-types/ibc/applications/transfer/v1/tx";
 import { EncodeObject } from "@cosmjs/proto-signing";
 import { fromBech32, toBech32 } from "@cosmjs/encoding";
 import { getChainInfo } from "@/constants/chains";
+import { getChainChannelConfig } from "@/constants/intentoChains";
 
 export async function createMessagesForPfmStream({
   route,
@@ -40,7 +41,7 @@ export async function createMessagesForPfmStream({
   // Type guard to ensure TypeScript knows firstOp has transfer property
   if (
     "transfer" in firstOp &&
-    firstOp.transfer?.toChainId != route.swapVenues?.[0].chainId
+    !getChainChannelConfig(firstOp.transfer?.toChainId || "")
   ) {
     return;
   }
@@ -127,45 +128,46 @@ export async function createMessagesForPfmStream({
     originalSender: userAddresses[0].address,
   });
 
-  // const intoAddress = getIntentoAddressForChannel({
-  //   destPrefix: "into",
-  //   channel: intentoChannelToDest,
-  //   originalSender: fwdAddress,
-  // });
-
-  // const intoAddress = toBech32(
-  //   "into",
-  //   fromBech32(userAddresses[0].address).data
-  // );
-
   const intoAddress = toBech32("into", fromBech32(fwdAddress).data);
   const recurrences = Math.floor(
     Number(streamSettings.duration) / Number(streamSettings.interval)
   );
   const streamAmount = Math.floor(Number(firstOp.amountOut) / recurrences);
 
-  const memoOG = JSON.parse(
-    JSON.parse(originalRouteMsgs.txs?.[0].cosmosTx.msgs?.[0].msg || "")["memo"]
-  );
-  if (!memoOG.wasm.contract) throw new Error("skip wasm contract not found");
-  const streamEndSec =
-    Math.floor(Date.now() / 1000) + Number(streamSettings.duration);
-  const wasmMsg = constructWasmMsgSkipContractForStream(
-    memoOG.wasm.msg,
-    recurrences,
-    streamEndSec,
-    streamSettings.minAssetOutPercent
-  );
-
-  memoOG.wasm.msg = wasmMsg;
-
+  let memoObj: any;
+  let receiverString = ""; // Initialize with empty string
+  if (
+    JSON.parse(originalRouteMsgs.txs?.[0].cosmosTx.msgs?.[0].msg || "")?.memo
+  ) {
+    const memoOG = JSON.parse(
+      JSON.parse(originalRouteMsgs.txs?.[0].cosmosTx.msgs?.[0].msg || "")[
+        "memo"
+      ]
+    );
+    if (!memoOG.wasm.contract) throw new Error("skip wasm contract not found");
+    const streamEndSec =
+      Math.floor(Date.now() / 1000) + Number(streamSettings.duration);
+    let wasmMsg = constructWasmMsgSkipContractForStream(
+      memoOG.wasm.msg,
+      recurrences,
+      streamEndSec,
+      streamSettings.minAssetOutPercent
+    );
+    memoObj = memoOG;
+    memoObj.wasm.msg = wasmMsg;
+    receiverString = memoOG.wasm.contract;
+  } else {
+    receiverString = JSON.parse(
+      originalRouteMsgs.txs?.[0].cosmosTx.msgs?.[0].msg || ""
+    )["receiver"];
+  }
   const flowMsgIntento = {
     "@type": "/ibc.applications.transfer.v1.MsgTransfer",
     source_channel: intentoChannelToDest,
     source_port: "transfer",
     sender: intoAddress,
     token: { amount: String(streamAmount), denom: "ibc/" + ibcDenomHash },
-    receiver: memoOG.wasm.contract, //Object.values(userAddresses)[1].address,
+    receiver: receiverString,
     timeout_height: { revision_number: "0", revision_height: "0" },
     timeout_timestamp:
       streamSettings.startAt == 0
@@ -182,7 +184,7 @@ export async function createMessagesForPfmStream({
                 streamSettings.startAt
             ) * 1_000_000_000n
           ).toString(), // 10 minutes
-    memo: JSON.stringify(memoOG),
+    memo: JSON.stringify(memoObj),
   };
   console.log(flowMsgIntento);
   const memoSourceChain = {
@@ -205,7 +207,7 @@ export async function createMessagesForPfmStream({
                 ).toString(),
           stop_on_fail: "true",
           updating_disabled: "true",
-          label: "tokenstream.fun",
+          label: "test",
           owner: intoAddress,
           fallback: "true",
         },
