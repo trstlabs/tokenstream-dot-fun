@@ -18,7 +18,8 @@ export function constructWasmMsgSkipContract(
   wasmMsg: any,
   recurrences: number,
   streamEndSec: number,
-  minAssetOutPercent: number
+  minAssetOutPercent: number,
+  streamMode: "SPLIT_INPUT" | "RECUR_INPUT"
 ): any {
   // Defensive copy (if needed)
   // const msg = JSON.parse(JSON.stringify(wasmMsg));
@@ -35,8 +36,10 @@ export function constructWasmMsgSkipContract(
 
   // DCA: divide amount by recurrences if recurrences > 1
   let dividedAmount = originalAmount;
-  if (recurrences > 1) {
-    dividedAmount = Math.floor(originalAmount / recurrences);
+  if (streamMode === "SPLIT_INPUT") {
+    if (recurrences > 1) {
+      dividedAmount = Math.floor(originalAmount / recurrences);
+    }
   }
 
   // Set min_asset.native.amount based on minAssetOutPercent

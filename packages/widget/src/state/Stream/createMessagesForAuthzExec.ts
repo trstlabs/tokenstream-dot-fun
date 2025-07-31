@@ -169,7 +169,8 @@ export async function createMessagesForAuthzExec({
             cosmosMsgObject.msg,
             recurrences,
             streamEndSec,
-            streamSettings.minAssetOutPercent
+            streamSettings.minAssetOutPercent,
+            streamSettings.streamMode
           );
 
           cosmosMsgObject.msg = wasmMsg;
@@ -182,7 +183,7 @@ export async function createMessagesForAuthzExec({
     streamAmount = amountIn;
   }
 
-  if (streamSettings.streamIntoStreamSwapID != "") {
+  if (streamSettings.streamIntoStreamSwapID != undefined) {
     cosmosTx.msgs.forEach((msg) => {
       if (msg.msg) {
         let cosmosMsgObject = JSON.parse(msg.msg);

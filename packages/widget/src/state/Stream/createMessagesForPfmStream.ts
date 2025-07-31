@@ -151,7 +151,8 @@ export async function createMessagesForPfmStream({
       memoOG.wasm.msg,
       recurrences,
       streamEndSec,
-      streamSettings.minAssetOutPercent
+      streamSettings.minAssetOutPercent,
+      streamSettings.streamMode
     );
     memoObj = memoOG;
     memoObj.wasm.msg = wasmMsg;
@@ -220,7 +221,13 @@ export async function createMessagesForPfmStream({
     sourceChannel: firstOp.transfer?.channel,
     sourcePort: firstOp.transfer?.port,
     sender: userAddresses.map((user) => user.address)[0],
-    token: { amount: route.amountIn, denom: route.sourceAssetDenom },
+    token: {
+      amount:
+        streamSettings.streamMode === "SPLIT_INPUT"
+          ? route.amountIn
+          : (Number(route.amountIn) * recurrences).toString(),
+      denom: route.sourceAssetDenom,
+    },
     receiver: userAddresses.map((user) => user.address)[1],
     memo: JSON.stringify(memoSourceChain),
     timeoutTimestamp:
