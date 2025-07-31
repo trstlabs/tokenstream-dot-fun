@@ -104,18 +104,17 @@ export const SwapPage = () => {
   const isSwapOperation = useIsSwapOperation(route);
 
   const [nextPage, setNextPage] = useState(Routes.SwapExecutionPage);
-
+  const isStreamingSupported =
+    (sourceAsset?.chainId &&
+      intentoHostedAccountSupportedChains.includes(sourceAsset.chainId)) ||
+    (route?.operations &&
+      "transfer" in route.operations[0] &&
+      getChainChannelConfig(route.operations[0].transfer?.toChainId || "") !==
+        undefined);
   // Handle route-based navigation and Intento hosted account support
   useEffect(() => {
     // Check if source chain supports streaming
-    if (
-      (sourceAsset?.chainId &&
-        intentoHostedAccountSupportedChains.includes(sourceAsset.chainId)) ||
-      (route?.operations &&
-        "transfer" in route.operations[0] &&
-        getChainChannelConfig(route.operations[0].transfer?.toChainId || "") !==
-          undefined)
-    ) {
+    if (isStreamingSupported) {
       setNextPage(Routes.StreamPage);
     } else {
       setStreamSettingsAtom((prev) => ({ ...prev, shouldStream: false }));
@@ -449,7 +448,9 @@ export const SwapPage = () => {
 
     return (
       <MainButton
-        label={isSwapOperation ? "Swap" : "Send"}
+        label={
+          !isStreamingSupported ? (isSwapOperation ? "Swap" : "Send") : "Stream"
+        }
         icon={ICONS.swap}
         disabled={!route}
         onClick={onClick}
