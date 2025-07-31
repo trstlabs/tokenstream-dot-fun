@@ -18,7 +18,6 @@ import { EncodeObject } from "@cosmjs/proto-signing";
 export function constructWasmMsgSkipContract(
   wasmMsg: any,
   recurrences: number,
-  streamStartSec: number,
   streamEndSec: number,
   minAssetOutPercent: number,
   streamMode: "SPLIT_INPUT" | "RECUR_INPUT"
@@ -27,25 +26,11 @@ export function constructWasmMsgSkipContract(
   // const msg = JSON.parse(JSON.stringify(wasmMsg));
   const msg = wasmMsg;
 
-  // Calculate stream duration in seconds
-  const streamDuration = streamEndSec - streamStartSec;
+  // Set a fixed buffer after stream ends (1 hour)
+  const bufferAfterStreamEnd = 3600; // 1 hour
 
-  // Set timeout to be the maximum of 1 hour or 10% of stream duration, with a cap at 7 days
-  const minTimeout = 3600; // 1 hour
-  const maxTimeout = 7 * 24 * 3600; // 7 days
-  const calculatedTimeout = Math.min(
-    Math.max(Math.floor(streamDuration * 0.1), minTimeout),
-    maxTimeout
-  );
-
-  // Set the timeout to be the later of:
-  // 1. The stream end time + calculated timeout
-  // 2. Current time + minimum timeout
-  // This ensures the timeout never happens before the stream ends
-  const absoluteTimeout = Math.max(
-    streamEndSec + calculatedTimeout, // Option 1
-    streamStartSec + minTimeout // Option 2 (safety net)
-  );
+  // Calculate the absolute timeout as stream end time + buffer
+  const absoluteTimeout = streamEndSec + bufferAfterStreamEnd;
 
   // Set the timeout timestamp in nanoseconds
   msg.swap_and_action.timeout_timestamp = absoluteTimeout * 1_000_000_000;

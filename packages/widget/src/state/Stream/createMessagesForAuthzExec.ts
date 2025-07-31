@@ -151,40 +151,40 @@ export async function createMessagesForAuthzExec({
     console.error("No valid Cosmos transaction messages found");
     return;
   }
-
+  const recurrences = Math.floor(
+    Number(streamSettings.duration) / Number(streamSettings.interval)
+  );
   // 2. DCA/SPLIT_INPUT logic
   let streamAmount: string;
   if (streamSettings.streamMode === "SPLIT_INPUT") {
-    const recurrences = Math.floor(
-      Number(streamSettings.duration) / Number(streamSettings.interval)
-    );
     streamAmount = Math.floor(Number(amountIn) / recurrences).toString();
-    cosmosTx.msgs.forEach((msg) => {
-      if (msg.msg) {
-        let cosmosMsgObject = JSON.parse(msg.msg);
-        if (cosmosMsgObject.msg) {
-          const now = Math.floor(Date.now() / 1000);
-          const streamStartSec = streamSettings.startAt === 0 ? now : now + streamSettings.startAt;
-          const streamEndSec = streamStartSec + Number(streamSettings.duration);
-          let wasmMsg = constructWasmMsgSkipContract(
-            cosmosMsgObject.msg,
-            recurrences,
-            streamStartSec,
-            streamEndSec,
-            streamSettings.minAssetOutPercent,
-            streamSettings.streamMode
-          );
-
-          cosmosMsgObject.msg = wasmMsg;
-          cosmosMsgObject.funds[0].amount = streamAmount;
-          msg.msg = JSON.stringify(cosmosMsgObject);
-        }
-      }
-    });
   } else {
     streamAmount = amountIn;
   }
+  cosmosTx.msgs.forEach((msg) => {
+    if (msg.msg) {
+      let cosmosMsgObject = JSON.parse(msg.msg);
+      if (cosmosMsgObject.msg) {
+        const now = Math.floor(Date.now() / 1000);
+        const streamStartSec =
+          streamSettings.startAt === 0
+            ? now + streamSettings.interval
+            : now + streamSettings.startAt;
+        const streamEndSec = streamStartSec + Number(streamSettings.duration);
+        let wasmMsg = constructWasmMsgSkipContract(
+          cosmosMsgObject.msg,
+          recurrences,
+          streamEndSec,
+          streamSettings.minAssetOutPercent,
+          streamSettings.streamMode
+        );
 
+        cosmosMsgObject.msg = wasmMsg;
+        cosmosMsgObject.funds[0].amount = streamAmount;
+        msg.msg = JSON.stringify(cosmosMsgObject);
+      }
+    }
+  });
   if (streamSettings.streamIntoStreamSwapID != undefined) {
     cosmosTx.msgs.forEach((msg) => {
       if (msg.msg) {
@@ -207,7 +207,7 @@ export async function createMessagesForAuthzExec({
   // 3. Grant expiration logic
   const { needsNewGrant, expirationSeconds } = calculateGrantExpiration(
     existingGrant,
-    streamSettings.duration
+    streamSettings.duration + streamSettings.startAt
   );
   console.log("existingGrant", existingGrant);
   console.log("needsNewGrant", needsNewGrant);
