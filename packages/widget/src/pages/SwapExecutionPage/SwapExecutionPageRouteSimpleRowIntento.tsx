@@ -52,7 +52,7 @@ export const SwapExecutionPageRouteSimpleRowIntento = ({
   });
 
   const chainAddresses = useAtomValue(chainAddressesAtom);
-
+  const intentoImgUrl = "https://intento.zone/assets/images/icon.png";
   const source = useMemo(() => {
     const chainAddressArray = Object.values(chainAddresses);
     const address = chainAddressArray[0]?.address;
@@ -68,7 +68,7 @@ export const SwapExecutionPageRouteSimpleRowIntento = ({
 
     return {
       address: intoAddress,
-      image: "https://intento.zone/assets/images/icon.png",
+      image: intentoImgUrl,
     };
   }, [chainAddresses]);
 
@@ -96,13 +96,13 @@ export const SwapExecutionPageRouteSimpleRowIntento = ({
         backgroundColor={theme.success.text}
         status={status}
       >
-        {assetDetails.assetImage ? (
+        {intentoImgUrl ? (
           <img
             height={50}
             width={50}
             style={{ borderRadius: 50 }}
-            src={assetDetails.assetImage}
-            title={assetDetails?.asset?.name}
+            src={intentoImgUrl}
+            title={"Intento"}
           />
         ) : (
           <PlaceholderIcon>?</PlaceholderIcon>
@@ -115,7 +115,7 @@ export const SwapExecutionPageRouteSimpleRowIntento = ({
         {usdValue && <SmallText>{formatUSD(usdValue)}</SmallText>}
 
         <Row align="center" height={18} gap={5}>
-          <StyledChainName normalTextColor textWrap="nowrap">
+          <StyledChainName normalTextColor fontWeight="bold" textWrap="nowrap">
             Streaming {recurrences}x with Intento
           </StyledChainName>
 
