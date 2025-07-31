@@ -58,39 +58,42 @@ export const SwapExecutionPageRouteSimple = ({
     swapExecutionState,
   ]);
 
-  const safeDivide = (value: number | undefined, divisor: number): string =>
-    typeof value === "number" ? (value / divisor).toString() : "";
-
   const source = {
     denom: firstOperation.denomIn,
-    tokenAmount: firstOperation.amountIn,
-    chainId: firstOperation.fromChainId ?? firstOperation.chainId,
-    usdValue: route?.usdAmountIn,
-  };
-
-  const intento = {
-    denom: firstOperation.denomIn,
     tokenAmount:
-      shouldStream && streamMode === "SPLIT_INPUT"
-        ? Math.floor(Number(firstOperation.amountOut) / recurrences).toString()
-        : firstOperation.amountOut,
+      shouldStream && streamMode === "RECUR_INPUT"
+        ? (Number(firstOperation.amountIn) * recurrences).toString()
+        : firstOperation.amountIn,
     chainId: firstOperation.fromChainId ?? firstOperation.chainId,
     usdValue:
-      shouldStream && streamMode === "SPLIT_INPUT"
-        ? safeDivide(Number(route?.usdAmountOut), recurrences)
-        : route?.usdAmountOut,
+      shouldStream && streamMode === "RECUR_INPUT"
+        ? (Number(route?.usdAmountIn) * recurrences).toString()
+        : route?.usdAmountIn,
+  };
+
+  const intentoFlow = {
+    denom: firstOperation.denomIn,
+    tokenAmount:
+      shouldStream && streamMode === "RECUR_INPUT"
+        ? (Number(firstOperation.amountIn) * recurrences).toString()
+        : firstOperation.amountIn,
+    chainId: firstOperation.fromChainId ?? firstOperation.chainId,
+    usdValue:
+      shouldStream && streamMode === "RECUR_INPUT"
+        ? (Number(route?.usdAmountIn) * recurrences).toString()
+        : route?.usdAmountIn,
   };
 
   const destination = {
     denom: lastOperation.denomOut,
     tokenAmount:
-      shouldStream && streamMode === "SPLIT_INPUT"
-        ? Math.floor(Number(lastOperation.amountOut) / recurrences).toString()
+      shouldStream && streamMode === "RECUR_INPUT"
+        ? (Number(lastOperation.amountOut) * recurrences).toString()
         : lastOperation.amountOut,
     chainId: lastOperation.toChainId ?? lastOperation.chainId,
     usdValue:
-      shouldStream && streamMode === "SPLIT_INPUT"
-        ? safeDivide(Number(route?.usdAmountOut), recurrences)
+      shouldStream && streamMode === "RECUR_INPUT"
+        ? (Number(route?.usdAmountOut) * recurrences).toString()
         : route?.usdAmountOut,
   };
 
@@ -110,7 +113,7 @@ export const SwapExecutionPageRouteSimple = ({
       <StyledBridgeArrowIcon color={theme.primary.text.normal} />
       {shouldStream && (
         <SwapExecutionPageRouteSimpleRowIntento
-          {...intento}
+          {...intentoFlow}
           status={firstOperationStatus}
           explorerLink={sourceExplorerLink}
           recurrences={recurrences}
@@ -124,7 +127,16 @@ export const SwapExecutionPageRouteSimple = ({
         onClickEditDestinationWallet={onClickEditDestinationWallet}
         explorerLink={destinationExplorerLink}
         context="destination"
+        isSwapStream={shouldStream && source.denom !== destination.denom}
       />
+      {/* {shouldStream && (
+        <SmallText normalTextColor fontWeight="bold" textWrap="nowrap">
+          Note: Streaming mode is{" "}
+          {streamMode === "RECUR_INPUT"
+            ? "Recurring Token Input"
+            : "Splitting Token Input"}
+        </SmallText>
+      )} */}
     </StyledSwapExecutionPageRoute>
   );
 };
