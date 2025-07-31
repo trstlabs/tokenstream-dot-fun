@@ -253,7 +253,8 @@ export async function createMessagesForAuthzExec({
       owner: intoAddress,
       fallback: "true",
       hosted_account: channelConfig.hostedAddress,
-      hosted_fee_limit: channelConfig.hostedAccountFee + channelConfig.denom, // host denom
+      hosted_fee_limit:
+        channelConfig.hostedAccountFee + channelConfig.denomOnIntento, // host denom
     },
   };
 
