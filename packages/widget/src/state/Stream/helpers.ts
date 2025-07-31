@@ -10,6 +10,7 @@ import { EncodeObject } from "@cosmjs/proto-signing";
  * Construct a WASM message for Skip contract streaming with updated timestamp and minAssetOut.
  * @param wasmMsg The original WASM message object
  * @param recurrences Number of recurrences for DCA (ignored if not SPLIT_INPUT)
+ * @param streamStartSec The stream start timestamp (in seconds)
  * @param streamEndSec The stream end timestamp (in seconds)
  * @param minAssetOutPercent Percentage for min_asset.native.amount (-20, 0, +5, etc), or -1 for zero
  * @returns The mutated WASM message
@@ -17,6 +18,7 @@ import { EncodeObject } from "@cosmjs/proto-signing";
 export function constructWasmMsgSkipContract(
   wasmMsg: any,
   recurrences: number,
+  streamStartSec: number,
   streamEndSec: number,
   minAssetOutPercent: number,
   streamMode: "SPLIT_INPUT" | "RECUR_INPUT"
@@ -25,8 +27,28 @@ export function constructWasmMsgSkipContract(
   // const msg = JSON.parse(JSON.stringify(wasmMsg));
   const msg = wasmMsg;
 
-  // Set the timestamp in nanoseconds: stream end + 10 minutes (600 seconds)
-  msg.swap_and_action.timeout_timestamp = (streamEndSec + 600) * 1_000_000_000;
+  // Calculate stream duration in seconds
+  const streamDuration = streamEndSec - streamStartSec;
+
+  // Set timeout to be the maximum of 1 hour or 10% of stream duration, with a cap at 7 days
+  const minTimeout = 3600; // 1 hour
+  const maxTimeout = 7 * 24 * 3600; // 7 days
+  const calculatedTimeout = Math.min(
+    Math.max(Math.floor(streamDuration * 0.1), minTimeout),
+    maxTimeout
+  );
+
+  // Set the timeout to be the later of:
+  // 1. The stream end time + calculated timeout
+  // 2. Current time + minimum timeout
+  // This ensures the timeout never happens before the stream ends
+  const absoluteTimeout = Math.max(
+    streamEndSec + calculatedTimeout, // Option 1
+    streamStartSec + minTimeout // Option 2 (safety net)
+  );
+
+  // Set the timeout timestamp in nanoseconds
+  msg.swap_and_action.timeout_timestamp = absoluteTimeout * 1_000_000_000;
 
   // Calculate original amount
   const originalAmount = parseInt(

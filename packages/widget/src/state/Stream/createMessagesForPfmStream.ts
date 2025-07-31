@@ -145,11 +145,13 @@ export async function createMessagesForPfmStream({
       ]
     );
     if (!memoOG.wasm.contract) throw new Error("skip wasm contract not found");
-    const streamEndSec =
-      Math.floor(Date.now() / 1000) + Number(streamSettings.duration);
+    const now = Math.floor(Date.now() / 1000);
+    const streamStartSec = streamSettings.startAt === 0 ? now : now + streamSettings.startAt;
+    const streamEndSec = streamStartSec + Number(streamSettings.duration);
     let wasmMsg = constructWasmMsgSkipContract(
       memoOG.wasm.msg,
       recurrences,
+      streamStartSec,
       streamEndSec,
       streamSettings.minAssetOutPercent,
       streamSettings.streamMode
