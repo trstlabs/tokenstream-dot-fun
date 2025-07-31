@@ -252,8 +252,7 @@ export async function createMessagesForAuthzExec({
       label: "tokenstream.fun",
       owner: intoAddress,
       fallback: "true",
-      hosted_address: channelConfig.hostedAddress,
-      cid: "connection-2", //temporary fix,
+      hosted_account: channelConfig.hostedAddress,
       hosted_fee_limit: channelConfig.hostedAccountFee + channelConfig.denom, // host denom
     },
   };
