@@ -543,7 +543,7 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
 
             if (email && owner) {
               fetch(
-                "https://triggerportal.zone/.netlify/functions/flow-alert?subscribe=true",
+                "https://portal.intento.zone/.netlify/functions/flow-alert?subscribe=true",
                 {
                   method: "POST",
                   headers: {
