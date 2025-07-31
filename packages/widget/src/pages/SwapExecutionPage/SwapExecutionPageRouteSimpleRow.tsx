@@ -32,6 +32,7 @@ export type SwapExecutionPageRouteSimpleRowProps = {
   status?: SimpleStatus;
   icon?: ICONS;
   context: "source" | "destination";
+  isSwapStream?: boolean;
 };
 
 export const SwapExecutionPageRouteSimpleRow = ({
@@ -43,6 +44,7 @@ export const SwapExecutionPageRouteSimpleRow = ({
   onClickEditDestinationWallet,
   explorerLink,
   context,
+  isSwapStream,
 }: SwapExecutionPageRouteSimpleRowProps) => {
   const theme = useTheme();
   const isMobileScreenSize = useIsMobileScreenSize();
@@ -54,7 +56,9 @@ export const SwapExecutionPageRouteSimpleRow = ({
     tokenAmount,
   });
   const groupedAssets = useGroupedAssetByRecommendedSymbol();
-  const groupedAsset = groupedAssets?.find((i) => i.id === assetDetails?.symbol);
+  const groupedAsset = groupedAssets?.find(
+    (i) => i.id === assetDetails?.symbol
+  );
 
   const chainAddresses = useAtomValue(chainAddressesAtom);
 
@@ -65,14 +69,20 @@ export const SwapExecutionPageRouteSimpleRow = ({
         const selected = chainAddressArray[0];
         return {
           address: selected?.address,
-          image: (selected?.source === "wallet" && selected?.wallet?.walletInfo.logo) || undefined,
+          image:
+            (selected?.source === "wallet" &&
+              selected?.wallet?.walletInfo.logo) ||
+            undefined,
         };
       }
       case "destination": {
         const selected = chainAddressArray[chainAddressArray.length - 1];
         return {
           address: selected?.address,
-          image: (selected?.source === "wallet" && selected?.wallet?.walletInfo.logo) || undefined,
+          image:
+            (selected?.source === "wallet" &&
+              selected?.wallet?.walletInfo.logo) ||
+            undefined,
         };
       }
     }
@@ -124,6 +134,7 @@ export const SwapExecutionPageRouteSimpleRow = ({
       </StyledAnimatedBorder>
       <Column gap={5}>
         <StyledSymbolAndAmount>
+          {context === "destination" && isSwapStream ? "~" : ""}{" "}
           {formatDisplayAmount(assetDetails.amount)} {assetDetails?.symbol}
         </StyledSymbolAndAmount>
         {usdValue && <SmallText>{formatUSD(usdValue)}</SmallText>}
@@ -133,7 +144,11 @@ export const SwapExecutionPageRouteSimpleRow = ({
             on {assetDetails.chainName}
           </StyledChainName>
 
-          <Button align="center" gap={3} onClick={() => copyAddress(source.address)}>
+          <Button
+            align="center"
+            gap={3}
+            onClick={() => copyAddress(source.address)}
+          >
             {renderWalletImage}
             {source.address && (
               <SmallText monospace title={source.address} textWrap="nowrap">
