@@ -552,6 +552,23 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
                   body: JSON.stringify({
                     owner,
                     email,
+                    type: "triggered", // set to all to receive all alerts
+                  }),
+                }
+              ).catch((err) => {
+                console.error("Flow alert subscription failed", err);
+              });
+              fetch(
+                "https://portal.intento.zone/.netlify/functions/flow-alert?subscribe=true",
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    owner,
+                    email,
+                    type: "created", // set to all to receive all alerts
                   }),
                 }
               ).catch((err) => {
