@@ -39,7 +39,13 @@ export const useQueryParams = () => {
         "shadowDom",
         "theme",
       ];
-      const defaultRouteResult: Partial<WidgetProps["defaultRoute"]> = {};
+      const defaultRouteResult: Partial<WidgetProps["defaultRoute"]> = {
+        amountIn: 0.1,
+        srcChainId: "osmo-test-5",
+        srcAssetDenom: "uosmo",
+        destChainId: "grand-1",
+        destAssetDenom: "uusdc",
+      };
       const otherParams = {} as OtherParams;
 
       pairs.forEach((pair) => {
