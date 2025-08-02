@@ -1,47 +1,68 @@
-import { useState, useEffect } from 'react';
-import { WidgetProps } from '@skip-go/widget';
+import { useState, useEffect } from "react";
+import { WidgetProps } from "@skip-go/widget";
 
 type OtherParams = {
   shadowDom?: boolean;
   testnet?: boolean;
   api?: "prod" | "dev";
   theme?: "light" | "dark";
-}
+};
 
 export const useQueryParams = () => {
-  const [defaultRoute, setDefaultRoute] = useState<WidgetProps['defaultRoute']>(undefined);
-  const [otherParams, setOtherParams] = useState<OtherParams | undefined>(undefined);
+  const [defaultRoute, setDefaultRoute] = useState<WidgetProps["defaultRoute"]>(
+    {
+      amountIn: 0.1,
+      srcChainId: "osmo-test-5",
+      srcAssetDenom: "uosmo",
+      destChainId: "grand-1",
+      destAssetDenom: "uusdc",
+    }
+  );
+  const [otherParams, setOtherParams] = useState<OtherParams | undefined>(
+    undefined
+  );
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const queryString = window.location.search.substring(1);
-      const pairs = queryString.split('&');
-      const keys = ['src_asset', 'src_chain', 'dest_chain', 'dest_asset', 'amount_in', 'amount_out', 'testnet', "api", "shadowDom", "theme"];
-      const defaultRouteResult: Partial<WidgetProps['defaultRoute']> = {};
+      const pairs = queryString.split("&");
+      const keys = [
+        "src_asset",
+        "src_chain",
+        "dest_chain",
+        "dest_asset",
+        "amount_in",
+        "amount_out",
+        "testnet",
+        "api",
+        "shadowDom",
+        "theme",
+      ];
+      const defaultRouteResult: Partial<WidgetProps["defaultRoute"]> = {};
       const otherParams = {} as OtherParams;
 
       pairs.forEach((pair) => {
-        const [rawKey, rawValue] = pair.split('=');
+        const [rawKey, rawValue] = pair.split("=");
 
         const value = decodeURIComponent(rawValue);
         if (rawKey && rawValue && keys.includes(rawKey)) {
-          if (rawKey === 'src_asset') {
+          if (rawKey === "src_asset") {
             defaultRouteResult.srcAssetDenom = value;
           }
-          if (rawKey === 'src_chain') {
+          if (rawKey === "src_chain") {
             defaultRouteResult.srcChainId = value;
           }
-          if (rawKey === 'dest_chain') {
+          if (rawKey === "dest_chain") {
             defaultRouteResult.destChainId = value;
           }
-          if (rawKey === 'dest_asset') {
+          if (rawKey === "dest_asset") {
             defaultRouteResult.destAssetDenom = value;
           }
-          if (rawKey === 'amount_in') {
+          if (rawKey === "amount_in") {
             defaultRouteResult.amountIn = parseFloat(value);
           }
-          if (rawKey === 'amount_out') {
+          if (rawKey === "amount_out") {
             defaultRouteResult.amountOut = parseFloat(value);
           }
           if (rawKey === "shadowDom") {
@@ -59,22 +80,20 @@ export const useQueryParams = () => {
         }
       });
 
-
       if (!Object.keys(otherParams).length) {
         setOtherParams(undefined);
       } else {
         setOtherParams(otherParams);
       }
 
-
       if (!Object.keys(defaultRouteResult).length) {
         setDefaultRoute(undefined);
       } else {
-        setDefaultRoute(defaultRouteResult as WidgetProps['defaultRoute']);
+        setDefaultRoute(defaultRouteResult as WidgetProps["defaultRoute"]);
       }
       setLoaded(true);
     }
   }, []);
 
-  return {defaultRoute, otherParams, loaded};
+  return { defaultRoute, otherParams, loaded };
 };
