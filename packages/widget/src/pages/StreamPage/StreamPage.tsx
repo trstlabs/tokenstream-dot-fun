@@ -274,7 +274,7 @@ export const StreamPage = ({}: StreamPageProps) => {
           </Row>
 
           {/* Stream into StreamSwap button - only shown for USDC destination on Osmosis from a token on Osmosis or Osmosis Testnet */}
-          {import.meta.env.VITE_STREAM_SWAP_IDS &&
+          {/* {import.meta.env.VITE_STREAM_SWAP_IDS &&
             ((swapExecutionState?.route?.sourceAssetChainId == "osmosis-1" &&
               swapExecutionState?.route?.destAssetChainId == "osmosis-1") ||
               (swapExecutionState?.route?.destAssetChainId == "osmo-test-5" &&
@@ -305,7 +305,7 @@ export const StreamPage = ({}: StreamPageProps) => {
                   backgroundColor="#8a2be2"
                 />
               </div>
-            )}
+            )} */}
         </>
       )}
 
