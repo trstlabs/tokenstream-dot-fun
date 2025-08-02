@@ -4,8 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "tokenstream.fun",
   icons: {
-    icon: [{ url: "/favicon.ico" }, { url: "/favicon.ico", sizes: "any" }],
-    apple: [{ url: "/favicon.ico" }],
+    icon: "/favicon.ico",
   },
 };
 
