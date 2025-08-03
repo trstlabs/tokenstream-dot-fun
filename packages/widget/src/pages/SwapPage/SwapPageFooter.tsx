@@ -15,17 +15,7 @@ import { useSettingsChanged } from "@/hooks/useSettingsChanged";
 import { useIsMobileScreenSize } from "@/hooks/useIsMobileScreenSize";
 import { useIsGoFast } from "@/hooks/useIsGoFast";
 
-import { convertSecondsToMinutesOrHours } from "@/utils/number";
 import { getFeeList, getTotalFees } from "@/utils/route";
-
-const EstimatedDuration = ({ seconds }: { seconds?: number }) => {
-  const formatted = seconds ? convertSecondsToMinutesOrHours(seconds) : null;
-  return formatted ? (
-    <Row gap={4} align="flex-end">
-      {formatted}
-    </Row>
-  ) : null;
-};
 
 const Fee = ({ amount }: { amount?: string }) =>
   amount ? (
@@ -34,8 +24,18 @@ const Fee = ({ amount }: { amount?: string }) =>
     </Row>
   ) : null;
 
-const SettingsButton = ({ highlight, changed }: { highlight?: boolean; changed: boolean }) => (
-  <StyledSettingsContainer align="flex-end" gap={3} highlightSettings={highlight}>
+const SettingsButton = ({
+  highlight,
+  changed,
+}: {
+  highlight?: boolean;
+  changed: boolean;
+}) => (
+  <StyledSettingsContainer
+    align="flex-end"
+    gap={3}
+    highlightSettings={highlight}
+  >
     <CogIconWrapper>
       <CogIcon />
       {changed && <SettingsChangedIndicator />}
@@ -53,8 +53,13 @@ const SignatureRequired = ({ count }: { count: number }) => (
   </Row>
 );
 
-const RoutePreferenceLabel = ({ preference }: { preference: RoutePreference }) => {
-  const label = preference === RoutePreference.FASTEST ? "Fastest route" : "Cheapest route";
+const RoutePreferenceLabel = ({
+  preference,
+}: {
+  preference: RoutePreference;
+}) => {
+  const label =
+    preference === RoutePreference.FASTEST ? "Fastest route" : "Cheapest route";
   return <span>{label}</span>;
 };
 
@@ -79,7 +84,6 @@ export const SwapPageFooterItems: React.FC<SwapPageFooterItemsProps> = ({
   const isMobile = useIsMobileScreenSize();
   const isGoFast = useIsGoFast(route);
 
-  const estimatedSeconds = route?.estimatedRouteDurationSeconds;
   const fees = useMemo(() => (route ? getFeeList(route) : []), [route]);
   const totalFees = getTotalFees(fees)?.formattedUsdAmount;
   const signaturesRequired = route?.txsRequired ?? 1;
@@ -92,12 +96,16 @@ export const SwapPageFooterItems: React.FC<SwapPageFooterItemsProps> = ({
       <Row align="flex-end" gap={10} height={isMobile ? undefined : 13}>
         {showEstimatedTime && (
           <>
-            <SettingsButton highlight={highlightSettings} changed={settingsChanged} />
-            <EstimatedDuration seconds={estimatedSeconds} />
+            <SettingsButton
+              highlight={highlightSettings}
+              changed={settingsChanged}
+            />
           </>
         )}
         {showFee && <Fee amount={totalFees} />}
-        {!isMobile && signaturesRequired > 1 && <SignatureRequired count={signaturesRequired} />}
+        {!isMobile && signaturesRequired > 1 && (
+          <SignatureRequired count={signaturesRequired} />
+        )}
         {!isMobile && signaturesRequired <= 1 && isGoFast && (
           <RoutePreferenceLabel preference={routePreference} />
         )}
@@ -106,7 +114,9 @@ export const SwapPageFooterItems: React.FC<SwapPageFooterItemsProps> = ({
   };
 
   const rightContent = () =>
-    isMobile && isGoFast ? <RoutePreferenceLabel preference={routePreference} /> : null;
+    isMobile && isGoFast ? (
+      <RoutePreferenceLabel preference={routePreference} />
+    ) : null;
 
   return (
     <>
@@ -137,7 +147,8 @@ export const StyledSignatureRequiredContainer = styled(Row)`
 `;
 
 const StyledSettingsContainer = styled(Row)<{ highlightSettings?: boolean }>`
-  ${({ highlightSettings, theme }) => highlightSettings && `color: ${theme.primary.text.normal}`};
+  ${({ highlightSettings, theme }) =>
+    highlightSettings && `color: ${theme.primary.text.normal}`};
 `;
 
 const CogIconWrapper = styled(Row)`
