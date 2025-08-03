@@ -162,7 +162,8 @@ const SectionHeader = styled.div<{ active: boolean }>`
 `;
 
 const SectionBody = styled.div`
-  padding: 10px 8px 8px 8px;
+  padding-left: 8px;
+  padding-right: 8px;
   background: ${({ theme }) => theme.primary.background.normal};
 `;
 
@@ -174,6 +175,7 @@ const StyledStreamSettings = styled(Column)`
 `;
 
 const StyledHelpText = styled(SmallText)`
+  padding-bottom: 10px;
   padding-left: 4px;
   padding-right: 4px;
   font-size: 11px;

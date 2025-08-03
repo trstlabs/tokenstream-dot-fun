@@ -25,8 +25,8 @@ export const EmailSetting = () => {
   const valid = email === "" || isValidEmail(email);
 
   return (
-    <Column gap={10}>
-      <SmallText>Email for Flow Alerts (optional)</SmallText>
+    <Column gap={2}>
+      <SmallText>Email for Alerts</SmallText>
       <Row>
         <StyledInput
           type="email-address"
