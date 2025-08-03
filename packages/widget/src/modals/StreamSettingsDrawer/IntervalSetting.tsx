@@ -8,14 +8,28 @@ import { SmallText, SmallTextButton } from "@/components/Typography";
 import { Row, Column } from "@/components/Layout";
 import { css, styled } from "styled-components";
 import { streamSettingsAtom } from "@/state/streamSettings";
+
 export const IntervalSetting = () => {
   const [settings, setSettings] = useAtom(streamSettingsAtom);
   const seconds = settings.interval;
 
-  // Decide the display unit
-  const isInHours = seconds < 86400;
-  const unit = isInHours ? "hours" : "days";
-  const unitInSeconds = isInHours ? 3600 : 86400;
+  // Automatically determine the best unit to display
+  let unitInSeconds: number;
+  let unit: string;
+
+  if (seconds < 3600) {
+    // Less than 1 hour
+    unitInSeconds = 60;
+    unit = "minutes";
+  } else if (seconds < 86400) {
+    // 1 hour or more but less than 1 day
+    unitInSeconds = 3600;
+    unit = "hours";
+  } else {
+    // 1 day or more
+    unitInSeconds = 86400;
+    unit = "days";
+  }
 
   // Convert to display value
   const displayValue = formatNumberWithCommas(seconds / unitInSeconds);
@@ -29,9 +43,18 @@ export const IntervalSetting = () => {
     latest = latest.replace(/[,]{2,}/g, ",");
 
     if (!latest.endsWith(".")) {
+      let maxValue: number;
+      if (unit === "minutes") {
+        maxValue = 10080; // 1 week in minutes
+      } else if (unit === "hours") {
+        maxValue = 168; // 1 week in hours
+      } else {
+        // days
+        maxValue = 30; // 30 days max
+      }
       latest = Math.max(
         0,
-        Math.min(100, +formatNumberWithoutCommas(latest))
+        Math.min(maxValue, +formatNumberWithoutCommas(latest))
       ).toString();
     }
 
@@ -57,11 +80,15 @@ export const IntervalSetting = () => {
           />
           <SmallText>{unit}</SmallText>
 
-          {/* Quick Set Buttons (all in days) */}
           <SmallTextButton
-            onClick={() => setSettings((s) => ({ ...s, interval: 3600 / 2 }))}
+            onClick={() => setSettings((s) => ({ ...s, interval: 600 }))}
           >
-            30 minutes
+            10 min
+          </SmallTextButton>
+          <SmallTextButton
+            onClick={() => setSettings((s) => ({ ...s, interval: 1800 }))}
+          >
+            30 min
           </SmallTextButton>
           <SmallTextButton
             onClick={() => setSettings((s) => ({ ...s, interval: 3600 }))}

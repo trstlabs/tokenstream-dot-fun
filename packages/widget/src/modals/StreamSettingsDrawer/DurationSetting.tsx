@@ -12,10 +12,23 @@ export const DurationSetting = () => {
   const [settings, setSettings] = useAtom(streamSettingsAtom);
   const seconds = settings.duration;
 
-  // Decide the display unit
-  const isInHours = seconds < 86400;
-  const unit = isInHours ? "hours" : "days";
-  const unitInSeconds = isInHours ? 3600 : 86400;
+  // Automatically determine the best unit to display
+  let unitInSeconds: number;
+  let unit: string;
+
+  if (seconds < 3600) {
+    // Less than 1 hour
+    unitInSeconds = 60;
+    unit = "minutes";
+  } else if (seconds < 86400) {
+    // Less than 1 day
+    unitInSeconds = 3600;
+    unit = "hours";
+  } else {
+    // 1 day or more
+    unitInSeconds = 86400;
+    unit = "days";
+  }
 
   // Convert to display value
   const displayValue = formatNumberWithCommas(seconds / unitInSeconds);
@@ -29,9 +42,18 @@ export const DurationSetting = () => {
     latest = latest.replace(/[,]{2,}/g, ",");
 
     if (!latest.endsWith(".")) {
+      let maxValue: number;
+      if (unit === "minutes") {
+        maxValue = 10080; // 1 week in minutes
+      } else if (unit === "hours") {
+        maxValue = 168; // 1 week in hours
+      } else {
+        // days
+        maxValue = 365; // 1 year in days
+      }
       latest = Math.max(
         0,
-        Math.min(100, +formatNumberWithoutCommas(latest))
+        Math.min(maxValue, +formatNumberWithoutCommas(latest))
       ).toString();
     }
 
@@ -56,27 +78,31 @@ export const DurationSetting = () => {
             onChange={handleDurationChange}
           />
           <SmallText>{unit}</SmallText>
-
-          {/* Quick Set Buttons (all in days) */}
           <SmallTextButton
-            onClick={() => setSettings((s) => ({ ...s, duration: 3600 }))}
+            onClick={() => setSettings((s) => ({ ...s, duration: 3600 }))} // 1 hour
           >
             1 hour
           </SmallTextButton>
+
           <SmallTextButton
-            onClick={() => setSettings((s) => ({ ...s, duration: 86400 }))}
+            onClick={() => setSettings((s) => ({ ...s, duration: 86400 }))} // 1 day
           >
             1 day
           </SmallTextButton>
           <SmallTextButton
-            onClick={() => setSettings((s) => ({ ...s, duration: 604800 }))}
+            onClick={() => setSettings((s) => ({ ...s, duration: 604800 }))} // 1 week
           >
             1 week
           </SmallTextButton>
           <SmallTextButton
-            onClick={() => setSettings((s) => ({ ...s, duration: 2419200 }))}
+            onClick={() => setSettings((s) => ({ ...s, duration: 1209600 }))} // 2 weeks
           >
-            4 weeks
+            2 weeks
+          </SmallTextButton>
+          <SmallTextButton
+            onClick={() => setSettings((s) => ({ ...s, duration: 2592000 }))} // 30 days
+          >
+            30 days
           </SmallTextButton>
         </Row>
       </Column>

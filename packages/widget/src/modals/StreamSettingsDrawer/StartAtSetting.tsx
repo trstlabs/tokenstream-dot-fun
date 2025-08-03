@@ -14,10 +14,10 @@ export const StartAtSetting = () => {
   const [settings, setSettings] = useAtom(streamSettingsAtom);
   const seconds = settings.startAt;
 
-  // Decide the display unit
-  const isInHours = seconds < 86400;
-  const unit = isInHours ? "hours" : "days";
-  const unitInSeconds = isInHours ? 3600 : 86400;
+  // Automatically determine the best unit to display
+  const useMinutes = seconds < 3600; // Less than 1 hour
+  const unitInSeconds = useMinutes ? 60 : 3600;
+  const unit = useMinutes ? "minutes" : "hours";
 
   // Convert to display value
   const displayValue = formatNumberWithCommas(seconds / unitInSeconds);
@@ -31,9 +31,10 @@ export const StartAtSetting = () => {
     latest = latest.replace(/[,]{2,}/g, ",");
 
     if (!latest.endsWith(".")) {
+      const maxValue = useMinutes ? 10080 : 100; // 10080 minutes = 1 week
       latest = Math.max(
         0,
-        Math.min(100, +formatNumberWithoutCommas(latest))
+        Math.min(maxValue, +formatNumberWithoutCommas(latest))
       ).toString();
     }
 
@@ -50,8 +51,8 @@ export const StartAtSetting = () => {
       return theme.primary.text.normal;
     }
 
-    return theme.primary.text.ultraLowContrast;
-  }, [seconds, theme.primary.text, theme.primary.text.ultraLowContrast]);
+    return theme.primary.text.lowContrast;
+  }, [seconds, theme.primary.text, theme.primary.text.lowContrast]);
 
   return (
     <Column gap={10}>
@@ -67,7 +68,6 @@ export const StartAtSetting = () => {
           />
           <SmallText>{unit}</SmallText>
 
-          {/* Quick Set Buttons (all in days) */}
           <SmallTextButton
             color={nowColor}
             onClick={() => setSettings((s) => ({ ...s, startAt: 0 }))}
@@ -75,7 +75,12 @@ export const StartAtSetting = () => {
             Now
           </SmallTextButton>
           <SmallTextButton
-            onClick={() => setSettings((s) => ({ ...s, startAt: 3600 }))}
+            onClick={() => setSettings((s) => ({ ...s, startAt: 1800 }))} // 30 minutes
+          >
+            30 min
+          </SmallTextButton>
+          <SmallTextButton
+            onClick={() => setSettings((s) => ({ ...s, startAt: 3600 }))} // 1 hour
           >
             1 hour
           </SmallTextButton>
