@@ -43,7 +43,7 @@ export interface IntentoStreamSettings {
 export const defaultStreamSettings: IntentoStreamSettings = {
   minAssetOutPercent: -1,
   customGasAmount: "200000",
-  interval: 600, // 10 minutes
+  interval: 12000, // 2 hours
   duration: 86400, // 1 day
   startAt: 0,
   shouldStream: false,
