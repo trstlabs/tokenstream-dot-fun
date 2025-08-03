@@ -6,11 +6,13 @@ import {
 } from "@/utils/number";
 import { SmallText, SmallTextButton } from "@/components/Typography";
 import { Row, Column } from "@/components/Layout";
-import { css, styled } from "styled-components";
+import { styled } from "styled-components";
 import { streamSettingsAtom } from "@/state/streamSettings";
+import { useStreamValidation } from "@/hooks/useStreamValidation";
 export const DurationSetting = () => {
   const [settings, setSettings] = useAtom(streamSettingsAtom);
   const seconds = settings.duration;
+  const { isDurationValid } = useStreamValidation();
 
   // Automatically determine the best unit to display
   let unitInSeconds: number;
@@ -76,6 +78,7 @@ export const DurationSetting = () => {
             inputMode="numeric"
             value={displayValue}
             onChange={handleDurationChange}
+            $hasError={!isDurationValid}
           />
           <SmallText>{unit}</SmallText>
           <SmallTextButton
@@ -118,23 +121,24 @@ const SwapDetailText = styled(Row).attrs({
   letter-spacing: 0.26px;
 `;
 
-const StyledInput = styled.input<{ validAddress?: boolean }>`
-  font-size: 12px;
+const StyledInput = styled.input<{ $hasError?: boolean }>`
+  font-size: 14px;
   font-family: "ABCDiatype", sans-serif;
-  height: 40px;
-  width: 20%;
-  box-sizing: border-box;
-  outline: none;
-  padding: 8px 40px 8px 15px;
-  border: 1px solid ${({ theme }) => theme.primary.text.ultraLowContrast};
-  background: ${({ theme }) => theme.secondary.background.normal};
-  color: ${({ theme }) => theme.primary.text.normal};
+  height: 32px;
+  width: 80px;
+  text-align: right;
+  border: 1px solid ${({ theme, $hasError }) => 
+    $hasError ? theme.error.text : theme.primary.text.ultraLowContrast};
   border-radius: 6px;
+  padding: 0 8px;
+  background: ${({ theme, $hasError }) => 
+    $hasError ? theme.error.background : theme.secondary.background.normal};
+  color: ${({ theme }) => theme.primary.text.normal};
+  outline: none;
+  transition: border-color 0.2s, background-color 0.2s;
 
-  ${({ validAddress, theme }) =>
-    validAddress === false &&
-    css`
-      border-color: ${theme.error.text};
-      background: ${theme.error.background};
-    `}
+  &:focus {
+    border-color: ${({ theme, $hasError }) => 
+      $hasError ? theme.error.text : theme.primary.text.lowContrast};
+  }
 `;
