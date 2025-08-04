@@ -212,7 +212,7 @@ export async function createMessagesForPfmStream({
                 ).toString(),
           stop_on_fail: "true",
           updating_disabled: "true",
-          label: "test",
+          label: "tokenstream.fun",
           owner: intoAddress,
           fallback: "true",
         },
