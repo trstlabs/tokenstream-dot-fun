@@ -16,6 +16,7 @@ import { EncodeObject } from "@cosmjs/proto-signing";
 import { fromBech32, toBech32 } from "@cosmjs/encoding";
 import { getChainInfo } from "@/constants/chains";
 import { getChainChannelConfig } from "@/constants/intentoChains";
+import { skipClientConfigAtom } from "../skipClient";
 
 export async function createMessagesForPfmStream({
   route,
@@ -89,10 +90,14 @@ export async function createMessagesForPfmStream({
   if (firstOp.transfer?.denomOut?.startsWith("ibc/")) {
     // Get the hash part
     const hashOnly = firstOp.transfer.denomOut.split("ibc/")[1];
-
+    const skipClientConfig = get(skipClientConfigAtom);
+    const lcdURL =
+      (await skipClientConfig.endpointOptions?.getRestEndpointForChain?.(
+        firstOp.transfer?.toChainId || ""
+      )) || getChainInfo(firstOp.transfer?.toChainId || "")?.rest;
     // Lookup denom trace from the LCD
     const denomTrace = await fetch(
-      `${getChainInfo(firstOp.transfer?.toChainId || "")?.rest}/ibc/apps/transfer/v1/denom_traces/${hashOnly}`
+      `${lcdURL}/ibc/apps/transfer/v1/denom_traces/${hashOnly}`
     )
       .then((res) => res.json())
       .then((res) => res.denom_trace);
