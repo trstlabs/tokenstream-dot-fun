@@ -1,0 +1,21 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%' viewBox='0 0 800 800'>
+  <rect fill='#00044e' width='800' height='800'/>
+  <g fill-opacity='0.5'>
+    <circle fill='#0d1f6d' cx='400' cy='400' r='100'>
+      <animate attributeName='r' from='100' to='400' dur='8s' repeatCount='indefinite' begin='0s'/>
+      <animate attributeName='fill-opacity' from='1' to='0' dur='8s' repeatCount='indefinite' begin='0s'/>
+    </circle>
+    <circle fill='#051E70' cx='400' cy='400' r='100'>
+      <animate attributeName='r' from='100' to='400' dur='8s' repeatCount='indefinite' begin='2s'/>
+      <animate attributeName='fill-opacity' from='1' to='0' dur='8s' repeatCount='indefinite' begin='2s'/>
+    </circle>
+    <circle fill='#000f58' cx='400' cy='400' r='100'>
+      <animate attributeName='r' from='100' to='400' dur='8s' repeatCount='indefinite' begin='4s'/>
+      <animate attributeName='fill-opacity' from='1' to='0' dur='8s' repeatCount='indefinite' begin='4s'/>
+    </circle>
+    <circle fill='#2A3591' cx='400' cy='400' r='100'>
+      <animate attributeName='r' from='100' to='400' dur='8s' repeatCount='indefinite' begin='6s'/>
+      <animate attributeName='fill-opacity' from='1' to='0' dur='8s' repeatCount='indefinite' begin='6s'/>
+    </circle>
+  </g>
+</svg>

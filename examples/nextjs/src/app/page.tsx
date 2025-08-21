@@ -68,9 +68,10 @@ export default function Home() {
         height: "100vh",
         alignItems: "center",
         justifyContent: "center",
-        backgroundImage: `url('${
-          theme === "dark" ? "/bullseye-gradient.svg" : "/bullseye-gradient.svg"
-        }')`,
+        // backgroundImage: `url('${
+        //   theme === "dark" ? "/bullseye-gradient.svg" : "/bullseye-gradient.svg"
+        // }')`,
+        backgroundImage: "url('/bullseye-gradient-animated.svg')",
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}
