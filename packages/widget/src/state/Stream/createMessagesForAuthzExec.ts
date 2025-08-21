@@ -1,6 +1,7 @@
 import { messages, RouteResponse, UserAddress } from "@skip-go/client";
 import {
   expectedStreamFeesAtom,
+  IBC_TIMEOUT_SECONDS,
   IntentoStreamSettings,
 } from "@/state/streamSettings";
 import {
@@ -21,7 +22,6 @@ import { Timestamp } from "cosmjs-types/google/protobuf/timestamp";
 import { fromBech32, toBech32 } from "@cosmjs/encoding";
 
 const GRANT_EXPIRATION_BUFFER_SECONDS = 600; // 10 min buffer
-const IBC_TIMEOUT_SECONDS = 60; // 1 min timeout for IBC
 
 interface SwapSettings {
   slippage: number;

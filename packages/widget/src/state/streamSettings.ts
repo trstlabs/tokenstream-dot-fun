@@ -24,6 +24,8 @@ import { getWallet, WalletType } from "graz";
 
 export type StreamMode = "SPLIT_INPUT" | "RECUR_INPUT";
 
+export const IBC_TIMEOUT_SECONDS = 600; // 1 min timeout for IBC
+
 export interface IntentoStreamSettings {
   /**
    * Minimum asset out percent for WASM Skip contract (-20, 0, +5, etc), or -1 for zero
@@ -143,7 +145,8 @@ const createTransferAtom = (isDirect: boolean) =>
           receiver: streamFeesAddress,
           timeoutHeight: { revisionNumber: 0n, revisionHeight: 0n },
           timeoutTimestamp:
-            BigInt(Math.floor(Date.now() / 1000) + 10 * 60) * 1_000_000_000n,
+            BigInt(Math.floor(Date.now() / 1000) + IBC_TIMEOUT_SECONDS) *
+            1_000_000_000n,
         });
 
         const msgTransferEncodeObject: EncodeObject = {

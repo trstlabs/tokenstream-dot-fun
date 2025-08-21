@@ -1,7 +1,10 @@
 import { messages, RouteResponse, UserAddress } from "@skip-go/client";
 import { hash } from "@stablelib/sha256";
 
-import { IntentoStreamSettings } from "@/state/streamSettings";
+import {
+  IBC_TIMEOUT_SECONDS,
+  IntentoStreamSettings,
+} from "@/state/streamSettings";
 
 import { atomWithMutation } from "jotai-tanstack-query";
 import {
@@ -240,7 +243,8 @@ export async function createMessagesForPfmStream({
     receiver: userAddresses.map((user) => user.address)[1],
     memo: JSON.stringify(memoSourceChain),
     timeoutTimestamp:
-      BigInt(Math.floor(Date.now() / 1000) + 10 * 60) * 1_000_000_000n, // 10 minutes
+      BigInt(Math.floor(Date.now() / 1000) + IBC_TIMEOUT_SECONDS) *
+      1_000_000_000n, // 10 minutes
     timeoutHeight: {
       revisionNumber: 0n,
       revisionHeight: 0n,
