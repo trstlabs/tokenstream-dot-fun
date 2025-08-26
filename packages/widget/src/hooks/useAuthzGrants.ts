@@ -71,7 +71,7 @@ async function getAuthzGrants(
     // Query grants
     const response = await authzExtension.authz.grants(
       granter,
-      chainConfig?.hostedAddress || "",
+      chainConfig?.trustlessAgentAddress || "",
       msgTypeUrl,
       undefined // pagination (optional)
     );
@@ -93,7 +93,7 @@ async function getAuthzGrants(
     const latestGrant = sortedGrants[0];
     return {
       granter,
-      grantee: chainConfig?.hostedAddress || "",
+      grantee: chainConfig?.trustlessAgentAddress || "",
       msgTypeUrl,
       expiration: latestGrant.expiration
         ? new Date(Number(latestGrant.expiration.seconds) * 1000)

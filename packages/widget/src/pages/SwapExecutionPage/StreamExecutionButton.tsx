@@ -30,7 +30,7 @@ import { buildMessagesResponse } from "@/utils/buildMessagesResponse";
 import { useQuery } from "@tanstack/react-query";
 import { swapSettingsAtom } from "@/state/swapPage";
 import { chainAddressesAtom } from "@/state/swapExecutionPage";
-import { intentoHostedAccountSupportedChains } from "@/constants/intentoChains";
+import { intentoTrustlessAgentSupportedChains } from "@/constants/intentoChains";
 import { MutateFunction } from "jotai-tanstack-query";
 import { Adapter } from "@solana/wallet-adapter-base";
 import { svmWalletAtom } from "@/state/wallets";
@@ -203,7 +203,7 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
 
   // Only check grants for supported chains
   const isSupportedChain = route?.sourceAssetChainId
-    ? intentoHostedAccountSupportedChains.includes(route.sourceAssetChainId)
+    ? intentoTrustlessAgentSupportedChains.includes(route.sourceAssetChainId)
     : false;
 
   // Check grants using the first message type URL for supported chains

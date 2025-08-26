@@ -51,7 +51,7 @@ import { streamSettingsAtom } from "@/state/streamSettings";
 
 import {
   getChainChannelConfig,
-  intentoHostedAccountSupportedChains,
+  intentoTrustlessAgentSupportedChains,
 } from "@/constants/intentoChains";
 import { SwapPageHeader } from "./SwapPageHeader";
 import { useConnectToMissingCosmosChain } from "./useConnectToMissingCosmosChain";
@@ -106,7 +106,7 @@ export const SwapPage = () => {
   const [nextPage, setNextPage] = useState(Routes.SwapExecutionPage);
   const isStreamingSupported =
     (sourceAsset?.chainId &&
-      intentoHostedAccountSupportedChains.includes(sourceAsset.chainId)) ||
+      intentoTrustlessAgentSupportedChains.includes(sourceAsset.chainId)) ||
     (route?.operations &&
       "transfer" in route.operations[0] &&
       getChainChannelConfig(route.operations[0].transfer?.toChainId || "") !==

@@ -8,7 +8,7 @@ import { swapSettingsAtom } from "./swapPage";
 
 import { createMessagesForPfmStream } from "./Stream/createMessagesForPfmStream";
 import { createMessagesForAuthzExec } from "./Stream/createMessagesForAuthzExec";
-import { intentoHostedAccountSupportedChains } from "@/constants/intentoChains";
+import { intentoTrustlessAgentSupportedChains } from "@/constants/intentoChains";
 import { Coin } from "@cosmjs/amino";
 import { fromBech32, toBech32 } from "@cosmjs/encoding";
 import { StreamMessagesResult } from "./Stream/helpers";
@@ -193,12 +193,12 @@ export const createStreamMessagesAtom = atom(null, async (get, set) => {
 
   // Check if the source chain supports Intento hosted accounts for AuthZ MsgExec
   const sourceChainId = route.sourceAssetChainId;
-  const isIntentoHostedAccountSupportedChain =
-    intentoHostedAccountSupportedChains.includes(sourceChainId);
+  const isIntentoTrustlessAgentSupportedChain =
+    intentoTrustlessAgentSupportedChains.includes(sourceChainId);
 
   // Use AuthZ MsgExec for supported chains (e.g., Osmosis), otherwise use PFM Stream
   let result;
-  if (isIntentoHostedAccountSupportedChain) {
+  if (isIntentoTrustlessAgentSupportedChain) {
     console.log(`Using AuthZ MsgExec for ${sourceChainId} chain`);
     result = await createMessagesForAuthzExec({
       route,

@@ -12,7 +12,7 @@ import {
 import { MsgTransfer } from "cosmjs-types/ibc/applications/transfer/v1/tx";
 import { EncodeObject } from "@cosmjs/proto-signing";
 import {
-  intentoHostedAccountSupportedChains,
+  intentoTrustlessAgentSupportedChains,
   getChainChannelConfig,
 } from "@/constants/intentoChains";
 import { atomWithMutation } from "jotai-tanstack-query";
@@ -34,7 +34,7 @@ export interface ExistingGrant {
   expiration: Date | null;
 }
 function isSupportedChain(chainId: string): boolean {
-  return intentoHostedAccountSupportedChains.includes(chainId);
+  return intentoTrustlessAgentSupportedChains.includes(chainId);
 }
 
 function calculateGrantExpiration(
@@ -220,13 +220,13 @@ export async function createMessagesForAuthzExec({
       (msg): msg is { msgTypeUrl: string } => typeof msg.msgTypeUrl === "string"
     ),
     userAddresses[0].address,
-    channelConfig.hostedICAAddress,
+    channelConfig.trustlessAgentICAAddress,
     expirationSeconds
   );
 
   // 5. Build MsgExec
   const msgExec = {
-    grantee: channelConfig.hostedICAAddress,
+    grantee: channelConfig.trustlessAgentICAAddress,
     msgs: cosmosTx.msgs.map((msg) => ({
       "@type": msg.msgTypeUrl,
       ...JSON.parse(msg.msg || ""),
@@ -254,9 +254,9 @@ export async function createMessagesForAuthzExec({
       label: "tokenstream.fun",
       owner: intoAddress,
       fallback: "true",
-      hosted_account: channelConfig.hostedAddress,
-      hosted_fee_limit:
-        channelConfig.hostedAccountFee + channelConfig.denomOnIntento, // host denom
+      trustless_agent: channelConfig.trustlessAgentAddress,
+      // Expected format: "{amount0}{denomination},...,{amountN}{denominationN}"
+      fee_limit: `${channelConfig.trustlessAgentFee}${channelConfig.denomOnIntento}`,
     },
   };
 

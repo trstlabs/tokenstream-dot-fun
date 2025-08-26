@@ -17,7 +17,7 @@ import {
 import { sourceAssetAtom } from "@/state/swapPage";
 import {
   getChainChannelConfig,
-  intentoHostedAccountSupportedChains,
+  intentoTrustlessAgentSupportedChains,
 } from "@/constants/intentoChains";
 import { useStreamFeeParams } from "@/hooks/useStreamFeeParams";
 import { convertTokenAmountToHumanReadableAmount } from "@/utils/crypto";
@@ -58,12 +58,12 @@ export const StreamPage = ({}: StreamPageProps) => {
     );
 
     // Check if chain supports hosted accounts
-    const isHostedAccountSupported =
+    const isTrustlessAgentSupported =
       sourceAsset?.chainId &&
-      intentoHostedAccountSupportedChains.includes(sourceAsset.chainId);
+      intentoTrustlessAgentSupportedChains.includes(sourceAsset.chainId);
 
     let authzFee = 0;
-    if (isHostedAccountSupported && sourceAsset?.chainId) {
+    if (isTrustlessAgentSupported && sourceAsset?.chainId) {
       switch (sourceAsset.chainId) {
         case import.meta.env.VITE_CHAIN_ID_OSMO:
           authzFee = Number(
@@ -81,7 +81,7 @@ export const StreamPage = ({}: StreamPageProps) => {
         try {
           const denom = coin.denom;
           // If hosted account is supported, only process the denom that matches the source asset's chain ID
-          if (isHostedAccountSupported) {
+          if (isTrustlessAgentSupported) {
             const chainConfig = getChainChannelConfig(
               sourceAsset?.chainId || ""
             );
@@ -118,7 +118,7 @@ export const StreamPage = ({}: StreamPageProps) => {
 
     // If no fees were found for the source asset's denom but hosted account is supported,
     // return an empty array to indicate no valid fees
-    if (isHostedAccountSupported && sourceAsset?.denom && fees.length === 0) {
+    if (isTrustlessAgentSupported && sourceAsset?.denom && fees.length === 0) {
       return [];
     }
     return fees;

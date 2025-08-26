@@ -71,7 +71,7 @@ export default function Home() {
         // backgroundImage: `url('${
         //   theme === "dark" ? "/bullseye-gradient.svg" : "/bullseye-gradient.svg"
         // }')`,
-        backgroundImage: "url('/bullseye-gradient-animated.svg')",
+        backgroundImage: "url('/bullseye-gradient.svg')",
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}

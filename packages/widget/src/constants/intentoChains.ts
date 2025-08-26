@@ -12,16 +12,16 @@ interface ChainChannelConfig {
   isTestnet: boolean;
   denom: string;
   denomOnIntento: string;
-  hostedICAAddress: string;
-  hostedAddress: string;
-  hostedAccountFee: string;
+  trustlessAgentICAAddress: string;
+  trustlessAgentAddress: string;
+  trustlessAgentFee: string;
 }
 
 /**
  * List of chains that support Intento hosted accounts for AuthZ MsgExec
  * These chains can use the AuthZ MsgExec flow instead of PFM
  */
-export const intentoHostedAccountSupportedChains = [
+export const intentoTrustlessAgentSupportedChains = [
   "osmosis-1", // Osmosis mainnet
   "osmo-test-5", // Osmosis testnet
 ];
@@ -39,9 +39,10 @@ export const chainChannelConfigs: Record<string, ChainChannelConfig> = {
     isTestnet: false,
     denom: "uosmo",
     denomOnIntento: import.meta.env.VITE_IBC_DENOM_OSMO || "",
-    hostedICAAddress: import.meta.env.VITE_HOSTED_ICA_ADDRESS_OSMO || "",
-    hostedAddress: import.meta.env.VITE_HOSTED_ADDRESS_OSMO || "",
-    hostedAccountFee: import.meta.env.VITE_HOSTED_ACCOUNT_FEE_LIMIT_OSMO || "",
+    trustlessAgentICAAddress:
+      import.meta.env.VITE_HOSTED_ICA_ADDRESS_OSMO || "",
+    trustlessAgentAddress: import.meta.env.VITE_HOSTED_ADDRESS_OSMO || "",
+    trustlessAgentFee: import.meta.env.VITE_HOSTED_ACCOUNT_FEE_LIMIT_OSMO || "",
   },
   "osmo-test-5": {
     chainId: "osmo-test-5",
@@ -51,9 +52,10 @@ export const chainChannelConfigs: Record<string, ChainChannelConfig> = {
     isTestnet: true,
     denom: "uosmo",
     denomOnIntento: import.meta.env.VITE_IBC_DENOM_OSMO || "",
-    hostedICAAddress: import.meta.env.VITE_HOSTED_ICA_ADDRESS_OSMO || "",
-    hostedAddress: import.meta.env.VITE_HOSTED_ADDRESS_OSMO || "",
-    hostedAccountFee: import.meta.env.VITE_HOSTED_ACCOUNT_FEE_LIMIT_OSMO || "",
+    trustlessAgentICAAddress:
+      import.meta.env.VITE_HOSTED_ICA_ADDRESS_OSMO || "",
+    trustlessAgentAddress: import.meta.env.VITE_HOSTED_ADDRESS_OSMO || "",
+    trustlessAgentFee: import.meta.env.VITE_HOSTED_ACCOUNT_FEE_LIMIT_OSMO || "",
   },
 };
 

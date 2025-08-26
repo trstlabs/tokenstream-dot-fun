@@ -219,7 +219,7 @@ export async function createMessagesForPfmStream({
                   Date.now() / 1000 + streamSettings.startAt
                 ).toString(),
           stop_on_fail: "true",
-          updating_disabled: "true",
+          update_disabled: "true",
           label: "tokenstream.fun",
           owner: intoAddress,
           fallback: "true",
