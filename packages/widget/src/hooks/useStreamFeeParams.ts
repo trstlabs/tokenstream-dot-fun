@@ -45,7 +45,7 @@ export const useStreamFeeParams = () => {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
-        const endpoint = `${lcdURL}/intento/intent/v1beta1/params`;
+        const endpoint = `${lcdURL}/intento/intent/v1/params`;
         const res = await fetch(endpoint, { signal: controller.signal });
         clearTimeout(timeoutId);
 
