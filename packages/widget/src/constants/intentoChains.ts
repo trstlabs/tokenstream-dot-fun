@@ -40,9 +40,11 @@ export const chainChannelConfigs: Record<string, ChainChannelConfig> = {
     denom: "uosmo",
     denomOnIntento: import.meta.env.VITE_IBC_DENOM_OSMO || "",
     trustlessAgentICAAddress:
-      import.meta.env.VITE_HOSTED_ICA_ADDRESS_OSMO || "",
-    trustlessAgentAddress: import.meta.env.VITE_HOSTED_ADDRESS_OSMO || "",
-    trustlessAgentFee: import.meta.env.VITE_HOSTED_ACCOUNT_FEE_LIMIT_OSMO || "",
+      import.meta.env.VITE_TRUSTLESS_AGENT_ICA_ADDRESS_OSMO || "",
+    trustlessAgentAddress:
+      import.meta.env.VITE_TRUSTLESS_AGENT_ADDRESS_OSMO || "",
+    trustlessAgentFee:
+      import.meta.env.VITE_TRUSTLESS_AGENT_FEE_LIMIT_OSMO || "",
   },
   "osmo-test-5": {
     chainId: "osmo-test-5",
@@ -53,9 +55,11 @@ export const chainChannelConfigs: Record<string, ChainChannelConfig> = {
     denom: "uosmo",
     denomOnIntento: import.meta.env.VITE_IBC_DENOM_OSMO || "",
     trustlessAgentICAAddress:
-      import.meta.env.VITE_HOSTED_ICA_ADDRESS_OSMO || "",
-    trustlessAgentAddress: import.meta.env.VITE_HOSTED_ADDRESS_OSMO || "",
-    trustlessAgentFee: import.meta.env.VITE_HOSTED_ACCOUNT_FEE_LIMIT_OSMO || "",
+      import.meta.env.VITE_TRUSTLESS_AGENT_ICA_ADDRESS_OSMO || "",
+    trustlessAgentAddress:
+      import.meta.env.VITE_TRUSTLESS_AGENT_ADDRESS_OSMO || "",
+    trustlessAgentFee:
+      import.meta.env.VITE_TRUSTLESS_AGENT_FEE_LIMIT_OSMO || "",
   },
 };
 

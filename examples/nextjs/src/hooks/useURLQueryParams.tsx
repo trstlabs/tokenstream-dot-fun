@@ -11,11 +11,12 @@ type OtherParams = {
 export const useQueryParams = () => {
   const [defaultRoute, setDefaultRoute] = useState<WidgetProps["defaultRoute"]>(
     {
-      amountIn: 0.1,
-      srcChainId: "osmo-test-5",
-      srcAssetDenom: "uosmo",
-      destChainId: "grand-1",
-      destAssetDenom: "uusdc",
+      amountIn: 1,
+      srcChainId: "osmosis-1",
+      srcAssetDenom:
+        "ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4",
+      destChainId: "cosmoshub-4",
+      destAssetDenom: "uatom",
     }
   );
   const [otherParams, setOtherParams] = useState<OtherParams | undefined>(
@@ -40,11 +41,12 @@ export const useQueryParams = () => {
         "theme",
       ];
       const defaultRouteResult: Partial<WidgetProps["defaultRoute"]> = {
-        amountIn: 0.1,
-        srcChainId: "osmo-test-5",
-        srcAssetDenom: "uosmo",
-        destChainId: "grand-1",
-        destAssetDenom: "uusdc",
+        amountIn: 1,
+        srcChainId: "osmosis-1",
+        srcAssetDenom:
+          "ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4",
+        destChainId: "cosmoshub-4",
+        destAssetDenom: "uatom",
       };
       const otherParams = {} as OtherParams;
 

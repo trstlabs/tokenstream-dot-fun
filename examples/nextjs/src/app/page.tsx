@@ -18,7 +18,7 @@ export default function Home() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [disableShadowDom, setDisableShadowDom] = useState(false);
   const [apiUrl, setApiUrl] = useState<"prod" | "dev">("prod");
-  const [testnet, setTestnet] = useState<boolean>(true);
+  const [testnet, setTestnet] = useState<boolean>(false);
 
   useLayoutEffect(() => {
     if (otherParams !== undefined) {

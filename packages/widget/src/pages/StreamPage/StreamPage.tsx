@@ -67,7 +67,7 @@ export const StreamPage = ({}: StreamPageProps) => {
       switch (sourceAsset.chainId) {
         case import.meta.env.VITE_CHAIN_ID_OSMO:
           authzFee = Number(
-            import.meta.env.VITE_HOSTED_ACCOUNT_FEE_LIMIT_OSMO || "0"
+            import.meta.env.VITE_TRUSTLESS_AGENT_FEE_LIMIT_OSMO || "0"
           );
           break;
         // Add more cases for other chains here if needed
