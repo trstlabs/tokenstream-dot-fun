@@ -2414,6 +2414,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@chain-registry/types@npm:^2.0.49":
+  version: 2.0.49
+  resolution: "@chain-registry/types@npm:2.0.49"
+  checksum: 1f46b600089d6a3ee93cdf505283ec9c4c8c648fa60017dae84ea5e025be37ea0d563fb05fdd6c945349365a0e17cedf272e396b3c71483e07a4275399540636
+  languageName: node
+  linkType: hard
+
 "@chain-registry/types@npm:^2.0.5":
   version: 2.0.5
   resolution: "@chain-registry/types@npm:2.0.5"
@@ -8609,7 +8616,7 @@ __metadata:
     add: ^2.0.6
     bech32: ^2.0.0
     buffer: ^6.0.3
-    chain-registry: ^2.0.5
+    chain-registry: ^2.0.49
     download: ^8.0.0
     eslint: ^9.9.0
     eslint-config-prettier: ^9.1.0
@@ -16161,6 +16168,15 @@ __metadata:
     loupe: ^3.1.0
     pathval: ^2.0.0
   checksum: 15e4ba12d02df3620fd59b4a6e8efe43b47872ce61f1c0ca77ac1205a2a5898f3b6f1f52408fd1a708b8d07fdfb5e65b97af40bad9fd94a69ed8d4264c7a69f1
+  languageName: node
+  linkType: hard
+
+"chain-registry@npm:^2.0.49":
+  version: 2.0.49
+  resolution: "chain-registry@npm:2.0.49"
+  dependencies:
+    "@chain-registry/types": ^2.0.49
+  checksum: 41aaae58fc332def0dca1605c1a87384461a67730a621086e3aa23d26ac286c8a018fff27a10a6cc2fc1f5a078fbb2139cfe1873343ac897be90672432663cf4
   languageName: node
   linkType: hard
 
