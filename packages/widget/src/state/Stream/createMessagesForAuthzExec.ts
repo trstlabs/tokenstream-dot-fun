@@ -256,7 +256,7 @@ export async function createMessagesForAuthzExec({
       fallback: "true",
       trustless_agent: channelConfig.trustlessAgentAddress,
       // Expected format: "{amount0}{denomination},...,{amountN}{denominationN}"
-      fee_limit: `${channelConfig.trustlessAgentFee}`,
+      fee_limit: `${channelConfig.trustlessAgentFee}${channelConfig.denomOnIntento}`,
     },
   };
 
