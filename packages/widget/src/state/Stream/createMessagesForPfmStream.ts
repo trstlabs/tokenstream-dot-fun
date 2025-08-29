@@ -86,6 +86,10 @@ export async function createMessagesForPfmStream({
       intentoChannelToDest = import.meta.env.VITE_CHANNEL_ID_INTO_OSMO;
       channelDestToIntento = import.meta.env.VITE_CHANNEL_ID_OSMO_INTO;
       break;
+    case "cosmoshub-4":
+      intentoChannelToDest = import.meta.env.VITE_CHANNEL_ID_INTO_ATOM;
+      channelDestToIntento = import.meta.env.VITE_CHANNEL_ID_ATOM_INTO;
+      break;
     default:
       alert("Unsupported chain for tokenstream");
   }

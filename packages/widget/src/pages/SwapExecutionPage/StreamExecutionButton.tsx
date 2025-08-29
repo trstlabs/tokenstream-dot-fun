@@ -447,14 +447,14 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
           >
             {shouldShowFundButtons ? (
               <>
-                {/* <div style={{ width: "100%" }}>
+                <div style={{ width: "100%" }}>
                   <MainButton
-                    label={isFunding ? "Awaiting..." : "Fund ATOM"}
+                    label={isFundingAtom ? "Awaiting..." : "Fund ATOM"}
                     icon={ICONS.rightArrow}
                     onClick={handleFundAtom}
-                    disabled={isFunding}
+                    disabled={isFundingAtom}
                   />
-                </div> */}
+                </div>
                 {hasIntoToken && (
                   <div style={{ width: "100%" }}>
                     <MainButton

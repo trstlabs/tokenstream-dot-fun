@@ -24,6 +24,7 @@ interface ChainChannelConfig {
 export const intentoTrustlessAgentSupportedChains = [
   "osmosis-1", // Osmosis mainnet
   "osmo-test-5", // Osmosis testnet
+  "cosmoshub-4", // Cosmos Hub mainnet
 ];
 
 /**
@@ -60,6 +61,21 @@ export const chainChannelConfigs: Record<string, ChainChannelConfig> = {
       import.meta.env.VITE_TRUSTLESS_AGENT_ADDRESS_OSMO || "",
     trustlessAgentFee:
       import.meta.env.VITE_TRUSTLESS_AGENT_FEE_LIMIT_OSMO || "",
+  },
+  "cosmoshub-4": {
+    chainId: "cosmoshub-4",
+    intentoChannelToDest: import.meta.env.VITE_CHANNEL_ID_INTO_ATOM || "",
+    channelDestToIntento: import.meta.env.VITE_CHANNEL_ID_ATOM_INTO || "",
+    displayName: "Cosmos Hub",
+    isTestnet: false,
+    denom: "uatom",
+    denomOnIntento: import.meta.env.VITE_IBC_DENOM_ATOM || "",
+    trustlessAgentICAAddress:
+      import.meta.env.VITE_TRUSTLESS_AGENT_ICA_ADDRESS_ATOM || "",
+    trustlessAgentAddress:
+      import.meta.env.VITE_TRUSTLESS_AGENT_ADDRESS_ATOM || "",
+    trustlessAgentFee:
+      import.meta.env.VITE_TRUSTLESS_AGENT_FEE_LIMIT_ATOM || "",
   },
 };
 
