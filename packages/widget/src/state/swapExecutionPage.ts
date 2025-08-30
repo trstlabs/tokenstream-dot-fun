@@ -48,7 +48,6 @@ import { getWalletClient } from "@wagmi/core";
 import { Uint64 } from "@cosmjs/math";
 import { atomWithStorageNoCrossTabSync } from "@/utils/storage";
 import { Adapter } from "@solana/wallet-adapter-base";
-import { fromBech32, toBech32 } from "@cosmjs/encoding";
 
 type ValidatingGasBalanceData = {
   chainId?: string;
@@ -575,27 +574,6 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
                 console.error("Flow alert subscription failed", err);
               });
             }
-            const proof = {
-              address: toQuestAddress(signerAddress),
-              txHash: res.transactionHash,
-              flowLabel: "",
-              timestamp: Math.floor(Date.now() / 1000),
-              quest: "tokenstream",
-            };
-            console.log(proof);
-
-            await fetch(
-              "https://portal.intento.zone/.netlify/functions/log-proof",
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "x-api-key": process.env.TRIGGERPORTAL_SECRET!,
-                },
-
-                body: JSON.stringify(proof),
-              }
-            );
           } else {
             throw new Error("Failed to submit msg");
           }
@@ -666,8 +644,3 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
     },
   };
 });
-
-function toQuestAddress(address: string): string {
-  const { data } = fromBech32(address);
-  return toBech32("archway", data);
-}
