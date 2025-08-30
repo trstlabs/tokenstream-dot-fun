@@ -137,11 +137,12 @@ const createTransferAtom = (isDirect: boolean) =>
           sourceChannel: import.meta.env.VITE_CHANNEL_ID_ATOM_INTO,
           sourcePort: "transfer",
           sender: cosmosAddress,
-          token: expectedStreamFees?.find(
-            (fee) =>
-              fee.denom === import.meta.env.VITE_IBC_DENOM_ATOM ||
-              fee.denom !== "uinto"
-          ),
+          token: {
+            amount: expectedStreamFees?.find(
+              (fee) => fee.denom === import.meta.env.VITE_IBC_DENOM_ATOM
+            )?.amount,
+            denom: "uatom",
+          },
           receiver: streamFeesAddress,
           timeoutHeight: { revisionNumber: 0n, revisionHeight: 0n },
           timeoutTimestamp:
