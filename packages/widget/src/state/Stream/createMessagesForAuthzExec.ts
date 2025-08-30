@@ -8,6 +8,7 @@ import {
   StreamMessagesResult,
   constructWasmMsgContractCallForStreamSwap,
   constructWasmMsgSkipContract,
+  updateTimestampsInMemo,
 } from "./helpers";
 import { MsgTransfer } from "cosmjs-types/ibc/applications/transfer/v1/tx";
 import { EncodeObject } from "@cosmjs/proto-signing";
@@ -164,13 +165,24 @@ export async function createMessagesForAuthzExec({
   cosmosTx.msgs.forEach((msg) => {
     if (msg.msg) {
       let cosmosMsgObject = JSON.parse(msg.msg);
+      console.log("cosmosMsgObject", cosmosMsgObject);
+
+      const now = Math.floor(Date.now() / 1000);
+      const streamStartSec =
+        streamSettings.startAt === 0
+          ? now + streamSettings.interval
+          : now + streamSettings.startAt;
+      const streamEndSec = streamStartSec + Number(streamSettings.duration);
+
+      // Wasm Message
       if (cosmosMsgObject.msg) {
-        const now = Math.floor(Date.now() / 1000);
-        const streamStartSec =
-          streamSettings.startAt === 0
-            ? now + streamSettings.interval
-            : now + streamSettings.startAt;
-        const streamEndSec = streamStartSec + Number(streamSettings.duration);
+        console.log("Wasm msg");
+
+        // if (cosmosMsgObject.timeout_timestamp) {
+        //   cosmosMsgObject.timeoutTimestamp =
+        //     BigInt(streamEndSec) + 3600n * 1_000_000_000n;
+        // }
+
         let wasmMsg = constructWasmMsgSkipContract(
           cosmosMsgObject.msg,
           recurrences,
@@ -182,6 +194,87 @@ export async function createMessagesForAuthzExec({
         cosmosMsgObject.msg = wasmMsg;
         cosmosMsgObject.funds[0].amount = streamAmount;
         msg.msg = JSON.stringify(cosmosMsgObject);
+      }
+      if (cosmosMsgObject.timeout_timestamp) {
+        // Convert stream end time to nanoseconds and add 1 hour buffer
+        const timeoutNs = (streamEndSec + 3600) * 1_000_000_000; // Convert to nanoseconds and add 1 hour
+        cosmosMsgObject.timeout_timestamp = timeoutNs.toString(); // Store as string to avoid BigInt serialization issues
+        console.log(
+          "cosmosMsgObject.timeout_timestamp",
+          cosmosMsgObject.timeout_timestamp
+        );
+        try {
+          // Parse the message content
+          console.log("message", cosmosMsgObject);
+          // Helper function to update wasm message in an object
+          const updateWasmMessage = (obj: any) => {
+            if (!obj) return false;
+            console.log("obj", obj);
+            // Handle forward.next.wasm.msg structure
+            if (obj.forward?.next?.wasm?.msg) {
+              obj.forward.next.wasm.msg = constructWasmMsgSkipContract(
+                obj.forward.next.wasm.msg,
+                recurrences,
+                streamEndSec,
+                streamSettings.minAssetOutPercent,
+                streamSettings.streamMode
+              );
+              return true;
+            }
+            // Handle direct wasm.msg structure
+            else if (obj.wasm?.msg) {
+              obj.wasm.msg = constructWasmMsgSkipContract(
+                obj.wasm.msg,
+                recurrences,
+                streamEndSec,
+                streamSettings.minAssetOutPercent,
+                streamSettings.streamMode
+              );
+              return true;
+            }
+
+            return false;
+          };
+
+          // Try to update wasm message in the main content or in memo
+          let wasmUpdated = updateWasmMessage(cosmosMsgObject);
+          console.log("wasmUpdated", wasmUpdated);
+          // If not found in main content, try to parse memo
+          if (!wasmUpdated && cosmosMsgObject.memo) {
+            try {
+              const memoObj = JSON.parse(cosmosMsgObject.memo);
+              wasmUpdated = updateWasmMessage(memoObj);
+              if (wasmUpdated) {
+                cosmosMsgObject.memo = JSON.stringify(memoObj);
+              }
+            } catch (e) {
+              console.warn("Failed to parse memo:", e);
+            }
+          }
+
+          // Custom JSON stringifier that handles BigInt
+          const stringifyWithBigInt = (obj: any): string => {
+            return JSON.stringify(obj, (_, value) => {
+              if (typeof value === "bigint") {
+                return value.toString();
+              }
+              return value;
+            });
+          };
+
+          // Update timestamps in the message
+          const updatedMsg = updateTimestampsInMemo(
+            stringifyWithBigInt(cosmosMsgObject),
+            streamEndSec
+          );
+
+          // Update the message with the processed content
+          msg.msg = updatedMsg;
+
+          console.log("Updated message:", msg.msg);
+        } catch (error) {
+          console.warn("Error processing wasm message:", error);
+        }
       }
     }
   });

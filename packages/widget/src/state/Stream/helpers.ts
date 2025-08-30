@@ -33,7 +33,45 @@ export function constructWasmMsgSkipContract(
   const absoluteTimeout = streamEndSec + bufferAfterStreamEnd;
 
   // Set the timeout timestamp in nanoseconds
-  msg.swap_and_action.timeout_timestamp = absoluteTimeout * 1_000_000_000;
+  const timeoutNs = BigInt(absoluteTimeout) * 1_000_000_000n;
+  msg.swap_and_action.timeout_timestamp = timeoutNs.toString();
+
+  // Handle memo in post_swap_action if it exists
+  if (msg.swap_and_action?.post_swap_action?.ibc_transfer?.ibc_info?.memo) {
+    try {
+      const memo = JSON.parse(
+        msg.swap_and_action.post_swap_action.ibc_transfer.ibc_info.memo
+      );
+
+      // Update timeouts in memo
+      const updateMemoTimeouts = (obj: any) => {
+        if (!obj || typeof obj !== "object") return;
+
+        // Update timeout fields
+        if ("timeout" in obj) {
+          obj.timeout = timeoutNs.toString();
+        }
+        if ("timeout_timestamp" in obj) {
+          obj.timeout_timestamp = timeoutNs.toString();
+        }
+
+        // Recursively process nested objects
+        Object.values(obj).forEach((val) => {
+          if (typeof val === "object" && val !== null) {
+            updateMemoTimeouts(val);
+          }
+        });
+      };
+
+      updateMemoTimeouts(memo);
+
+      // Update the memo with the modified object
+      msg.swap_and_action.post_swap_action.ibc_transfer.ibc_info.memo =
+        JSON.stringify(memo);
+    } catch (e) {
+      console.warn("Failed to parse memo:", e);
+    }
+  }
 
   // Calculate original amount
   const originalAmount = parseInt(
@@ -52,20 +90,91 @@ export function constructWasmMsgSkipContract(
   // Set min_asset.native.amount based on minAssetOutPercent
   let minAssetOut: number;
   if (minAssetOutPercent === -1) {
-    minAssetOut = 0;
+    minAssetOut = 1; // minimum amount for min_asset.native.amount
   } else {
     minAssetOut = Math.floor(dividedAmount * (1 + minAssetOutPercent / 100));
   }
   msg.swap_and_action.min_asset.native.amount = String(minAssetOut);
 
-  if (minAssetOut < 0) {
-    throw new Error("min_asset.native.amount calculated as negative");
+  if (minAssetOut < 1) {
+    throw new Error("min_asset.native.amount calculated as less than 1");
   }
 
   return msg;
 }
 
 // Constants (this would need to be the equivalent of `types.ModuleName` in Go)
+/**
+ * Updates all timestamp fields in a memo string to the specified timestamp
+ * @param memo The memo string to update (stringified JSON)
+ * @param timestamp The timestamp in seconds to set
+ * @returns The updated memo string
+ */
+export function updateTimestampsInMemo(
+  memo: string,
+  timestamp: number
+): string {
+  try {
+    const memoObj = JSON.parse(memo);
+    const timeoutNs = BigInt(timestamp) * 1_000_000_000n;
+
+    // Recursively update all timestamp fields in the object
+    const updateTimeouts = (obj: any) => {
+      if (!obj || typeof obj !== "object") return;
+
+      // Update all known timestamp fields
+      const timestampFields = ["timeout", "timeout_timestamp", "timestamp"];
+      timestampFields.forEach((field) => {
+        if (field in obj) {
+          obj[field] = timeoutNs.toString();
+        }
+      });
+
+      // Special handling for forward object's timeout
+      if (obj.forward?.timeout) {
+        obj.forward.timeout = timeoutNs.toString();
+      }
+
+      // Recursively process nested objects
+      Object.values(obj).forEach((val) => {
+        if (typeof val === "object" && val !== null) {
+          updateTimeouts(val);
+        }
+      });
+    };
+
+    updateTimeouts(memoObj);
+
+    // Handle stringified JSON in memo fields
+    const processStringifiedJson = (obj: any) => {
+      if (!obj || typeof obj !== "object") return;
+
+      Object.entries(obj).forEach(([key, value]) => {
+        if (typeof value === "string") {
+          try {
+            const parsed = JSON.parse(value);
+            if (typeof parsed === "object" && parsed !== null) {
+              updateTimeouts(parsed);
+              obj[key] = JSON.stringify(parsed);
+            }
+          } catch (e) {
+            // Not a JSON string, continue
+          }
+        } else if (typeof value === "object" && value !== null) {
+          processStringifiedJson(value);
+        }
+      });
+    };
+
+    processStringifiedJson(memoObj);
+
+    return JSON.stringify(memoObj);
+  } catch (e) {
+    console.warn("Failed to update timestamps in memo:", e);
+    return memo; // Return original memo if parsing fails
+  }
+}
+
 const ModuleName = "packetfowardmiddleware";
 
 export function getForwardAddress({
