@@ -11,7 +11,7 @@ import { Widget, WidgetProps } from "@/widget/Widget";
 const DevMode = () => {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [apiUrl, setApiUrl] = useState<"prod" | "dev">("prod");
-  const [testnet, setTestnet] = useState<boolean>(true);
+  const [testnet, setTestnet] = useState<boolean>(false);
   const [disableShadowDom, setDisableShadowDom] = useState(true);
   const [renderWebComponent, setRenderWebComponent] = useState(false);
 
