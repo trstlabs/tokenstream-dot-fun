@@ -208,19 +208,25 @@ export const StreamPage = ({}: StreamPageProps) => {
                 Streaming Fee
               </SmallText>
               <SmallText textAlign="center">
-                {fees.map((fee, index) => (
-                  <span key={index}>
-                    {fee.denom === "uinto" &&
-                      convertTokenAmountToHumanReadableAmount(fee.amount, 6) +
-                        " INTO"}
-                    {fee.denom === import.meta.env.VITE_IBC_DENOM_ATOM &&
-                      convertTokenAmountToHumanReadableAmount(fee.amount, 6) +
-                        " ATOM or "}
-                    {fee.denom === import.meta.env.VITE_IBC_DENOM_OSMO &&
-                      convertTokenAmountToHumanReadableAmount(fee.amount, 6) +
-                        " OSMO "}
-                  </span>
-                ))}
+                {fees.map((fee, index) => {
+                  // Map denoms to their display symbols
+                  const denomMap: Record<string, string> = {
+                    'uinto': 'INTO',
+                    [import.meta.env.VITE_IBC_DENOM_ATOM]: 'ATOM',
+                    [import.meta.env.VITE_IBC_DENOM_OSMO]: 'OSMO'
+                  };
+                  
+                  const symbol = denomMap[fee.denom] || fee.denom;
+                  const amount = convertTokenAmountToHumanReadableAmount(fee.amount, 6);
+                  const isLast = index === fees.length - 1;
+                  
+                  return (
+                    <span key={fee.denom}>
+                      {amount} {symbol}
+                      {!isLast && ' or '}
+                    </span>
+                  );
+                })}
               </SmallText>
               <SmallText color={theme.brandColor} textAlign="center">
                 Do you want to go once or stream?
@@ -275,11 +281,8 @@ export const StreamPage = ({}: StreamPageProps) => {
 
           {/* Stream into StreamSwap button - only shown for USDC destination on Osmosis from a token on Osmosis or Osmosis Testnet */}
           {/* {import.meta.env.VITE_STREAM_SWAP_IDS &&
-            ((swapExecutionState?.route?.sourceAssetChainId == "osmosis-1" &&
-              swapExecutionState?.route?.destAssetChainId == "osmosis-1") ||
-              (swapExecutionState?.route?.destAssetChainId == "osmo-test-5" &&
-                swapExecutionState?.route?.sourceAssetChainId ==
-                  "osmo-test-5")) &&
+            swapExecutionState?.route?.sourceAssetChainId == "osmosis-1" &&
+            swapExecutionState?.route?.destAssetChainId == "osmosis-1" &&
             swapExecutionState?.route?.destAssetDenom?.includes(
               import.meta.env.VITE_OSMOSIS_USDC_DENOM
             ) &&
