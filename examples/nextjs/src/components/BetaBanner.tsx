@@ -1,46 +1,91 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import ReactDOM from "react-dom";
+import { CloseIcon } from "./CloseIcon";
 
-export function BetaBanner() {
-  const [isVisible, setIsVisible] = useState(true);
-  const [isDismissed, setIsDismissed] = useState(false);
+type BetaBannerProps = {
+  theme?: "dark" | "light";
+};
 
-  // Check if banner was previously dismissed
-  useEffect(() => {
-    const dismissed = localStorage?.getItem("betaBannerDismissed");
-    setIsDismissed(dismissed === "true");
-  }, []);
+export function BetaBanner({ theme = "light" }: BetaBannerProps) {
+  const hideBannerTitle =
+    typeof window !== "undefined" ? localStorage.getItem("hideBanner") : null;
+  const hideBannerFromLocalStorage =
+    hideBannerTitle === process.env.NEXT_PUBLIC_BANNER_TITLE;
 
-  const handleDismiss = () => {
-    localStorage?.setItem("betaBannerDismissed", "true");
-    setIsVisible(false);
-    setIsDismissed(true);
+  const [isDesktop, setIsDesktop] = useState(false);
+  const [bannerRoot, setBannerRoot] = useState<HTMLElement | null>(null);
+  const [hideBanner, setHideBanner] = useState(
+    hideBannerFromLocalStorage ?? false
+  );
+
+  const handleHideBanner = () => {
+    setHideBanner(true);
+    localStorage?.setItem(
+      "hideBanner",
+      process.env.NEXT_PUBLIC_BANNER_TITLE ?? ""
+    );
   };
 
-  if (isDismissed) return null;
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 900px)");
+    const update = () => setIsDesktop(mediaQuery.matches);
+    update();
 
-  return (
-    <div
-      className={`w-full bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4 transition-all duration-300 ${isVisible ? "opacity-100" : "opacity-0 h-0 p-0 mb-0 overflow-hidden"}`}
-      role="alert"
-    >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center">
-          <span className="font-bold mr-2">Beta Version</span>
-          <span>
-            This is a beta version. Timeouts may occur and swaps may get stuck.
-            Test with small amounts first.
-          </span>
-        </div>
-        <button
-          onClick={handleDismiss}
-          className="ml-4 px-2 py-1 text-yellow-700 hover:text-yellow-900 focus:outline-none"
-          aria-label="Dismiss"
+    mediaQuery.addEventListener("change", update);
+    return () => mediaQuery.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    let el = document.getElementById("banner-root");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "banner-root";
+      document.body.appendChild(el);
+    }
+    setBannerRoot(el);
+  }, []);
+
+  const bannerElement = !hideBanner ? (
+    <div className="fixed bottom-0 left-0 right-0 z-50 p-4">
+      <a
+        href={process.env.NEXT_PUBLIC_BANNER_LINK}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`flex flex-col gap-[18px] rounded-[10px] p-[18px] shadow-lg ${theme === "light" ? "bg-white text-black" : "bg-black text-white"}`}
+      >
+        <strong
+          className={`flex items-center justify-between font-sans text-[15px] font-medium ${theme === "light" ? "text-black" : "text-white"}`}
         >
-          ✕
-        </button>
-      </div>
+          {process.env.NEXT_PUBLIC_BANNER_TITLE || "Beta Version"}
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleHideBanner();
+            }}
+            className="ml-2"
+            aria-label="Dismiss"
+          >
+            <CloseIcon color={theme === "light" ? "#00000073" : "#ffffff80"} />
+          </button>
+        </strong>
+        <div
+          className={`font-sans text-[13px] ${theme === "light" ? "text-[#00000073]" : "text-[#ffffff80]"}`}
+        >
+          {process.env.NEXT_PUBLIC_BANNER_MESSAGE ||
+            "This is a beta version. Some features may not work as expected."}
+        </div>
+      </a>
     </div>
-  );
+  ) : null;
+
+  if (isDesktop && bannerRoot) {
+    return ReactDOM.createPortal(bannerElement, bannerRoot);
+  }
+
+  return bannerElement;
 }
