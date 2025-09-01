@@ -12,6 +12,7 @@ import {
   getCounterpartyChannelId,
   getForwardAddress,
   constructWasmMsgSkipContract,
+  constructWasmMsgContractCallForStreamSwap,
 } from "./helpers";
 
 import { MsgTransfer } from "cosmjs-types/ibc/applications/transfer/v1/tx";
@@ -170,6 +171,15 @@ export async function createMessagesForPfmStream({
       streamSettings.minAssetOutPercent,
       streamSettings.streamMode
     );
+    
+    if (streamSettings.streamIntoStreamSwapID) {
+      wasmMsg = constructWasmMsgContractCallForStreamSwap(
+        wasmMsg,
+        streamSettings.streamIntoStreamSwapID,
+        import.meta.env.VITE_STREAMSWAP_CONTRACT_ADDRESS || ""
+      );
+    }
+    
     memoObj = memoOG;
     memoObj.wasm.msg = wasmMsg;
     receiverString = memoOG.wasm.contract;

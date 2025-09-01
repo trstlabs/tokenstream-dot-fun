@@ -190,6 +190,14 @@ export async function createMessagesForAuthzExec({
           streamSettings.minAssetOutPercent,
           streamSettings.streamMode
         );
+        
+        if (streamSettings.streamIntoStreamSwapID) {
+          wasmMsg = constructWasmMsgContractCallForStreamSwap(
+            wasmMsg,
+            streamSettings.streamIntoStreamSwapID,
+            import.meta.env.VITE_STREAMSWAP_CONTRACT_ADDRESS || ""
+          );
+        }
 
         cosmosMsgObject.msg = wasmMsg;
         cosmosMsgObject.funds[0].amount = streamAmount;
@@ -219,6 +227,13 @@ export async function createMessagesForAuthzExec({
                 streamSettings.minAssetOutPercent,
                 streamSettings.streamMode
               );
+              if (streamSettings.streamIntoStreamSwapID) {
+                obj.forward.next.wasm.msg = constructWasmMsgContractCallForStreamSwap(
+                  obj.forward.next.wasm.msg,
+                  streamSettings.streamIntoStreamSwapID,
+                  import.meta.env.VITE_STREAMSWAP_CONTRACT_ADDRESS || ""
+                );
+              }
               return true;
             }
             // Handle direct wasm.msg structure
@@ -230,6 +245,13 @@ export async function createMessagesForAuthzExec({
                 streamSettings.minAssetOutPercent,
                 streamSettings.streamMode
               );
+              if (streamSettings.streamIntoStreamSwapID) {
+                obj.wasm.msg = constructWasmMsgContractCallForStreamSwap(
+                  obj.wasm.msg,
+                  streamSettings.streamIntoStreamSwapID,
+                  import.meta.env.VITE_STREAMSWAP_CONTRACT_ADDRESS || ""
+                );
+              }
               return true;
             }
 

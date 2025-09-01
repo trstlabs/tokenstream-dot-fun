@@ -2,6 +2,7 @@
 import { MainButton } from "@/components/MainButton";
 import { ICONS } from "@/icons";
 import { SwapExecutionState } from "./SwapExecutionPage";
+import { createExplorerAddressLink } from "@/utils/explorerLink";
 import pluralize from "pluralize";
 import { convertSecondsToMinutesOrHours } from "@/utils/number";
 import { useAtomValue, useSetAtom } from "jotai";
@@ -467,9 +468,42 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
                 )}
               </>
             ) : (
-              <SmallText normalTextColor style={{ textAlign: "center" }}>
-                All set, no additional funding required for this transaction
-              </SmallText>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "8px",
+                  alignItems: "center",
+                }}
+              >
+                <SmallText normalTextColor style={{ textAlign: "center" }}>
+                  All set, no additional funding required for this transaction.
+                  {chainAddresses?.[0] && (
+                    <>
+                      <a
+                        href={`https://portal.intento.zone`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: "var(--primary-color)" }}
+                      >
+                        Go to the Intento Portal
+                      </a>
+                      {/* <a
+                        href={`${createExplorerAddressLink({
+                          chainId: chainAddresses[0].chainId,
+                          chainType: "cosmos",
+                          address: chainAddresses[0].address || "",
+                        })}/address/${chainAddresses[0].address}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: "var(--primary-color)" }}
+                      >
+                        or view your address in the explorer
+                      </a> */}
+                    </>
+                  )}
+                </SmallText>
+              </div>
             )}
           </div>
         );

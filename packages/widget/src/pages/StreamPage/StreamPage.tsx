@@ -211,19 +211,22 @@ export const StreamPage = ({}: StreamPageProps) => {
                 {fees.map((fee, index) => {
                   // Map denoms to their display symbols
                   const denomMap: Record<string, string> = {
-                    'uinto': 'INTO',
-                    [import.meta.env.VITE_IBC_DENOM_ATOM]: 'ATOM',
-                    [import.meta.env.VITE_IBC_DENOM_OSMO]: 'OSMO'
+                    uinto: "INTO",
+                    [import.meta.env.VITE_IBC_DENOM_ATOM]: "ATOM",
+                    [import.meta.env.VITE_IBC_DENOM_OSMO]: "OSMO",
                   };
-                  
+
                   const symbol = denomMap[fee.denom] || fee.denom;
-                  const amount = convertTokenAmountToHumanReadableAmount(fee.amount, 6);
+                  const amount = convertTokenAmountToHumanReadableAmount(
+                    fee.amount,
+                    6
+                  );
                   const isLast = index === fees.length - 1;
-                  
+
                   return (
                     <span key={fee.denom}>
                       {amount} {symbol}
-                      {!isLast && ' or '}
+                      {!isLast && " or "}
                     </span>
                   );
                 })}
@@ -280,8 +283,7 @@ export const StreamPage = ({}: StreamPageProps) => {
           </Row>
 
           {/* Stream into StreamSwap button - only shown for USDC destination on Osmosis from a token on Osmosis or Osmosis Testnet */}
-          {/* {import.meta.env.VITE_STREAM_SWAP_IDS &&
-            swapExecutionState?.route?.sourceAssetChainId == "osmosis-1" &&
+          {import.meta.env.VITE_STREAM_SWAP_IDS &&
             swapExecutionState?.route?.destAssetChainId == "osmosis-1" &&
             swapExecutionState?.route?.destAssetDenom?.includes(
               import.meta.env.VITE_OSMOSIS_USDC_DENOM
@@ -290,25 +292,27 @@ export const StreamPage = ({}: StreamPageProps) => {
               ?.toLowerCase()
               .includes("usdc") && (
               <div style={{ marginTop: "10px", width: "100%" }}>
-                <MainButton
-                  label={`✨ Stream into $${Object.keys(JSON.parse(import.meta.env.VITE_STREAM_SWAP_IDS || "{}"))[0]} StreamSwap`}
-                  onClick={() => {
-                    track("stream page: stream into streamswap clicked");
-                    const streamId = Object.values(
-                      JSON.parse(import.meta.env.VITE_STREAM_SWAP_IDS || "{}")
-                    )[0] as string;
+                <div>
+                  <MainButton
+                    label={`✨ Stream into $${Object.keys(JSON.parse(import.meta.env.VITE_STREAM_SWAP_IDS || "{}"))[0]} StreamSwap`}
+                    onClick={() => {
+                      track("stream page: stream into streamswap clicked");
+                      const streamId = Object.values(
+                        JSON.parse(import.meta.env.VITE_STREAM_SWAP_IDS || "{}")
+                      )[0] as string;
 
-                    setStreamSettings((prev) => ({
-                      ...prev,
-                      shouldStream: true,
-                      streamIntoStreamSwapID: streamId,
-                    }));
-                    setHasTriggeredSwap(true);
-                  }}
-                  backgroundColor="#8a2be2"
-                />
+                      setStreamSettings((prev) => ({
+                        ...prev,
+                        shouldStream: true,
+                        streamIntoStreamSwapID: streamId,
+                      }));
+                      setHasTriggeredSwap(true);
+                    }}
+                    backgroundColor="linear-gradient(135deg, #8a2be2 0%,rgb(255, 123, 0) 100%)"
+                  />
+                </div>
               </div>
-            )} */}
+            )}
         </>
       )}
 
