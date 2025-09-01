@@ -477,7 +477,7 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
                 }}
               >
                 <SmallText normalTextColor style={{ textAlign: "center" }}>
-                  All set, no additional funding required for this transaction.
+                  All set, no additional funding required for this transaction.{" "}
                   {chainAddresses?.[0] && (
                     <>
                       <a
