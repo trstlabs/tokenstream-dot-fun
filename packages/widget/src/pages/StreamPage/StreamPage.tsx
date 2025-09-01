@@ -282,8 +282,11 @@ export const StreamPage = ({}: StreamPageProps) => {
             </div>
           </Row>
 
-          {/* Stream into StreamSwap button - only shown for USDC destination on Osmosis from a token on Osmosis or Osmosis Testnet */}
+          {/* Stream into StreamSwap button - only shown for USDC destination on Osmosis from a token swapped on Osmosis */}
           {import.meta.env.VITE_STREAM_SWAP_IDS &&
+            swapExecutionState?.route?.swapVenues?.every(
+              (venue) => venue.chainId === "osmosis-1"
+            ) &&
             swapExecutionState?.route?.destAssetChainId == "osmosis-1" &&
             swapExecutionState?.route?.destAssetDenom?.includes(
               import.meta.env.VITE_OSMOSIS_USDC_DENOM
