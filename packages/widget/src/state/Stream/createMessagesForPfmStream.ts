@@ -142,9 +142,13 @@ export async function createMessagesForPfmStream({
   });
 
   const intoAddress = toBech32("into", fromBech32(fwdAddress).data);
-  const recurrences = Math.floor(
+  let recurrences = Math.floor(
     Number(streamSettings.duration) / Number(streamSettings.interval)
   );
+
+  if (streamSettings.startAt != undefined && streamSettings.startAt > 0) {
+    recurrences = recurrences + 1;
+  }
   const streamAmount = Math.floor(Number(firstOp.amountOut) / recurrences);
 
   let memoObj: any;
@@ -171,7 +175,7 @@ export async function createMessagesForPfmStream({
       streamSettings.minAssetOutPercent,
       streamSettings.streamMode
     );
-    
+
     if (streamSettings.streamIntoStreamSwapID) {
       wasmMsg = constructWasmMsgContractCallForStreamSwap(
         wasmMsg,
@@ -179,7 +183,7 @@ export async function createMessagesForPfmStream({
         import.meta.env.VITE_STREAMSWAP_CONTRACT_ADDRESS || ""
       );
     }
-    
+
     memoObj = memoOG;
     memoObj.wasm.msg = wasmMsg;
     receiverString = memoOG.wasm.contract;

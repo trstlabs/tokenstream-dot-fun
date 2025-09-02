@@ -152,9 +152,13 @@ export async function createMessagesForAuthzExec({
     console.error("No valid Cosmos transaction messages found");
     return;
   }
-  const recurrences = Math.floor(
+  let recurrences = Math.floor(
     Number(streamSettings.duration) / Number(streamSettings.interval)
   );
+
+  if (streamSettings.startAt != undefined && streamSettings.startAt > 0) {
+    recurrences = recurrences + 1;
+  }
   // 2. DCA/SPLIT_INPUT logic
   let streamAmount: string;
   if (streamSettings.streamMode === "SPLIT_INPUT") {
@@ -190,7 +194,7 @@ export async function createMessagesForAuthzExec({
           streamSettings.minAssetOutPercent,
           streamSettings.streamMode
         );
-        
+
         if (streamSettings.streamIntoStreamSwapID) {
           wasmMsg = constructWasmMsgContractCallForStreamSwap(
             wasmMsg,
@@ -228,11 +232,12 @@ export async function createMessagesForAuthzExec({
                 streamSettings.streamMode
               );
               if (streamSettings.streamIntoStreamSwapID) {
-                obj.forward.next.wasm.msg = constructWasmMsgContractCallForStreamSwap(
-                  obj.forward.next.wasm.msg,
-                  streamSettings.streamIntoStreamSwapID,
-                  import.meta.env.VITE_STREAMSWAP_CONTRACT_ADDRESS || ""
-                );
+                obj.forward.next.wasm.msg =
+                  constructWasmMsgContractCallForStreamSwap(
+                    obj.forward.next.wasm.msg,
+                    streamSettings.streamIntoStreamSwapID,
+                    import.meta.env.VITE_STREAMSWAP_CONTRACT_ADDRESS || ""
+                  );
               }
               return true;
             }
