@@ -31,14 +31,18 @@ export const SwapExecutionPageRouteSimple = ({
 }: SwapExecutionPageRouteProps) => {
   const theme = useTheme();
   const { route } = useAtomValue(swapExecutionStateAtom);
-  const { interval, duration, shouldStream, streamMode } =
+  const { interval, duration, shouldStream, streamMode, startAt } =
     useAtomValue(streamSettingsAtom);
   const firstOperation = operations[0];
   const lastOperation = operations[operations.length - 1];
   const status = statusData?.transferEvents;
 
-  const recurrences =
+  let recurrences =
     shouldStream && interval && duration ? Math.floor(duration / interval) : 1;
+
+  if (startAt != undefined && startAt > 0) {
+    recurrences = recurrences + 1;
+  }
 
   const destinationStatus = useMemo(() => {
     const destinationStatus = status?.[lastOperation.transferIndex]?.status;
