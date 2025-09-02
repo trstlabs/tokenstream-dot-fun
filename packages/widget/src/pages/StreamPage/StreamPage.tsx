@@ -48,7 +48,7 @@ export const StreamPage = ({}: StreamPageProps) => {
   const fees = useMemo(() => {
     if (!streamFeeParams?.gasFeeCoins?.length) return [];
 
-    const expectedMaxGasUsed = 150_000;
+    const expectedMaxGasUsed = 120_000;
     const lenMsgs = 1;
     let recurrences = Math.max(
       1,
@@ -72,6 +72,11 @@ export const StreamPage = ({}: StreamPageProps) => {
         case import.meta.env.VITE_CHAIN_ID_OSMO:
           authzFee = Number(
             import.meta.env.VITE_TRUSTLESS_AGENT_FEE_LIMIT_OSMO || "0"
+          );
+          break;
+        case import.meta.env.VITE_CHAIN_ID_ATOM:
+          authzFee = Number(
+            import.meta.env.VITE_TRUSTLESS_AGENT_FEE_LIMIT_ATOM || "0"
           );
           break;
         // Add more cases for other chains here if needed
