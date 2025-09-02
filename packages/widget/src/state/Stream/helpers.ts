@@ -34,7 +34,7 @@ export function constructWasmMsgSkipContract(
 
   // Set the timeout timestamp in nanoseconds
   const timeoutNs = BigInt(absoluteTimeout) * 1_000_000_000n;
-  msg.swap_and_action.timeout_timestamp = timeoutNs.toString();
+  msg.swap_and_action.timeout_timestamp = Number(timeoutNs);
 
   // Handle memo in post_swap_action if it exists
   if (msg.swap_and_action?.post_swap_action?.ibc_transfer?.ibc_info?.memo) {
@@ -49,10 +49,10 @@ export function constructWasmMsgSkipContract(
 
         // Update timeout fields
         if ("timeout" in obj) {
-          obj.timeout = timeoutNs.toString();
+          obj.timeout = Number(timeoutNs);
         }
         if ("timeout_timestamp" in obj) {
-          obj.timeout_timestamp = timeoutNs.toString();
+          obj.timeout_timestamp = Number(timeoutNs);
         }
 
         // Recursively process nested objects
@@ -126,14 +126,9 @@ export function updateTimestampsInMemo(
       const timestampFields = ["timeout", "timeout_timestamp", "timestamp"];
       timestampFields.forEach((field) => {
         if (field in obj) {
-          obj[field] = timeoutNs.toString();
+          obj[field] = Number(timeoutNs);
         }
       });
-
-      // Special handling for forward object's timeout
-      if (obj.forward?.timeout) {
-        obj.forward.timeout = timeoutNs.toString();
-      }
 
       // Recursively process nested objects
       Object.values(obj).forEach((val) => {
