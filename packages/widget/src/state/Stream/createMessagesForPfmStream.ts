@@ -161,7 +161,8 @@ export async function createMessagesForPfmStream({
         "memo"
       ]
     );
-    if (!memoOG.wasm.contract) throw new Error("skip wasm contract not found");
+    if (!memoOG.wasm || !memoOG.wasm.contract)
+      throw new Error("skip wasm contract not found");
     const now = Math.floor(Date.now() / 1000);
     const streamStartSec =
       streamSettings.startAt === 0
