@@ -6,7 +6,10 @@ export const getRestEndpointForChain = async (chainId: string) => {
     return ClientState.endpointOptions.getRestEndpointForChain(chainId);
   }
 
-  if (ClientState.endpointOptions.endpoints && ClientState.endpointOptions.endpoints[chainId]) {
+  if (
+    ClientState.endpointOptions.endpoints &&
+    ClientState.endpointOptions.endpoints[chainId]
+  ) {
     const endpointOptions = ClientState.endpointOptions.endpoints[chainId];
 
     if (endpointOptions?.rest) {
@@ -14,15 +17,15 @@ export const getRestEndpointForChain = async (chainId: string) => {
     }
   }
 
-  const chain = chains().find((chain) => chain.chain_id === chainId);
+  const chain = chains().find((chain) => chain.chainId === chainId);
   if (!chain) {
     throw new Error(
-      `getRestEndpointForChain error: failed to find chain id '${chainId}' in registry`,
+      `getRestEndpointForChain error: failed to find chain id '${chainId}' in registry`
     );
   }
   if (chain.apis?.rest?.length === 0 || !chain.apis?.rest) {
     throw new Error(
-      `getRestEndpointForChain error: failed to find REST endpoint for chain id '${chainId}'`,
+      `getRestEndpointForChain error: failed to find REST endpoint for chain id '${chainId}'`
     );
   }
   const endpoints = chain.apis?.rest?.map((api) => api.address);
@@ -30,7 +33,7 @@ export const getRestEndpointForChain = async (chainId: string) => {
 
   if (!endpoint) {
     throw new Error(
-      `getRestEndpointForChain error: failed to find REST endpoint for chain id '${chainId}'`,
+      `getRestEndpointForChain error: failed to find REST endpoint for chain id '${chainId}'`
     );
   }
 

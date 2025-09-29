@@ -6,7 +6,10 @@ export const getRpcEndpointForChain = async (chainId: string) => {
     return ClientState.endpointOptions.getRpcEndpointForChain(chainId);
   }
 
-  if (ClientState.endpointOptions.endpoints && ClientState.endpointOptions.endpoints[chainId]) {
+  if (
+    ClientState.endpointOptions.endpoints &&
+    ClientState.endpointOptions.endpoints[chainId]
+  ) {
     const endpointOptions = ClientState.endpointOptions.endpoints[chainId];
 
     if (endpointOptions?.rpc) {
@@ -15,17 +18,19 @@ export const getRpcEndpointForChain = async (chainId: string) => {
   }
 
   console.warn(
-    "Warning: You are using unreliable public endpoints. We strongly recommend overriding them via endpointOptions for use beyond development settings.",
+    "Warning: You are using unreliable public endpoints. We strongly recommend overriding them via endpointOptions for use beyond development settings."
   );
 
-  const chain = chains().find((chain) => chain.chain_id === chainId);
+  const chain = chains().find((chain) => chain.chainId === chainId);
   if (!chain) {
-    throw new Error(`getRpcEndpointForChain: failed to find chain id '${chainId}' in registry`);
+    throw new Error(
+      `getRpcEndpointForChain: failed to find chain id '${chainId}' in registry`
+    );
   }
 
   if (chain.apis?.rpc?.length === 0 || !chain.apis?.rpc) {
     throw new Error(
-      `getRpcEndpointForChain error: failed to find RPC endpoint for chain id '${chainId}'`,
+      `getRpcEndpointForChain error: failed to find RPC endpoint for chain id '${chainId}'`
     );
   }
   const endpoints = chain.apis?.rpc?.map((api) => api.address);
@@ -33,7 +38,7 @@ export const getRpcEndpointForChain = async (chainId: string) => {
 
   if (!endpoint) {
     throw new Error(
-      `getRpcEndpointForChain error: failed to find RPC endpoint for chain id '${chainId}'`,
+      `getRpcEndpointForChain error: failed to find RPC endpoint for chain id '${chainId}'`
     );
   }
 

@@ -48,6 +48,7 @@ import { getWalletClient } from "@wagmi/core";
 import { Uint64 } from "@cosmjs/math";
 import { atomWithStorageNoCrossTabSync } from "@/utils/storage";
 import { Adapter } from "@solana/wallet-adapter-base";
+import type { GrantInfo } from "@/hooks/useAuthzGrants";
 
 type ValidatingGasBalanceData = {
   chainId?: string;
@@ -65,6 +66,7 @@ type SwapExecutionState = {
   isValidatingGasBalance?: ValidatingGasBalanceData;
   transactionsSigned: number;
   timestamp: number;
+  existingGrant?: GrantInfo | null;
 };
 
 export type ChainAddress = {
@@ -98,6 +100,7 @@ export const swapExecutionStateAtom =
       isValidatingGasBalance: undefined,
       transactionsSigned: 0,
       timestamp: -1,
+      existingGrant: undefined,
     }
   );
 
@@ -426,6 +429,16 @@ export const submitSwapExecutionCallbacksAtom = atom<
 
 export const simulateTxAtom = atom<boolean>();
 export const batchSignTxsAtom = atom<boolean>(true);
+
+export const setExistingGrantAtom = atom(
+  null,
+  (_get, set, existingGrant: GrantInfo | null | undefined) => {
+    set(swapExecutionStateAtom, (state) => ({
+      ...state,
+      existingGrant,
+    }));
+  }
+);
 
 export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
   const { route, userAddresses, transactionDetailsArray } = get(

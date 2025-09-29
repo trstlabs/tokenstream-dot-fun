@@ -50,7 +50,7 @@ export const defaultStreamSettings: IntentoStreamSettings = {
   startAt: 0,
   shouldStream: false,
   emailAddress: "",
-  streamMode: "SPLIT_INPUT", // Default to equal parts mode
+  streamMode: "SPLIT_INPUT",
 };
 
 // Persisted atom
@@ -65,7 +65,7 @@ export const streamMessagesAtom = atom<StreamMessagesResult>();
 
 // Define the atom for triggering the msgTransfer action
 // Atom for transferring tokens to Intento via IBC
-const createTransferAtom = (isDirect: boolean) =>
+const createTransferAtom = (isMsgSend: boolean) =>
   atom(null, async (get, _set) => {
     const { userAddresses } = get(swapExecutionStateAtom);
     const expectedStreamFees = get(expectedStreamFeesAtom);
@@ -91,7 +91,7 @@ const createTransferAtom = (isDirect: boolean) =>
           : wallet.getOfflineSigner(chainId);
       };
 
-      if (isDirect) {
+      if (isMsgSend) {
         // Direct MsgSend to Intento chain
         const chainId = import.meta.env.VITE_CHAIN_ID_INTO;
         const intoAddress = toBech32(
@@ -184,7 +184,7 @@ export const msgTransferAtomToIntentoAtom = createTransferAtom(false);
 export const msgSendToIntentoAtom = createTransferAtom(true);
 
 export const createStreamMessagesAtom = atom(null, async (get, set) => {
-  const { route, userAddresses, transactionDetailsArray } = get(
+  const { route, userAddresses, transactionDetailsArray, existingGrant } = get(
     swapExecutionStateAtom
   );
   const submitSwapExecutionCallbacks = get(submitSwapExecutionCallbacksAtom);
@@ -192,7 +192,7 @@ export const createStreamMessagesAtom = atom(null, async (get, set) => {
   const streamSettings = get(streamSettingsAtom);
   if (!route) return;
 
-  // Check if the source chain supports Intento hosted accounts for AuthZ MsgExec
+  // Check if the source chain supports Intento trustless agents for AuthZ MsgExec
   const sourceChainId = route.sourceAssetChainId;
   const isIntentoTrustlessAgentSupportedChain =
     intentoTrustlessAgentSupportedChains.includes(sourceChainId);
@@ -209,6 +209,7 @@ export const createStreamMessagesAtom = atom(null, async (get, set) => {
         slippage: swapSettings.slippage,
       },
       get,
+      existingGrant,
     });
   } else {
     console.log(`Using PFM Stream for ${sourceChainId} chain`);

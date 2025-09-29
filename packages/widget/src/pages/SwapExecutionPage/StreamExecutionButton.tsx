@@ -2,7 +2,7 @@
 import { MainButton } from "@/components/MainButton";
 import { ICONS } from "@/icons";
 import { SwapExecutionState } from "./SwapExecutionPage";
-import { createExplorerAddressLink } from "@/utils/explorerLink";
+// import { createExplorerAddressLink } from "@/utils/explorerLink";
 import pluralize from "pluralize";
 import { convertSecondsToMinutesOrHours } from "@/utils/number";
 import { useAtomValue, useSetAtom } from "jotai";
@@ -17,7 +17,7 @@ import { GoFastSymbol } from "@/components/GoFastSymbol";
 import { useIsGoFast } from "@/hooks/useIsGoFast";
 import { useCountdown } from "./useCountdown";
 import { track } from "@amplitude/analytics-browser";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTheme } from "styled-components";
 import { useAuthzGrants } from "@/hooks/useAuthzGrants";
 import {
@@ -30,7 +30,11 @@ import {
 import { buildMessagesResponse } from "@/utils/buildMessagesResponse";
 import { useQuery } from "@tanstack/react-query";
 import { swapSettingsAtom } from "@/state/swapPage";
-import { chainAddressesAtom } from "@/state/swapExecutionPage";
+import {
+  chainAddressesAtom,
+  setExistingGrantAtom,
+  swapExecutionStateAtom,
+} from "@/state/swapExecutionPage";
 import { intentoTrustlessAgentSupportedChains } from "@/constants/intentoChains";
 import { MutateFunction } from "jotai-tanstack-query";
 import { Adapter } from "@solana/wallet-adapter-base";
@@ -83,6 +87,8 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
   const chainAddresses = useAtomValue(chainAddressesAtom);
   const expectedStreamFees = useAtomValue(expectedStreamFeesAtom);
   const streamMessages = useAtomValue(streamMessagesAtom);
+  // Rename to avoid colliding with the component prop name `swapExecutionState`
+  const execStateFromAtom = useAtomValue(swapExecutionStateAtom);
 
   // Get the current user's address for the source chain
   const currentUserAddress = useMemo(() => {
@@ -190,16 +196,20 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
     if (!messagesResponse?.txs?.[0]) return [];
     const tx = messagesResponse.txs[0];
     if (!("cosmosTx" in tx) || !tx.cosmosTx.msgs) return [];
-    return tx.cosmosTx.msgs
+    const types = tx.cosmosTx.msgs
       .map((msg) => {
-        // Handle both @type and typeUrl for message type
         if (msg && typeof msg === "object") {
-          if ("@type" in msg) return String(msg["@type"]);
-          if ("typeUrl" in msg) return String(msg.typeUrl);
+          // Skip SDK may use msgTypeUrl in entries
+          if ("msgTypeUrl" in (msg as any)) return String((msg as any).msgTypeUrl);
+          // Or it might expose @type or typeUrl
+          if ("@type" in (msg as any)) return String((msg as any)["@type"]);
+          if ("typeUrl" in (msg as any)) return String((msg as any).typeUrl);
         }
         return "";
       })
       .filter(Boolean) as string[];
+    // Deduplicate
+    return Array.from(new Set(types));
   }, [messagesResponse]);
 
   // Only check grants for supported chains
@@ -207,18 +217,66 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
     ? intentoTrustlessAgentSupportedChains.includes(route.sourceAssetChainId)
     : false;
 
-  // Check grants using the first message type URL for supported chains
+  // Check grants when on a supported chain with a known granter address
+  // Do not block on msgTypeUrls; we will fall back to a default typeUrl if empty
+  // This ensures the hook runs and can cache results early.
+  // Note: granterAddress is defined below; TS narrow by computing rawGranter first.
+  // Prefer the address corresponding to the source chain id
+  const sourceChainId = route?.sourceAssetChainId;
+  const userAddrForSource = execStateFromAtom?.userAddresses?.find(
+    (u) => u.chainId === sourceChainId
+  )?.address;
+  const chainAddrForSource = Object.values(chainAddresses || {}).find(
+    (c) => c.chainId === sourceChainId
+  )?.address;
+  const rawGranter =
+    userAddrForSource ||
+    chainAddrForSource ||
+    execStateFromAtom?.userAddresses?.[0]?.address ||
+    chainAddresses?.[0]?.address;
+  const granterAddress = rawGranter && rawGranter.length > 0 ? rawGranter : undefined;
   const shouldCheckGrants =
-    isSupportedChain && !!route?.sourceAssetChainId && msgTypeUrls.length > 0;
+    isSupportedChain &&
+    !!route?.sourceAssetChainId &&
+    !!granterAddress &&
+    msgTypeUrls.length > 0;
+
+  useEffect(() => {
+    console.log("Authz debug:", {
+      isSupportedChain,
+      sourceChainId: route?.sourceAssetChainId,
+      msgTypeUrls,
+      selectedMsgTypeUrl: msgTypeUrls[0] || "/cosmos.bank.v1beta1.MsgSend",
+      shouldCheckGrants,
+      granterAddress,
+      chainAddresses,
+      userAddresses: execStateFromAtom?.userAddresses,
+    });
+  }, [isSupportedChain, route?.sourceAssetChainId, msgTypeUrls.join("|"), shouldCheckGrants, granterAddress, chainAddresses, execStateFromAtom?.userAddresses]);
+
+  // Use the first msg type URL directly
+  const selectedMsgTypeUrl = useMemo(() => {
+    return msgTypeUrls[0] || "/cosmos.bank.v1beta1.MsgSend";
+  }, [msgTypeUrls]);
+
   const { data: existingGrant, isLoading: isCheckingGrants } = useAuthzGrants(
     shouldCheckGrants
       ? {
-          granter: route.requiredChainAddresses?.[0],
-          chainId: route.sourceAssetChainId,
-          msgTypeUrl: msgTypeUrls[0] || "/cosmos.bank.v1beta1.MsgSend",
+          // Granter must be the user's address on the source chain, not the chainId
+          granter: granterAddress,
+          chainId: route?.sourceAssetChainId,
+          msgTypeUrl: selectedMsgTypeUrl,
         }
       : { granter: undefined, chainId: undefined }
   );
+
+  // Persist the existing grant in global state so it can be used when building stream messages
+  const setExistingGrant = useSetAtom(setExistingGrantAtom);
+  useEffect(() => {
+    // Save null when unsupported or not found, undefined means unknown/not loaded yet
+    if (isCheckingGrants) return;
+    setExistingGrant(existingGrant ?? null);
+  }, [existingGrant, isCheckingGrants, setExistingGrant]);
 
   const getDestinationAddreessUnsetText = useCallback(() => {
     const destinationChainIdHasSignRequired =
@@ -291,7 +349,6 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
             console.log("Checking for existing grants...");
             return;
           }
-
           if (existingGrant) {
             console.log("Found existing grant:", {
               expiration: existingGrant.expiration?.toISOString(),

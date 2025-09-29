@@ -40,13 +40,17 @@ function isSupportedChain(chainId: string): boolean {
 
 function calculateGrantExpiration(
   existing: ExistingGrant | null | undefined,
+  startAt: number,
+  interval: number,
   duration: number
 ): {
   needsNewGrant: boolean;
   expirationSeconds: bigint;
 } {
   const now = Math.floor(Date.now() / 1000);
-  const streamEnd = now + Number(duration);
+  // Stream starts after `interval` if startAt is 0, otherwise after `startAt`
+  const streamStart = startAt === 0 ? now + Number(interval) : now + Number(startAt);
+  const streamEnd = streamStart + Number(duration);
   const requiredExpiration = streamEnd + GRANT_EXPIRATION_BUFFER_SECONDS;
   if (existing?.expiration) {
     const existingSec = Math.floor(existing.expiration.getTime() / 1000);
@@ -327,7 +331,9 @@ export async function createMessagesForAuthzExec({
   // 3. Grant expiration logic
   const { needsNewGrant, expirationSeconds } = calculateGrantExpiration(
     existingGrant,
-    streamSettings.duration + streamSettings.startAt
+    streamSettings.startAt,
+    streamSettings.interval,
+    streamSettings.duration
   );
   console.log("existingGrant", existingGrant);
   console.log("needsNewGrant", needsNewGrant);

@@ -50,15 +50,13 @@ export const StreamPage = ({}: StreamPageProps) => {
 
     const expectedMaxGasUsed = 120_000;
     const lenMsgs = 1;
-    let recurrences = Math.max(
-      1,
-      Math.floor(
-        Number(streamSettings.duration) / Number(streamSettings.interval)
-      )
-    );
-
-    if (streamSettings.startAt != undefined && streamSettings.startAt > 0) {
-      recurrences = recurrences + 1;
+    // Calculate recurrences based on the total time span (from start to end) divided by interval
+    let recurrences = 1; // At least one recurrence
+    if (streamSettings.interval > 0) {
+      const startTime = streamSettings.startAt > 0 ? streamSettings.startAt : 0;
+      const endTime = startTime + streamSettings.duration;
+      const totalDuration = endTime - startTime;
+      recurrences = Math.max(1, Math.ceil(totalDuration / streamSettings.interval));
     }
 
     // Check if chain supports hosted accounts

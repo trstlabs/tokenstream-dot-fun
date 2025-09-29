@@ -1,13 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
-import { StargateClient } from "@cosmjs/stargate";
+import { Tendermint34Client } from "@cosmjs/tendermint-rpc";
+import { QueryClient } from "@cosmjs/stargate/build/queryclient/queryclient";
 import { setupAuthzExtension } from "@cosmjs/stargate/build/modules/authz/queries";
 import { skipClientConfigAtom } from "@/state/skipClient";
 import { useAtomValue } from "jotai";
 import { getChainInfo } from "graz";
 import { getChainChannelConfig } from "@/constants/intentoChains";
-import { QueryClient } from "@cosmjs/stargate/build/queryclient/queryclient";
+import { QueryGrantsResponse } from "cosmjs-types/cosmos/authz/v1beta1/query";
 
-const AUTHZ_CLIENTS: Record<string, StargateClient> = {};
+const TM_CLIENTS: Record<string, Tendermint34Client> = {};
 
 export interface GrantInfo {
   granter: string;
@@ -53,25 +54,20 @@ async function getAuthzGrants(
   msgTypeUrl: string
 ): Promise<GrantInfo | null> {
   try {
-    // Get or create client
-    let client = AUTHZ_CLIENTS[chainId];
-    if (!client) {
-      client = await StargateClient.connect(rpcURL);
-      AUTHZ_CLIENTS[chainId] = client;
+    // Get or create Tendermint client and query client
+    let tmClient = TM_CLIENTS[chainId];
+    if (!tmClient) {
+      tmClient = await Tendermint34Client.connect(rpcURL);
+      TM_CLIENTS[chainId] = tmClient;
     }
-
-    // Get the query client and setup authz extension
-    const queryClient = QueryClient.withExtensions(
-      // @ts-ignore - forceGetQueryClient is protected but we need it
-      client.forceGetQueryClient()
-    );
-    const authzExtension = setupAuthzExtension(queryClient);
+    const queryClient = new QueryClient(tmClient as unknown as any);
+    const authzExtension = setupAuthzExtension(queryClient as any);
     const chainConfig = getChainChannelConfig(chainId);
 
     // Query grants
-    const response = await authzExtension.authz.grants(
+    const response: QueryGrantsResponse = await authzExtension.authz.grants(
       granter,
-      chainConfig?.trustlessAgentAddress || "",
+      chainConfig?.trustlessAgentICAAddress || "",
       msgTypeUrl,
       undefined // pagination (optional)
     );
@@ -91,9 +87,10 @@ async function getAuthzGrants(
     });
 
     const latestGrant = sortedGrants[0];
+    console.log("latestGrant", latestGrant, sortedGrants, response.grants);
     return {
       granter,
-      grantee: chainConfig?.trustlessAgentAddress || "",
+      grantee: chainConfig?.trustlessAgentICAAddress || "",
       msgTypeUrl,
       expiration: latestGrant.expiration
         ? new Date(Number(latestGrant.expiration.seconds) * 1000)
