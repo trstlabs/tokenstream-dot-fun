@@ -56,7 +56,10 @@ export const StreamPage = ({}: StreamPageProps) => {
       const startTime = streamSettings.startAt > 0 ? streamSettings.startAt : 0;
       const endTime = startTime + streamSettings.duration;
       const totalDuration = endTime - startTime;
-      recurrences = Math.max(1, Math.ceil(totalDuration / streamSettings.interval));
+      recurrences = Math.max(
+        1,
+        Math.ceil(totalDuration / streamSettings.interval)
+      );
     }
 
     // Check if chain supports hosted accounts
@@ -177,13 +180,13 @@ export const StreamPage = ({}: StreamPageProps) => {
           },
         }}
       />
-
+      <StreamSettingsFooter />
       <StyledStreamPageRoute justify="space-between" align="center">
         <WaveIcon width={77} height={77} color={theme.primary.text.normal} />
         <Row justify="center" align="center" gap={5}>
           <div>
             <SmallText textAlign="center" color={theme.primary.text.normal}>
-              Stream Settings
+              Review Stream
             </SmallText>
             <SmallText textAlign="center">
               Every {formatDuration(streamSettings.interval)} for{" "}
@@ -326,7 +329,6 @@ export const StreamPage = ({}: StreamPageProps) => {
         </>
       )}
 
-      <StreamSettingsFooter />
       {/* <div style={{ marginTop: '20px' }}>
        <GhostButton
          gap={5}

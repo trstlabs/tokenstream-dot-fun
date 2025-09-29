@@ -493,6 +493,7 @@ export const SwapPage = () => {
       }}
     >
       <SwapPageHeader />
+      <StreamSettingsFooterSwapPage />
       <Column align="center">
         <SwapPageAssetChainInput
           selectedAsset={sourceAsset}
@@ -534,7 +535,6 @@ export const SwapPage = () => {
       </Column>
       {swapButton}
       <SettingsFooter />
-      <StreamSettingsFooterSwapPage />
     </Column>
   );
 };

@@ -72,7 +72,7 @@ export const StartAtSetting = () => {
             color={nowColor}
             onClick={() => setSettings((s) => ({ ...s, startAt: 0 }))}
           >
-            Now
+            1st Interval
           </SmallTextButton>
           <SmallTextButton
             onClick={() => setSettings((s) => ({ ...s, startAt: 1800 }))} // 30 minutes

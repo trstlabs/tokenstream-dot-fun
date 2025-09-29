@@ -40,7 +40,7 @@ const SettingsButton = ({
       <CogIcon />
       {changed && <SettingsChangedIndicator />}
     </CogIconWrapper>
-    Settings
+    Route Settings
   </StyledSettingsContainer>
 );
 
