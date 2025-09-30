@@ -121,13 +121,7 @@ const ScrollableDrawerContent = styled(Column)`
 `;
 
 const CollapsibleSection = styled.div`
-  border: 1px solid #eee;
-  border-radius: 12px;
   margin-bottom: 8px;
-  background: ${({ theme }) => theme.primary.background.normal};
-  @media (prefers-color-scheme: dark) {
-    border: 1px solid rgba(255, 255, 255, 0.04);
-  }
 `;
 
 const ChevronIcon = styled.span<{ open: boolean }>`
@@ -150,16 +144,12 @@ const SectionHeader = styled.div<{ active: boolean }>`
   color: ${({ theme }) => theme.primary.text.normal};
   background: ${({ active, theme }) =>
     active ? theme.primary.background.normal : "transparent"};
-  border-bottom: 1px solid #eee;
-  border-radius: 12px 12px 0 0;
+
   user-select: none;
   transition: background 0.2s;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  @media (prefers-color-scheme: dark) {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  }
 `;
 
 const SectionBody = styled.div`
