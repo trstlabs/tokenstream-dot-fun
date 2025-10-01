@@ -71,28 +71,10 @@ export const StreamPage = ({}: StreamPageProps) => {
       sourceAsset?.chainId &&
       intentoTrustlessAgentSupportedChains.includes(sourceAsset.chainId);
 
-    let authzFee = 0;
-    if (isTrustlessAgentSupported && sourceAsset?.chainId) {
-      switch (sourceAsset.chainId) {
-        case import.meta.env.VITE_CHAIN_ID_OSMO:
-          authzFee = Number(
-            import.meta.env.VITE_TRUSTLESS_AGENT_FEE_LIMIT_OSMO || "0"
-          );
-          break;
-        case import.meta.env.VITE_CHAIN_ID_ATOM:
-          authzFee = Number(
-            import.meta.env.VITE_TRUSTLESS_AGENT_FEE_LIMIT_ATOM || "0"
-          );
-          break;
-        // Add more cases for other chains here if needed
-        default:
-          authzFee = 0;
-      }
-    }
-
     const fees = streamFeeParams.gasFeeCoins
       .map((coin) => {
         try {
+          let authzFeeForDenom = 0;
           const denom = coin.denom;
           // If hosted account is supported, only process the denom that matches the source asset's chain ID
           if (isTrustlessAgentSupported) {
@@ -101,6 +83,11 @@ export const StreamPage = ({}: StreamPageProps) => {
             );
             if (!chainConfig) return null;
             if (denom !== chainConfig.denomOnIntento) return null;
+            // Add authz fee denom when using authz
+            authzFeeForDenom =
+              denom == chainConfig?.denomOnIntento
+                ? Number(chainConfig.trustlessAgentFee) * recurrences
+                : 0;
           }
           const denomPrice = Number(coin.amount);
           const gasFeeUnits =
@@ -111,12 +98,6 @@ export const StreamPage = ({}: StreamPageProps) => {
           const burnFeePerRun = applyBurnFee
             ? Number(streamFeeParams.burnFeePerMsg || 0) * lenMsgs
             : 0;
-          // Add authz fee for OSMO denom when using authz
-          const authzFeeForDenom =
-            denom === import.meta.env.VITE_IBC_DENOM_OSMO
-              ? authzFee * recurrences
-              : 0;
-
           const totalFee =
             recurrences * (gasFee + burnFeePerRun) + authzFeeForDenom;
           return {
