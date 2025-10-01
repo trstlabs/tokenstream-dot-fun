@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useAtom, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { track } from "@amplitude/analytics-browser";
 import styled, { useTheme } from "styled-components";
 
@@ -23,10 +23,14 @@ import { useStreamFeeParams } from "@/hooks/useStreamFeeParams";
 import { convertTokenAmountToHumanReadableAmount } from "@/utils/crypto";
 import { swapExecutionStateAtom } from "@/state/swapExecutionPage";
 import { useStreamSettingsDrawer } from "@/hooks/useStreamSettingsDrawer";
+import NiceModal from "@ebay/nice-modal-react";
+import { Modals } from "@/modals/registerModals";
+import { settingsDrawerAtom } from "@/state/settingsDrawer";
 
 export type StreamPageProps = {};
 
 export const StreamPage = ({}: StreamPageProps) => {
+  const settingsDrawer = useAtomValue(settingsDrawerAtom);
   const theme = useTheme();
   const [streamSettings, setStreamSettings] = useAtom(streamSettingsAtom);
   const setCurrentPage = useSetAtom(currentPageAtom);
@@ -133,6 +137,13 @@ export const StreamPage = ({}: StreamPageProps) => {
     }
     return fees;
   }, [streamFeeParams, streamSettings.duration, streamSettings.interval]);
+  const openStreamSettingsDrawer = () => {
+    track("stream page: open stream settings (email prompt)");
+    NiceModal.show(Modals.StreamSettingsDrawer, {
+      drawer: true,
+      container: settingsDrawer,
+    });
+  };
 
   // Update expected fees when calculation changes
   useEffect(() => {
@@ -181,7 +192,12 @@ export const StreamPage = ({}: StreamPageProps) => {
         }}
       />
       <StreamSettingsFooter />
-      <StyledStreamPageRoute justify="space-between" align="center">
+      <StyledStreamPageRoute
+        style={{ cursor: "pointer" }}
+        justify="space-between"
+        align="center"
+        onClick={openStreamSettingsDrawer}
+      >
         <WaveIcon width={77} height={77} color={theme.primary.text.normal} />
         <Row justify="center" align="center" gap={5}>
           <div>
@@ -192,9 +208,16 @@ export const StreamPage = ({}: StreamPageProps) => {
               Every {formatDuration(streamSettings.interval)} for{" "}
               {formatDuration(streamSettings.duration)}
             </SmallText>
+
             <SmallText textAlign="center">
               {Math.floor(streamSettings.duration / streamSettings.interval)}{" "}
               total recurrences
+            </SmallText>
+            <SmallText textAlign="center">
+              Starts{" "}
+              {streamSettings.startAt > 0
+                ? "in " + formatDuration(streamSettings.startAt)
+                : "on first run"}
             </SmallText>
           </div>
         </Row>
@@ -355,7 +378,7 @@ const StyledStreamPageRoute = styled(Column)`
   transition: opacity 0.2s ease;
 `;
 
-const formatDuration = (seconds: number) => {
+export const formatDuration = (seconds: number) => {
   if (seconds < 60) {
     return `${seconds} second${seconds !== 1 ? "s" : ""}`;
   }

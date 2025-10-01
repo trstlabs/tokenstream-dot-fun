@@ -9,6 +9,7 @@ innerWidth;
 import { convertSecondsToMinutesOrHours } from "@/utils/number";
 import { useSettingsChanged } from "@/hooks/useSettingsChanged";
 import { streamSettingsAtom } from "@/state/streamSettings";
+import { formatDuration } from "../StreamPage/StreamPage";
 
 export const StreamSettingsFooterItems: React.FC<{
   highlightSettings?: boolean;
@@ -17,7 +18,7 @@ export const StreamSettingsFooterItems: React.FC<{
   const { interval, duration } = useAtomValue(streamSettingsAtom);
   const settingsChanged = useSettingsChanged();
   const formattedInterval = convertSecondsToMinutesOrHours(interval || 0);
-  const formattedDuration = convertSecondsToMinutesOrHours(duration || 0);
+  const formattedDuration = formatDuration(duration);
 
   return (
     <Row align="flex-end" justify="space-between">
