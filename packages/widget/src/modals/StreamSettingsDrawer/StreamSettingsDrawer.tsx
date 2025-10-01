@@ -5,6 +5,7 @@ import { SmallText, SmallTextButton } from "@/components/Typography";
 import NiceModal from "@ebay/nice-modal-react";
 import { track } from "@amplitude/analytics-browser";
 import { Modals } from "../registerModals";
+import { convertToPxValue } from "@/utils/style";
 
 import { DurationSetting } from "./DurationSetting";
 import { IntervalSetting } from "./IntervalSetting";
@@ -161,7 +162,8 @@ const SectionBody = styled.div`
 const StyledStreamSettings = styled(Column)`
   width: 100%;
   padding: 20px;
-  border-radius: 20px;
+  border-radius: ${({ theme }) =>
+    convertToPxValue(theme.borderRadius?.modalContainer)};
   background: ${(props) => props.theme.primary.background.normal};
 `;
 

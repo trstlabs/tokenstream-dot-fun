@@ -1,5 +1,8 @@
 import { css, keyframes, styled } from "styled-components";
-import { disableShadowDomAtom, ShadowDomAndProviders } from "@/widget/ShadowDomAndProviders";
+import {
+  disableShadowDomAtom,
+  ShadowDomAndProviders,
+} from "@/widget/ShadowDomAndProviders";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import { ComponentType, useEffect, useRef, useState } from "react";
 import { PartialTheme } from "@/widget/theme";
@@ -20,7 +23,13 @@ export type ModalProps = {
   theme?: PartialTheme;
 };
 
-export const Modal = ({ children, drawer, container, onOpenChange, theme }: ModalProps) => {
+export const Modal = ({
+  children,
+  drawer,
+  container,
+  onOpenChange,
+  theme,
+}: ModalProps) => {
   const [prevOverflowStyle, setPrevOverflowStyle] = useState<string>("");
   const modalRef = useRef<HTMLDivElement>(null);
   const modal = useModal();
@@ -55,7 +64,9 @@ export const Modal = ({ children, drawer, container, onOpenChange, theme }: Moda
       return htmlElement.scrollHeight > htmlElement.clientHeight;
     };
 
-    const prevOverflowStyle = window.getComputedStyle(document.documentElement).overflow;
+    const prevOverflowStyle = window.getComputedStyle(
+      document.documentElement
+    ).overflow;
     if (!drawer || !hasScrollbar()) {
       setPrevOverflowStyle(prevOverflowStyle);
       document.documentElement.style.overflow = "hidden";
@@ -101,11 +112,13 @@ export const Modal = ({ children, drawer, container, onOpenChange, theme }: Moda
         </StyledContent>
       </StyledOverlay>
     </ShadowDomAndProviders>,
-    container ?? document.body,
+    container ?? document.body
   );
 };
 
-export const createModal = <T extends ModalProps>(component: ComponentType<T>) => {
+export const createModal = <T extends ModalProps>(
+  component: ComponentType<T>
+) => {
   const Component = component;
 
   const WrappedComponent = (props: T) => {
@@ -117,7 +130,10 @@ export const createModal = <T extends ModalProps>(component: ComponentType<T>) =
         <ErrorBoundary
           fallback={null}
           onError={(error) =>
-            setErrorWarning({ errorWarningType: ErrorWarningType.Unexpected, error })
+            setErrorWarning({
+              errorWarningType: ErrorWarningType.Unexpected,
+              error,
+            })
           }
         >
           <Component {...props} />
@@ -204,7 +220,8 @@ const StyledOverlay = styled.div<{
   display: grid;
   place-items: center;
   z-index: 10;
-  animation: ${({ open }) => (open ? fadeIn : fadeOut)} 150ms ease-in-out forwards;
+  animation: ${({ open }) => (open ? fadeIn : fadeOut)} 150ms ease-in-out
+    forwards;
 
   /* For Chrome */
   &::-webkit-scrollbar {
@@ -230,6 +247,9 @@ const StyledOverlay = styled.div<{
       scrollbar-width: none;
       /* For Internet Explorer and Edge */
       -ms-overflow-style: none;
+      will-change: transform, opacity;
+      backface-visibility: hidden;
+      transform: translateZ(0);
     `};
 
   pointer-events: ${({ open }) => (open ? "auto" : "none")};
@@ -241,11 +261,21 @@ const StyledContent = styled.div<{
 }>`
   max-width: 600px;
   width: 100%;
-  border-radius: 4px;
+  border-radius: ${({ theme }) =>
+    convertToPxValue(theme.borderRadius?.modalContainer)};
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 100;
+  background: ${({ theme }) => theme.primary.background.normal};
+  overflow: hidden; /* avoid hairline seams in Chrome at rounded edges during animations */
+  will-change: transform, opacity; /* hint for smoother GPU compositing */
+  transform: translateZ(
+    0
+  ); /* promote to its own layer to prevent white edge artifacts in Chrome */
+  backface-visibility: hidden; /* improve antialiasing on transforms */
+  -webkit-background-clip: padding-box; /* ensure background doesn't bleed over rounded corners */
+  background-clip: padding-box;
   animation: ${({ drawer, open }) =>
       open
         ? drawer
@@ -256,6 +286,7 @@ const StyledContent = styled.div<{
           : fadeOutAndZoomIn}
     150ms cubic-bezier(0.5, 1, 0.89, 1) forwards;
 `;
+
 export const StyledModalInnerContainer = styled(Column)`
   width: 100%;
   align-items: center;
@@ -266,7 +297,8 @@ export const StyledModalContainer = styled(Column)`
   padding: 10px;
   gap: 10px;
   width: calc(100% - 20px);
-  border-radius: ${({ theme }) => convertToPxValue(theme.borderRadius?.modalContainer)};
+  border-radius: ${({ theme }) =>
+    convertToPxValue(theme.borderRadius?.modalContainer)};
   background: ${({ theme }) => theme.primary.background.normal};
   height: 100%;
 `;
