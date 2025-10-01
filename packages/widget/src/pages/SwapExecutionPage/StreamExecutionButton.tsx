@@ -118,6 +118,7 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
   // Handlers for fund buttons
   const [isFundingAtom, setIsFundingAtom] = useState(false);
   const [isFundingInto, setIsFundingInto] = useState(false);
+  const [isCreatingStream, setIsCreatingStream] = useState(false); // show loading while building messages
   const setFundAtom = useSetAtom(msgTransferAtomToIntentoAtom);
   const setFundInto = useSetAtom(msgSendToIntentoAtom);
   const { createCosmosWallets } = useCreateCosmosWallets();
@@ -200,7 +201,8 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
       .map((msg) => {
         if (msg && typeof msg === "object") {
           // Skip SDK may use msgTypeUrl in entries
-          if ("msgTypeUrl" in (msg as any)) return String((msg as any).msgTypeUrl);
+          if ("msgTypeUrl" in (msg as any))
+            return String((msg as any).msgTypeUrl);
           // Or it might expose @type or typeUrl
           if ("@type" in (msg as any)) return String((msg as any)["@type"]);
           if ("typeUrl" in (msg as any)) return String((msg as any).typeUrl);
@@ -234,7 +236,8 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
     chainAddrForSource ||
     execStateFromAtom?.userAddresses?.[0]?.address ||
     chainAddresses?.[0]?.address;
-  const granterAddress = rawGranter && rawGranter.length > 0 ? rawGranter : undefined;
+  const granterAddress =
+    rawGranter && rawGranter.length > 0 ? rawGranter : undefined;
   const shouldCheckGrants =
     isSupportedChain &&
     !!route?.sourceAssetChainId &&
@@ -252,7 +255,15 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
       chainAddresses,
       userAddresses: execStateFromAtom?.userAddresses,
     });
-  }, [isSupportedChain, route?.sourceAssetChainId, msgTypeUrls.join("|"), shouldCheckGrants, granterAddress, chainAddresses, execStateFromAtom?.userAddresses]);
+  }, [
+    isSupportedChain,
+    route?.sourceAssetChainId,
+    msgTypeUrls.join("|"),
+    shouldCheckGrants,
+    granterAddress,
+    chainAddresses,
+    execStateFromAtom?.userAddresses,
+  ]);
 
   // Use the first msg type URL directly
   const selectedMsgTypeUrl = useMemo(() => {
@@ -361,6 +372,8 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
           }
 
           try {
+            // Indicate that we're building stream messages (AuthZ/PFM)
+            setIsCreatingStream(true);
             // Trigger stream message creation with the existing grant if available
             // Note: triggerCreateStreamMessages doesn't expect any arguments
             await triggerCreateStreamMessages();
@@ -379,6 +392,7 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
             });
           } catch (error) {
             console.error("Error in stream creation:", error);
+            setIsCreatingStream(false); // stop loading on failure
             throw error; // This will be caught by the outer catch block
           }
         } catch (error) {
@@ -392,6 +406,7 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
           });
           // Fallback to normal flow if there's an error
           try {
+            setIsCreatingStream(true);
             await triggerCreateStreamMessages();
             submitExecuteRouteMutation({
               getSvmSigner: async () => {
@@ -406,6 +421,7 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
             });
           } catch (fallbackError) {
             console.error("Fallback flow failed:", fallbackError);
+            setIsCreatingStream(false);
             setErrorWarning({
               errorWarningType: ErrorWarningType.Unexpected,
               error:
@@ -431,7 +447,13 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
         await checkAndCreateStream();
       };
 
-      return (
+      return isCreatingStream ? (
+        <MainButton
+          label="Building stream..."
+          loading
+          icon={ICONS.rightArrow}
+        />
+      ) : (
         <MainButton
           label="Confirm"
           icon={ICONS.rightArrow}
