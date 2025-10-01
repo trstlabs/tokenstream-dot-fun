@@ -221,7 +221,10 @@ export const StreamPage = ({}: StreamPageProps) => {
             </SmallText>
           </div>
         </Row>
-
+        {(!streamSettings.emailAddress ||
+          streamSettings.emailAddress.trim() === "") && (
+          <SmallText>No email set for alerts</SmallText>
+        )}
         <div>
           {isLoadingFees ? (
             <SmallText style={{ marginTop: "5px" }} textAlign="center">
