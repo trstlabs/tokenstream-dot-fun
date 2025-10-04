@@ -44,6 +44,8 @@ export const useAuthzGrants = ({
       return getAuthzGrants(rpcURL, granter, chainId, msgTypeUrl);
     },
     enabled: !!granter && !!chainId,
+    refetchInterval: 1000 * 60,
+    retry: 1,
   });
 };
 
