@@ -284,6 +284,18 @@ export const setSwapExecutionStateAtom = atom(null, (get, set) => {
         error: (error as Error)?.message,
       });
 
+      // Handle generic transaction errors for UI display
+      if (currentPage === Routes.SwapExecutionPage) {
+        set(errorWarningAtom, {
+          errorWarningType: ErrorWarningType.Unexpected,
+          error: error as Error,
+          onClickBack: () => {
+            set(setOverallStatusAtom, "unconfirmed");
+            set(clearIsValidatingGasBalanceAtom);
+          },
+        });
+      }
+
       if (isUserRejectedRequestError(error)) {
         track("expected error page: user rejected request");
         if (currentPage === Routes.SwapExecutionPage) {
@@ -542,53 +554,55 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
 
           console.log("res", res);
 
+          if (res.code !== 0) {
+            throw new Error(
+              `Transaction failed with code ${res.code}${res.rawLog ? `: ${res.rawLog}` : ""}`
+            );
+          }
+
+          // Only call completion callback on successful transaction
           submitSwapExecutionCallbacks?.onTransactionCompleted?.({
             chainId: chainID,
-            txHash: "res.transactionHash",
+            txHash: res.transactionHash,
             status: undefined,
           });
-          console.log("returning");
 
-          if (res.code === 0) {
-            const email = streamSettings.emailAddress?.trim();
-            const owner = intoAddress?.trim();
+          const email = streamSettings.emailAddress?.trim();
+          const owner = intoAddress?.trim();
 
-            if (email && owner) {
-              fetch(
-                "https://portal.intento.zone/.netlify/functions/flow-alert?subscribe=true",
-                {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({
-                    owner,
-                    email,
-                    type: "triggered", // set to all to receive all alerts
-                  }),
-                }
-              ).catch((err) => {
-                console.error("Flow alert subscription failed", err);
-              });
-              fetch(
-                "https://portal.intento.zone/.netlify/functions/flow-alert?subscribe=true",
-                {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({
-                    owner,
-                    email,
-                    type: "created", // set to all to receive all alerts
-                  }),
-                }
-              ).catch((err) => {
-                console.error("Flow alert subscription failed", err);
-              });
-            }
-          } else {
-            throw new Error("Failed to submit msg");
+          if (email && owner) {
+            fetch(
+              "https://portal.intento.zone/.netlify/functions/flow-alert?subscribe=true",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  owner,
+                  email,
+                  type: "triggered", // set to all to receive all alerts
+                }),
+              }
+            ).catch((err) => {
+              console.error("Flow alert subscription failed", err);
+            });
+            fetch(
+              "https://portal.intento.zone/.netlify/functions/flow-alert?subscribe=true",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  owner,
+                  email,
+                  type: "created", // set to all to receive all alerts
+                }),
+              }
+            ).catch((err) => {
+              console.error("Flow alert subscription failed", err);
+            });
           }
 
           return null;
@@ -648,6 +662,7 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
       } catch (error: unknown) {
         console.error(error);
         submitSwapExecutionCallbacks?.onError?.(error, transactionDetailsArray);
+        throw error; // Re-throw to trigger mutation error state
       }
       return null;
     },
