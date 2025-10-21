@@ -1,8 +1,5 @@
 import { AminoTypes } from "@cosmjs/stargate";
-import {
-  createDefaultAminoConverters,
-  defaultRegistryTypes,
-} from "@cosmjs/stargate";
+import { defaultRegistryTypes } from "@cosmjs/stargate";
 import { createWasmAminoConverters } from "@cosmjs/cosmwasm-stargate";
 import {
   circleAminoConverters,
@@ -12,6 +9,7 @@ import {
   evmosAminoConverters,
   evmosProtoRegistry,
 } from "src/codegen/evmos/client";
+import { cosmosAminoConverters } from "src/codegen/cosmos/client";
 import { Registry } from "@cosmjs/proto-signing";
 import { MsgExecuteContract } from "cosmjs-types/cosmwasm/wasm/v1/tx.js";
 import { MsgExecute } from "src/codegen/initia/move/v1/tx";
@@ -33,7 +31,7 @@ export const setClientOptions = (options: SkipClientOptions = {}) => {
   ClientState.aminoTypes = new AminoTypes({
     ...circleAminoConverters,
     ...evmosAminoConverters,
-    ...createDefaultAminoConverters(), // Moved after custom converters
+    ...cosmosAminoConverters, // Moved after custom converters
     ...createWasmAminoConverters(),
     ...(options.aminoTypes ?? {}),
   });
