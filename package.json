@@ -43,7 +43,7 @@
     "@cosmjs/stargate": "0.32.4",
     "@cosmjs/tendermint-rpc": "0.32.4",
     "@cosmology/telescope": "1.8.3",
-    "@keplr-wallet/unit": "^0.12.67",
+    "@keplr-wallet/unit": "^0.12.280",
     "@protobufs/gogoproto": "0.0.10",
     "@protobufs/google": "0.0.10",
     "@rollup/plugin-node-resolve": "^13.1.3",

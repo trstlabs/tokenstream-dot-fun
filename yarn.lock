@@ -5585,32 +5585,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@keplr-wallet/types@npm:0.12.107":
-  version: 0.12.107
-  resolution: "@keplr-wallet/types@npm:0.12.107"
-  dependencies:
-    long: ^4.0.0
-  checksum: b73a6857c89da44d4e1197c8e51b0f2caad7ceb4d8ed3ecefca8e546f03eb85d0b899e6f28ae6d4d47e6633eaec4d8c2bb3af0c77036b1422d65b0ddf6eeb51b
-  languageName: node
-  linkType: hard
-
 "@keplr-wallet/types@npm:0.12.12":
   version: 0.12.12
   resolution: "@keplr-wallet/types@npm:0.12.12"
   dependencies:
     long: ^4.0.0
   checksum: e12c1121416378e0c7b9e97601d6eb650da5563fc0f97e6249c61b0045a6144ca8283cf7920e1b6ca539e7b7f308f70c4e874dd698ea0a6fd01efb69788486c3
-  languageName: node
-  linkType: hard
-
-"@keplr-wallet/types@npm:0.12.143":
-  version: 0.12.143
-  resolution: "@keplr-wallet/types@npm:0.12.143"
-  dependencies:
-    long: ^4.0.0
-  peerDependencies:
-    starknet: ^6
-  checksum: 5436694a587997ded2ac1c5d054e02c0a78c9d709833994d941478ca1ce884e1e5e202a14f4f4856153f9b1386aa58c69884faaa383358dddccc8ce46506efdb
   languageName: node
   linkType: hard
 
@@ -5622,6 +5602,17 @@ __metadata:
   peerDependencies:
     starknet: ^6
   checksum: c04a6f8a0b51c0439936a1ce0e74b38e836d0de2fd34a5406d17b11edbb0a84284d002483b2e9c73d4da5124af0891d8a1db0a399ed995e38c56da24265cb2e6
+  languageName: node
+  linkType: hard
+
+"@keplr-wallet/types@npm:0.12.280":
+  version: 0.12.280
+  resolution: "@keplr-wallet/types@npm:0.12.280"
+  dependencies:
+    long: ^4.0.0
+  peerDependencies:
+    starknet: ^7
+  checksum: 2f4aa0a63dd294cdebe3b9a30a77b553170736592089636c96419fe718dc92932f6ddf18bf6873a774abeb6c67c65ad4aefc3d9ec9192b1cf31f62e6ab85d531
   languageName: node
   linkType: hard
 
@@ -5647,25 +5638,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@keplr-wallet/unit@npm:^0.12.143":
-  version: 0.12.143
-  resolution: "@keplr-wallet/unit@npm:0.12.143"
+"@keplr-wallet/unit@npm:^0.12.280":
+  version: 0.12.280
+  resolution: "@keplr-wallet/unit@npm:0.12.280"
   dependencies:
-    "@keplr-wallet/types": 0.12.143
+    "@keplr-wallet/types": 0.12.280
     big-integer: ^1.6.48
     utility-types: ^3.10.0
-  checksum: bb30cdd5c8683e9fd00c37af42745798832cefe4a2bbe15d651cdae838a4746c8e79f9e021674fa833cd0e5d17db97a58fddabfcecad5cc3e686dea4525aa953
-  languageName: node
-  linkType: hard
-
-"@keplr-wallet/unit@npm:^0.12.67":
-  version: 0.12.107
-  resolution: "@keplr-wallet/unit@npm:0.12.107"
-  dependencies:
-    "@keplr-wallet/types": 0.12.107
-    big-integer: ^1.6.48
-    utility-types: ^3.10.0
-  checksum: d05f56074e4cafe53cc4b52fc9049c279936a7b6a10981e273588a89904949aa96b495ec4a7522ee957b21c55487adedf58077331d8db4443a17d29bf2856819
+  checksum: 1852d24ad5f59fba31b44344c2dad55f596c4913a809759b12511dc1ba57adb8b658b04f44e9ebe243708525bf37a8b18b999832b83f4a729f172a73e9879eab
   languageName: node
   linkType: hard
 
@@ -8474,7 +8454,7 @@ __metadata:
     "@cosmology/telescope": 1.8.3
     "@initia/initia-registry": ^1.0.6
     "@injectivelabs/sdk-ts": 1.15.3
-    "@keplr-wallet/unit": ^0.12.143
+    "@keplr-wallet/unit": ^0.12.280
     "@protobufs/gogoproto": 0.0.10
     "@protobufs/google": 0.0.10
     "@solana/wallet-adapter-base": ^0.9.23
@@ -30453,7 +30433,7 @@ __metadata:
     "@cosmjs/stargate": 0.32.4
     "@cosmjs/tendermint-rpc": 0.32.4
     "@cosmology/telescope": 1.8.3
-    "@keplr-wallet/unit": ^0.12.67
+    "@keplr-wallet/unit": ^0.12.280
     "@protobufs/gogoproto": 0.0.10
     "@protobufs/google": 0.0.10
     "@rollup/plugin-node-resolve": ^13.1.3
