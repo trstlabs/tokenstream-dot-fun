@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import ReactQueryProvider from "@/provider/ReactQueryProvider";
-
 
 export const metadata: Metadata = {
   title: "tokenstream.fun",

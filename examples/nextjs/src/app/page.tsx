@@ -4,10 +4,19 @@ import {
   openAssetAndChainSelectorModal,
   resetWidget,
 } from "@skip-go/widget";
-import { useEffect, useLayoutEffect, useState } from "react";
+import {
+  venues,
+  bridges as _bridges,
+  setApiOptions,
+  SwapVenue,
+  Bridge,
+  BridgeType,
+} from "@skip-go/client";
+import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { useQueryParams } from "@/hooks/useURLQueryParams";
 import Image from "next/image";
 import Link from "next/link";
+type ApiUrlOption = "prod" | "dev" | "local";
 
 export default function Home() {
   // optional query params, not necessary for the widget to work
@@ -23,16 +32,14 @@ export default function Home() {
 
   const [swapVenues, setSwapVenues] = useState<SwapVenue[]>();
   const [bridges, setBridges] = useState<Bridge[]>();
-  
- const computedApiUrl = useMemo(() => {
+
+  const computedApiUrl = useMemo(() => {
     if (apiUrl === "local") {
       return "http://localhost:8080";
     }
     const isProd = apiUrl === "prod";
     if (apiKey) {
-      return isProd
-        ? "https://api.skip.build"
-        : "https://api.dev.skip.build";
+      return isProd ? "https://api.skip.build" : "https://api.dev.skip.build";
     }
     return isProd
       ? "https://go.skip.build/api/skip"
