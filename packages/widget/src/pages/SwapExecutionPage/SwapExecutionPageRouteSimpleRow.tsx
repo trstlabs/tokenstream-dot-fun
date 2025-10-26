@@ -10,7 +10,10 @@ import { ChainIcon } from "@/icons/ChainIcon";
 import { PenIcon } from "@/icons/PenIcon";
 import { useGetAssetDetails } from "@/hooks/useGetAssetDetails";
 import { ClientOperation } from "@/utils/clientType";
-import { chainAddressesAtom, swapExecutionStateAtom } from "@/state/swapExecutionPage";
+import {
+  chainAddressesAtom,
+  swapExecutionStateAtom,
+} from "@/state/swapExecutionPage";
 import { useAtomValue } from "jotai";
 import { getTruncatedAddress } from "@/utils/crypto";
 import { formatUSD } from "@/utils/intl";
@@ -50,7 +53,10 @@ export const SwapExecutionPageRouteSimpleRow = ({
 }: SwapExecutionPageRouteSimpleRowProps) => {
   const theme = useTheme();
   const isMobileScreenSize = useIsMobileScreenSize();
-  const { saveToClipboard: copyAddress, isCopied: isShowingCopyAddressFeedback } = useClipboard();
+  const {
+    saveToClipboard: copyAddress,
+    isCopied: isShowingCopyAddressFeedback,
+  } = useClipboard();
 
   const assetDetails = useGetAssetDetails({
     assetDenom: denom,
@@ -75,7 +81,7 @@ export const SwapExecutionPageRouteSimpleRow = ({
     if (!gasAsset) return;
 
     const asset = assets?.find(
-      (a) => a.chainId === gasAsset?.chainId && a.denom === gasAsset?.denom,
+      (a) => a.chainId === gasAsset?.chainId && a.denom === gasAsset?.denom
     );
     return asset;
   }, [assets, gasRoute?.destAssetChainId, gasRoute?.destAssetDenom]);
@@ -129,7 +135,8 @@ export const SwapExecutionPageRouteSimpleRow = ({
 
     if (!amountUsd) return;
 
-    const assetSymbol = gasOnReceiveAsset?.recommendedSymbol?.toUpperCase() ?? "";
+    const assetSymbol =
+      gasOnReceiveAsset?.recommendedSymbol?.toUpperCase() ?? "";
 
     return `+ ${formatUSD(amountUsd)} in ${assetSymbol}`;
   }, [context, gasRoute?.usdAmountOut, gasOnReceiveAsset, isGorEnabled]);

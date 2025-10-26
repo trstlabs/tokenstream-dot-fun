@@ -14,6 +14,7 @@ import { rootIdAtom, themeAtom, modalZIndexAtom } from "@/state/skipClient";
 import { createPortal } from "react-dom";
 import { Column } from "./Layout";
 import { Container } from "./Container";
+import { convertToPxValue } from "@/utils/style";
 
 export type ModalProps = {
   children: React.ReactNode;

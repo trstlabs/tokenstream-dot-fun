@@ -102,9 +102,10 @@ export const SwapExecutionPageRouteSimple = ({
         : lastOperation.amountOut,
     chainId: lastOperation.toChainId ?? lastOperation.chainId,
     usdValue:
-      shouldStream && streamMode === "RECUR_INPUT"
+      route?.usdAmountOut &&
+      (shouldStream && streamMode === "RECUR_INPUT"
         ? (Number(route?.usdAmountOut) * recurrences).toString()
-        : route?.usdAmountOut,
+        : route?.usdAmountOut),
   };
 
   const sourceExplorerLink =

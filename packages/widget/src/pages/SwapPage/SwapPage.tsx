@@ -1,4 +1,10 @@
-import { startTransition, useCallback, useMemo } from "react";
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Column } from "@/components/Layout";
 import { MainButton } from "@/components/MainButton";
@@ -409,7 +415,7 @@ export const SwapPage = () => {
           setChainAddresses({});
           setGasRouteChainAddresses({});
           setSwapExecutionState();
-          setCurrentPage(Routes.SwapExecutionPage);
+          setCurrentPage(nextPage);
         });
       };
       setUserId(sourceAccount?.address);

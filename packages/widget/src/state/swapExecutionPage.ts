@@ -13,11 +13,7 @@ import {
 import { atomEffect } from "jotai-effect";
 
 import { currentTransactionAtom, setTransactionHistoryAtom } from "./history";
-import {
-  ClientOperation,
-  getClientOperations,
-  SimpleStatus,
-} from "@/utils/clientType";
+import { ClientOperation, getClientOperations } from "@/utils/clientType";
 import { errorWarningAtom, ErrorWarningType } from "./errorWarning";
 import { isUserRejectedRequestError } from "@/utils/error";
 import { sourceAssetAtom, swapSettingsAtom } from "./swapPage";
@@ -25,19 +21,11 @@ import { createExplorerLink } from "@/utils/explorerLink";
 import { callbacksAtom } from "./callbacks";
 import { track } from "@amplitude/analytics-browser";
 import {
-  streamMessagesAtom,
-  streamSettingsAtom,
-  type IntentoStreamSettings,
-} from "./streamSettings";
-import {
   ChainType,
   executeRoute,
   RouteResponse,
   TransactionCallbacks,
   UserAddress,
-  TxStatusResponse,
-  getSigningStargateClient,
-  getRecommendedGasPrice,
   TransactionDetails,
   executeMultipleRoutes,
   SignerGetters,
@@ -49,7 +37,6 @@ import { getWallet, WalletType } from "graz";
 import { config } from "@/constants/wagmi";
 import { WalletClient } from "viem";
 import { getWalletClient } from "@wagmi/core";
-import { Uint64 } from "@cosmjs/math";
 import { atomWithStorageNoCrossTabSync } from "@/utils/storage";
 import { Adapter } from "@solana/wallet-adapter-base";
 import type { GrantInfo } from "@/hooks/useAuthzGrants";
@@ -81,8 +68,6 @@ type SwapExecutionState = {
 
   currentTransactionId?: string;
   isValidatingGasBalance?: ValidatingGasBalanceData;
-  transactionsSigned: number;
-  timestamp: number;
   existingGrant?: GrantInfo | null;
 };
 
@@ -112,8 +97,6 @@ export const swapExecutionStateAtom =
       clientOperations: [],
       userAddresses: [],
       isValidatingGasBalance: undefined,
-      transactionsSigned: 0,
-      timestamp: -1,
       existingGrant: undefined,
     }
   );
@@ -469,7 +452,6 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
   const { timeoutSeconds } = get(routeConfigAtom);
   const { data: chains } = get(skipChainsAtom);
   const sourceAsset = get(sourceAssetAtom);
-  const streamMesages = get(streamMessagesAtom);
   const walletConnectDeepLinkByChainType = get(
     walletConnectDeepLinkByChainTypeAtom
   );

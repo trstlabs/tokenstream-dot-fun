@@ -26,6 +26,7 @@ import { useStreamSettingsDrawer } from "@/hooks/useStreamSettingsDrawer";
 import NiceModal from "@ebay/nice-modal-react";
 import { Modals } from "@/modals/registerModals";
 import { settingsDrawerAtom } from "@/state/settingsDrawer";
+import { currentTransactionAtom } from "@/state/history";
 
 export type StreamPageProps = {};
 
@@ -126,6 +127,8 @@ export const StreamPage = ({}: StreamPageProps) => {
     });
   };
 
+  const currentTransaction = useAtomValue(currentTransactionAtom);
+
   // Update expected fees when calculation changes
   useEffect(() => {
     if (fees.length > 0) {
@@ -137,7 +140,7 @@ export const StreamPage = ({}: StreamPageProps) => {
   useEffect(() => {
     if (
       streamSettings.shouldStream &&
-      swapExecutionState.overallStatus === "completed"
+      currentTransaction?.transferEvents?.[0]?.status === "completed"
     ) {
       setSwapExecutionState((prev) => ({
         ...prev,
@@ -146,7 +149,7 @@ export const StreamPage = ({}: StreamPageProps) => {
     }
   }, [
     streamSettings.shouldStream,
-    swapExecutionState.overallStatus,
+    currentTransaction?.transferEvents?.[0]?.status,
     setSwapExecutionState,
   ]);
 
@@ -199,6 +202,11 @@ export const StreamPage = ({}: StreamPageProps) => {
               {streamSettings.startAt > 0
                 ? "in " + formatDuration(streamSettings.startAt)
                 : "on first run"}
+            </SmallText>
+            <SmallText textAlign="center">
+              {streamSettings.streamMode === "SPLIT_INPUT"
+                ? "Split input amount in equal parts"
+                : "Full input amount per flow execution"}
             </SmallText>
           </div>
         </Row>
