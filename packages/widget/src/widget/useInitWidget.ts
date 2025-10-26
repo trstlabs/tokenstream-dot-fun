@@ -4,6 +4,7 @@ import { useAtomValue, useSetAtom } from "jotai";
 import {
   skipClientConfigAtom,
   themeAtom,
+  modalZIndexAtom,
   defaultSkipClientConfig,
   onlyTestnetsAtom,
 } from "@/state/skipClient";
@@ -20,9 +21,6 @@ import {
 import { WidgetProps } from "./Widget";
 import { callbacksAtom } from "@/state/callbacks";
 import { getBrandButtonTextColor } from "@/utils/colors";
-import { initSentry } from "./initSentry";
-import { version } from "../../package.json";
-import { setTag } from "@sentry/react";
 import { useMobileRouteConfig } from "@/hooks/useMobileRouteConfig";
 import { batchSignTxsAtom, simulateTxAtom } from "@/state/swapExecutionPage";
 import { initAmplitude } from "./initAmplitude";
@@ -31,21 +29,19 @@ import { ibcEurekaHighlightedAssetsAtom } from "@/state/ibcEurekaHighlightedAsse
 import { assetSymbolsSortedToTopAtom } from "@/state/assetSymbolsSortedToTop";
 import { hideAssetsUnlessWalletTypeConnectedAtom } from "@/state/hideAssetsUnlessWalletTypeConnected";
 import { filterAtom, filterOutAtom, filterOutUnlessUserHasBalanceAtom } from "@/state/filters";
+import { RoutePreference } from "@/state/types";
 
-export const useInitWidget = (props: WidgetProps) => {
-  if (props.enableSentrySessionReplays) {
-    initSentry();
-  }
+export const useInitWidget = (props: WidgetProps = {}) => {
   if (props.enableAmplitudeAnalytics) {
     initAmplitude();
   }
-  setTag("widget_version", version);
   useInitDefaultRoute(props.defaultRoute);
   useInitGetSigners(props);
   useMobileRouteConfig();
 
   const setSkipClientConfig = useSetAtom(skipClientConfigAtom);
   const setTheme = useSetAtom(themeAtom);
+  const setModalZIndex = useSetAtom(modalZIndexAtom);
   const setSwapSettings = useSetAtom(swapSettingsAtom);
   const setRouteConfig = useSetAtom(routeConfigAtom);
   const setFilter = useSetAtom(filterAtom);
@@ -66,18 +62,19 @@ export const useInitWidget = (props: WidgetProps) => {
   const wallets = useAtomValue(walletsAtom);
 
   const mergedSkipClientConfig: SkipClientOptions = useMemo(() => {
-    const { apiUrl, chainIdsToAffiliates, endpointOptions } = props;
+    const { apiUrl, chainIdsToAffiliates, endpointOptions, apiKey } = props;
     const fromWidgetProps = {
       apiUrl,
       chainIdsToAffiliates,
       endpointOptions,
+      apiKey,
     };
 
-    // merge if not undefined
     return {
       apiUrl: fromWidgetProps.apiUrl ?? defaultSkipClientConfig.apiUrl,
       endpointOptions: fromWidgetProps.endpointOptions ?? defaultSkipClientConfig.endpointOptions,
       chainIdsToAffiliates: fromWidgetProps.chainIdsToAffiliates ?? {},
+      apiKey: fromWidgetProps.apiKey,
     };
   }, [props]);
 
@@ -117,12 +114,6 @@ export const useInitWidget = (props: WidgetProps) => {
   }, [getSigners, mergedSkipClientConfig, wallets.cosmos, wallets.svm?.walletName]);
 
   useEffect(() => {
-    if (props.settings) {
-      setSwapSettings((prev) => ({
-        ...prev,
-        ...props.settings,
-      }));
-    }
     if (props.routeConfig) {
       setRouteConfig((prev) => {
         return {
@@ -130,6 +121,20 @@ export const useInitWidget = (props: WidgetProps) => {
           ...props.routeConfig,
         };
       });
+    }
+
+    if (props.modalZIndex) {
+      setModalZIndex(props.modalZIndex);
+    }
+
+    if (props.settings) {
+      setSwapSettings((prev) => ({
+        ...prev,
+        ...props.settings,
+        ...(props.routeConfig?.goFast === false
+          ? { routePreference: RoutePreference.CHEAPEST }
+          : {}),
+      }));
     }
     if (props.filter) {
       setFilter(props.filter);
@@ -223,6 +228,8 @@ export const useInitWidget = (props: WidgetProps) => {
     props.batchSignTxs,
     setBatchSignTxs,
     props.onTransactionSignRequested,
+    props.modalZIndex,
+    setModalZIndex,
   ]);
 
   return { theme: mergedTheme };

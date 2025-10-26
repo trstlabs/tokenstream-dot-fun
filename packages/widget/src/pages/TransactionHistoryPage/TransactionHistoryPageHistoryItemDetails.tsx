@@ -1,31 +1,42 @@
-import { SmallText } from "@/components/Typography";
-import { Column, Row } from "@/components/Layout";
+import { SmallText, SmallTextButton } from "@/components/Typography";
+import { Column, Row, Spacer } from "@/components/Layout";
 import { styled, useTheme } from "styled-components";
 import { ChainIcon } from "@/icons/ChainIcon";
 import { Button, Link } from "@/components/Button";
 import { TrashIcon } from "@/icons/TrashIcon";
 import { useMemo } from "react";
 import { HistoryArrowIcon } from "@/icons/HistoryArrowIcon";
-import { SimpleStatus } from "@/utils/clientType";
 import { getTruncatedAddress } from "@/utils/crypto";
-import { TransferAssetRelease } from "@skip-go/client";
+import {
+  RouteDetails,
+  RouteStatus,
+  TransactionDetails,
+  TransferAssetRelease,
+} from "@skip-go/client";
 import { useGetAssetDetails } from "@/hooks/useGetAssetDetails";
 import { createSkipExplorerLink } from "@/utils/explorerLink";
-import { TransactionDetails } from "@/state/swapExecutionPage";
 import { track } from "@amplitude/analytics-browser";
+import { GasOnReceive } from "@/components/GasOnReceive";
+import { useClipboard } from "@/hooks/useClipboard";
 
 type TransactionHistoryPageHistoryItemDetailsProps = {
-  status?: SimpleStatus;
+  status?: RouteStatus;
   sourceChainName: string;
   destinationChainName: string;
   absoluteTimeString: string;
   onClickDelete?: () => void;
   transferAssetRelease?: TransferAssetRelease;
   transactionDetails: TransactionDetails[];
+  feeAssetRouteDetails?: RouteDetails;
+  senderAddress?: string;
+  receiverAddress?: string;
+  base64ExplorerData?: string;
 };
 
 const statusMap = {
   unconfirmed: "Unconfirmed",
+  allowance: "In Progress",
+  validating: "In Progress",
   signing: "In Progress",
   broadcasted: "In Progress",
   pending: "In Progress",
@@ -43,8 +54,16 @@ export const TransactionHistoryPageHistoryItemDetails = ({
   onClickDelete,
   transferAssetRelease,
   transactionDetails,
+  feeAssetRouteDetails,
+  senderAddress,
+  receiverAddress,
+  base64ExplorerData,
 }: TransactionHistoryPageHistoryItemDetailsProps) => {
   const theme = useTheme();
+  const { saveToClipboard: saveSenderAddressToClipboard, isCopied: isSenderAddressCopied } =
+    useClipboard();
+  const { saveToClipboard: saveReceiverAddressToClipboard, isCopied: isReceiverAddressCopied } =
+    useClipboard();
 
   const initialTxHash = transactionDetails?.[0]?.txHash;
 
@@ -71,7 +90,7 @@ export const TransactionHistoryPageHistoryItemDetails = ({
     chainId: transferAssetRelease?.chainId,
   });
 
-  const skipExplorerLink = createSkipExplorerLink(transactionDetails);
+  const skipExplorerLink = createSkipExplorerLink(transactionDetails, base64ExplorerData);
 
   return (
     <Column padding={10} gap={10} style={{ paddingTop: showTransferAssetRelease ? 0 : 10 }}>
@@ -123,6 +142,39 @@ export const TransactionHistoryPageHistoryItemDetails = ({
           </SmallText>
         </Link>
       </StyledHistoryItemDetailRow>
+
+      {senderAddress && (
+        <StyledHistoryItemDetailRow align="center">
+          <StyledDetailsLabel>Sender</StyledDetailsLabel>
+          <SmallTextButton
+            normalTextColor
+            onClick={() => saveSenderAddressToClipboard(senderAddress)}
+          >
+            {isSenderAddressCopied ? "Copied!" : getTruncatedAddress(senderAddress)}
+          </SmallTextButton>
+        </StyledHistoryItemDetailRow>
+      )}
+
+      {receiverAddress && (
+        <StyledHistoryItemDetailRow align="center">
+          <StyledDetailsLabel>Receiver</StyledDetailsLabel>
+          <SmallTextButton
+            normalTextColor
+            onClick={() => saveReceiverAddressToClipboard(receiverAddress)}
+          >
+            {isReceiverAddressCopied ? "Copied!" : getTruncatedAddress(receiverAddress)}
+          </SmallTextButton>
+        </StyledHistoryItemDetailRow>
+      )}
+
+      {feeAssetRouteDetails && (
+        <StyledHistoryItemDetailRow align="center">
+          <Column width="100%">
+            <Spacer height={20} showLine lineColor={theme.secondary.background.transparent} />
+            <GasOnReceive hideContainer routeDetails={feeAssetRouteDetails} />
+          </Column>
+        </StyledHistoryItemDetailRow>
+      )}
 
       <Row align="center" style={{ marginTop: 10, padding: "0px 10px" }}>
         <Button onClick={onClickDelete} gap={5} align="center">

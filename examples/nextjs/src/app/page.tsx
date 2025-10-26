@@ -17,8 +17,31 @@ export default function Home() {
   // optional theme, widget will be dark mode be default
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [disableShadowDom, setDisableShadowDom] = useState(false);
-  const [apiUrl, setApiUrl] = useState<"prod" | "dev">("prod");
+  const [apiUrl, setApiUrl] = useState<ApiUrlOption>("prod");
   const [testnet, setTestnet] = useState<boolean>(false);
+  const [apiKey, setApiKey] = useState<string | undefined>();
+
+  const [swapVenues, setSwapVenues] = useState<SwapVenue[]>();
+  const [bridges, setBridges] = useState<Bridge[]>();
+  
+ const computedApiUrl = useMemo(() => {
+    if (apiUrl === "local") {
+      return "http://localhost:8080";
+    }
+    const isProd = apiUrl === "prod";
+    if (apiKey) {
+      return isProd
+        ? "https://api.skip.build"
+        : "https://api.dev.skip.build";
+    }
+    return isProd
+      ? "https://go.skip.build/api/skip"
+      : "https://dev.go.skip.build/api/skip";
+  }, [apiUrl, apiKey]);
+
+  useEffect(() => {
+    setApiOptions({ apiUrl: computedApiUrl });
+  }, [computedApiUrl]);
 
   useLayoutEffect(() => {
     if (otherParams !== undefined) {
@@ -55,8 +78,10 @@ export default function Home() {
 
       document.head.appendChild(script);
     };
-
     loadRemoteDebuggingScript();
+    setApiOptions({
+      apiUrl: "https://go.skip.build/api/skip",
+    });
   }, []);
 
   return (

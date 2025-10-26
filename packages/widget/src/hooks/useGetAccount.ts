@@ -16,9 +16,7 @@ export const useGetAccount = () => {
   const connectedAddress = useAtomValue(connectedAddressesAtom);
   const { data: chains } = useAtomValue(skipChainsAtom);
 
-  const { data: cosmosAccounts } = useCosmosAccount({
-    multiChain: true,
-  });
+  const { data: cosmosAccounts } = useCosmosAccount();
 
   const { wallets: _wallets } = useWallet();
 
@@ -31,7 +29,8 @@ export const useGetAccount = () => {
     // if checkChainType is true, it only check wallet connected no chainId is dependent
     (chainId?: string, checkChainType?: boolean, chainType?: string) => {
       if (!chainId) return;
-      chainType ??= chains?.find((c) => c.chainId === chainId)?.chainType;
+      const chain = chains?.find((c) => c.chainId === chainId);
+      chainType ??= chain?.chainType;
       if (connectedAddress && connectedAddress[chainId]) {
         return {
           address: connectedAddress[chainId],

@@ -5,20 +5,23 @@ import { SmallText, SmallTextButton } from "@/components/Typography";
 import { RouteArrow } from "@/icons/RouteArrow";
 import { useAtomValue } from "jotai";
 import { skipChainsAtom } from "@/state/skipClient";
-import { skipRouteAtom } from "@/state/route";
+import { routeConfigAtom, skipRouteAtom } from "@/state/route";
 import { Fragment, useMemo } from "react";
-import { getFeeList } from "@/utils/route";
-import SlippageSelector from "@/pages/SwapPage/SlippageSelector";
-import RoutePreferenceSelector from "@/pages/SwapPage/RoutePreferenceSelector";
+import { getFeeList } from "@/utils/fees";
+import SlippageSelector from "@/modals/SwapSettingsDrawer/SlippageSelector";
 import NiceModal from "@ebay/nice-modal-react";
 import { Modals } from "../registerModals";
 import { track } from "@amplitude/analytics-browser";
-import { convertToPxValue } from "@/utils/style";
+import RoutePreferenceSelector from "./RoutePreferenceSelector";
+import { Container } from "@/components/Container";
 
 export const SwapSettingsDrawer = createModal(() => {
   const theme = useTheme();
   const { data: route } = useAtomValue(skipRouteAtom);
   const { data: chains } = useAtomValue(skipChainsAtom);
+  const { goFast } = useAtomValue(routeConfigAtom);
+
+  const showRoutePreference = goFast !== false;
 
   const chainsRoute = useMemo(() => {
     return route?.chainIds?.map((chainId) => chains?.find((chain) => chain.chainId === chainId));
@@ -30,27 +33,29 @@ export const SwapSettingsDrawer = createModal(() => {
   }, [route]);
 
   return (
-    <StyledSwapPageSettings gap={15}>
+    <Container gap={15} borderRadius="modalContainer">
       <Column gap={10}>
-        <Row justify="space-between" align="center">
-          <SwapDetailText>Route</SwapDetailText>
-          <Row align="center" gap={5}>
-            {chainsRoute?.map((chain, index) => (
-              <Fragment key={index}>
-                <img
-                  width="25"
-                  height="25"
-                  src={chain?.logoUri}
-                  alt={chain?.prettyName}
-                  title={chain?.prettyName}
-                />
-                {index !== chainsRoute.length - 1 && (
-                  <RouteArrow color={theme?.primary?.text.normal} />
-                )}
-              </Fragment>
-            ))}
+        {route && (
+          <Row justify="space-between" align="center">
+            <SwapDetailText>Route</SwapDetailText>
+            <Row align="center" gap={5}>
+              {chainsRoute?.map((chain, index) => (
+                <Fragment key={index}>
+                  <img
+                    width="25"
+                    height="25"
+                    src={chain?.logoUri}
+                    alt={chain?.prettyName}
+                    title={chain?.prettyName}
+                  />
+                  {index !== chainsRoute.length - 1 && (
+                    <RouteArrow color={theme?.primary?.text.normal} />
+                  )}
+                </Fragment>
+              ))}
+            </Row>
           </Row>
-        </Row>
+        )}
         {Boolean(route?.swapPriceImpactPercent) && (
           <Row justify="space-between" align="center">
             <SwapDetailText>Price Impact</SwapDetailText>
@@ -60,6 +65,7 @@ export const SwapSettingsDrawer = createModal(() => {
           </Row>
         )}
       </Column>
+
       {fees.length > 0 && (
         <Column gap={10}>
           {fees.map(({ label, fee }, index) => (
@@ -72,7 +78,7 @@ export const SwapSettingsDrawer = createModal(() => {
           ))}
         </Column>
       )}
-      <RoutePreferenceSelector />
+      {showRoutePreference && <RoutePreferenceSelector />}
       <SlippageSelector />
       <Row gap={10}>
         <SmallText
@@ -100,18 +106,11 @@ export const SwapSettingsDrawer = createModal(() => {
           Close
         </SmallTextButton>
       </Row>
-    </StyledSwapPageSettings>
+    </Container>
   );
 });
 
-const StyledSwapPageSettings = styled(Column)`
-  width: 100%;
-  padding: 20px;
-  border-radius: ${({ theme }) => convertToPxValue(theme.borderRadius?.modalContainer)};
-  background: ${(props) => props.theme.primary.background.normal};
-`;
-
-const SwapDetailText = styled(Row).attrs({
+export const SwapDetailText = styled(Row).attrs({
   as: SmallText,
   normalTextColor: true,
 })`

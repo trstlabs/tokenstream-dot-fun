@@ -10,10 +10,10 @@ import { PartialTheme } from "@/widget/theme";
 import { ErrorBoundary } from "react-error-boundary";
 import { useAtomValue, useSetAtom } from "jotai";
 import { errorWarningAtom, ErrorWarningType } from "@/state/errorWarning";
-import { rootIdAtom, themeAtom } from "@/state/skipClient";
+import { rootIdAtom, themeAtom, modalZIndexAtom } from "@/state/skipClient";
 import { createPortal } from "react-dom";
 import { Column } from "./Layout";
-import { convertToPxValue } from "@/utils/style";
+import { Container } from "./Container";
 
 export type ModalProps = {
   children: React.ReactNode;
@@ -21,6 +21,8 @@ export type ModalProps = {
   container?: HTMLElement;
   onOpenChange?: (open: boolean) => void;
   theme?: PartialTheme;
+  blurBackground?: boolean;
+  disableCloseOnClickOutside?: boolean;
 };
 
 export const Modal = ({
@@ -29,6 +31,8 @@ export const Modal = ({
   container,
   onOpenChange,
   theme,
+  blurBackground,
+  disableCloseOnClickOutside,
 }: ModalProps) => {
   const [prevOverflowStyle, setPrevOverflowStyle] = useState<string>("");
   const modalRef = useRef<HTMLDivElement>(null);
@@ -36,6 +40,11 @@ export const Modal = ({
   const [wasVisible, setWasVisible] = useState<boolean>();
   const disableShadowDom = useAtomValue(disableShadowDomAtom);
   const rootId = useAtomValue(rootIdAtom);
+  const modalZIndex = useAtomValue(modalZIndexAtom);
+
+  const handleModalWheel = (event: React.WheelEvent) => {
+    event.stopPropagation();
+  };
 
   useEffect(() => {
     if (wasVisible && !modal.visible) {
@@ -52,6 +61,7 @@ export const Modal = ({
     };
 
     const handleClickOutside = (event: MouseEvent) => {
+      if (disableCloseOnClickOutside) return;
       if (modalRef.current !== event.target && modal.visible) {
         modal.hide();
       }
@@ -81,7 +91,13 @@ export const Modal = ({
       onOpenChange?.(false);
       document.documentElement.style.overflow = prevOverflowStyle;
     };
-  }, [drawer, modal, onOpenChange, prevOverflowStyle]);
+  }, [
+    disableCloseOnClickOutside,
+    drawer,
+    modal,
+    onOpenChange,
+    prevOverflowStyle,
+  ]);
 
   // this fixes a flickering animation when modals are opened
   if (disableShadowDom && wasVisible === undefined) return null;
@@ -92,6 +108,9 @@ export const Modal = ({
         drawer={drawer}
         open={modal.visible}
         data-root-id={rootId}
+        blurBackground={blurBackground}
+        modalZIndex={modalZIndex}
+        onWheel={handleModalWheel}
         onAnimationEnd={() => {
           if (!modal.visible) {
             // this is a hack to avoid an after image on windows
@@ -106,6 +125,7 @@ export const Modal = ({
           ref={modalRef}
           drawer={drawer}
           open={modal.visible}
+          modalZIndex={modalZIndex}
           onClick={(e) => e.stopPropagation()}
         >
           {children}
@@ -129,12 +149,12 @@ export const createModal = <T extends ModalProps>(
       <Modal {...props} theme={theme}>
         <ErrorBoundary
           fallback={null}
-          onError={(error) =>
+          onError={(error) => {
             setErrorWarning({
               errorWarningType: ErrorWarningType.Unexpected,
               error,
-            })
-          }
+            });
+          }}
         >
           <Component {...props} />
         </ErrorBoundary>
@@ -210,8 +230,15 @@ const fadeOutAndZoomIn = keyframes`
 const StyledOverlay = styled.div<{
   drawer?: boolean;
   open?: boolean;
+  blurBackground?: boolean;
+  modalZIndex?: number;
 }>`
   background: rgba(0 0 0 / 0.5);
+  ${({ blurBackground }) =>
+    blurBackground &&
+    css`
+      backdrop-filter: blur(4px);
+    `}
   position: fixed;
   top: 0;
   left: 0;
@@ -219,7 +246,7 @@ const StyledOverlay = styled.div<{
   bottom: 0;
   display: grid;
   place-items: center;
-  z-index: 10;
+  z-index: ${({ modalZIndex }) => modalZIndex ?? 10};
   animation: ${({ open }) => (open ? fadeIn : fadeOut)} 150ms ease-in-out
     forwards;
 
@@ -258,6 +285,7 @@ const StyledOverlay = styled.div<{
 const StyledContent = styled.div<{
   drawer?: boolean;
   open?: boolean;
+  modalZIndex?: number;
 }>`
   max-width: 600px;
   width: 100%;
@@ -266,16 +294,7 @@ const StyledContent = styled.div<{
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
-  background: ${({ theme }) => theme.primary.background.normal};
-  overflow: hidden; /* avoid hairline seams in Chrome at rounded edges during animations */
-  will-change: transform, opacity; /* hint for smoother GPU compositing */
-  transform: translateZ(
-    0
-  ); /* promote to its own layer to prevent white edge artifacts in Chrome */
-  backface-visibility: hidden; /* improve antialiasing on transforms */
-  -webkit-background-clip: padding-box; /* ensure background doesn't bleed over rounded corners */
-  background-clip: padding-box;
+  z-index: ${({ modalZIndex }) => (modalZIndex ?? 10) + 90};
   animation: ${({ drawer, open }) =>
       open
         ? drawer
@@ -292,13 +311,8 @@ export const StyledModalInnerContainer = styled(Column)`
   align-items: center;
   justify-content: center;
 `;
-export const StyledModalContainer = styled(Column)`
-  position: relative;
-  padding: 10px;
-  gap: 10px;
-  width: calc(100% - 20px);
-  border-radius: ${({ theme }) =>
-    convertToPxValue(theme.borderRadius?.modalContainer)};
-  background: ${({ theme }) => theme.primary.background.normal};
-  height: 100%;
-`;
+
+export const StyledModalContainer = styled(Container).attrs({
+  borderRadius: "modalContainer",
+  padding: 10,
+})``;

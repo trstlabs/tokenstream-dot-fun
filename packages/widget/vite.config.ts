@@ -42,6 +42,7 @@ export default defineConfig({
     nodePolyfills(),
   ],
   build: {
+    emptyOutDir: false,
     commonjsOptions: {
       include: [/jotai-effect/, /node_modules/],
       transformMixedEsModules: true,

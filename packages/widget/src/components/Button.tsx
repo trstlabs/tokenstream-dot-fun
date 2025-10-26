@@ -50,18 +50,22 @@ export const GhostButton = styled(SmallText).attrs({
 export const Button = styled.button<FlexProps>`
   ${removeButtonStyles}
   line-height: initial;
-  ${({ disabled }) =>
-    disabled
-      ? css`
-          &:hover {
-            cursor: not-allowed;
-          }
-        `
-      : css`
-          &:hover {
-            cursor: pointer;
-          }
-        `}
+  ${({ disabled, onClick }) => {
+    if (disabled) {
+      return css`
+        &:hover {
+          cursor: not-allowed;
+        }
+      `;
+    }
+    if (onClick) {
+      return css`
+        &:hover {
+          cursor: pointer;
+        }
+      `;
+    }
+  }}
 
   ${flexProps};
 `;
@@ -84,7 +88,7 @@ export const PillButton = styled(Button)`
 export const Link = styled(Button).attrs({
   as: "a",
 })`
-  color: ${({ theme }) => theme.primary.text.lowContrast};
+  color: ${({ color, theme }) => color ?? theme.primary.text.lowContrast};
   text-decoration: none;
 `;
 

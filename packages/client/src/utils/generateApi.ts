@@ -32,7 +32,16 @@ export const createRequestClient = ({ apiUrl, apiKey, apiHeaders }: SkipApiOptio
     if (!response.ok) {
       const message =
         typeof body === "object" && body?.message ? body.message : response.statusText;
-      throw new Error(message);
+
+      const error = new Error(message);
+
+      if (body?.code) {
+        (error as any).code = body.code;
+      }
+      if (body?.details) {
+        (error as any).details = body.details;
+      }
+      throw error;
     }
 
     return body;
@@ -51,7 +60,13 @@ export const createRequestClient = ({ apiUrl, apiKey, apiHeaders }: SkipApiOptio
     if (params && typeof params === "object") {
       Object.entries(params as Record<string, any>).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
-          url.searchParams.append(key, String(value));
+          if (Array.isArray(value)) {
+            value.forEach((item) => {
+              url.searchParams.append(key, String(item));
+            });
+          } else {
+            url.searchParams.append(key, String(value));
+          }
         }
       });
     }
@@ -110,15 +125,16 @@ export function createRequest<Request, Response, TransformedResponse>({
   const request = async (options?: RequestType): Promise<TransformedResponse | undefined> => {
     const { apiKey, apiUrl, apiHeaders, abortDuplicateRequests, ...requestParams } = options ?? {};
     let fetchClient = ApiState.client;
-    if (apiUrl || apiKey) {
+
+    if (apiKey || apiUrl || apiHeaders || fetchClient === undefined) {
       fetchClient = createRequestClient({
         apiUrl: apiUrl || "https://api.skip.build",
         apiKey,
         apiHeaders,
       });
-    } else {
-      await ApiState.clientInitialized;
     }
+
+    ApiState.apiCalled = true;
 
     if (abortDuplicateRequests && controller && !controller?.signal?.aborted) {
       controller?.abort();
@@ -266,7 +282,7 @@ export function pollingApi<K extends ValidApiMethodKeys>({
   onSuccess,
   onError,
   isSuccess = () => true,
-  maxRetries = 5,
+  maxRetries = 10,
   retryInterval = 1000,
   backoffMultiplier = 2,
   throwOnError = false,

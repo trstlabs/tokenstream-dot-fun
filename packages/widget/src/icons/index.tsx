@@ -10,7 +10,7 @@ import { HistoryIcon } from "./HistoryIcon";
 import { ThinArrowIcon } from "./ThinArrowIcon";
 import { HamburgerIcon } from "./HamburgerIcon";
 import { HorizontalLineIcon } from "./HorizontalLineIcon";
-import { ReactElement, SVGProps } from "react";
+import { ReactNode } from "react";
 import { GoFastIcon } from "./GoFastIcon";
 import { WaveIcon } from "./WaveIcon";
 
@@ -33,15 +33,19 @@ export enum ICONS {
   wave,
 }
 
-type IconProps = Omit<SVGProps<SVGSVGElement>, 'width' | 'height'> & {
+export type IconProps = {
   color?: string;
-  direction?: "right" | "left";
+  direction?: "right" | "down" | "left" | "up" | "top-right";
   backgroundColor?: string;
-  width?: number;
-  height?: number;
+  className?: string;
+  maskedVersion?: boolean;
+  width?: string | number;
+  height?: string | number;
+  viewBox?: string;
+  fill?: string;
 };
 
-type IconMap = Record<ICONS, (props: IconProps) => ReactElement | null>;
+type IconMap = Record<ICONS, (props: IconProps) => ReactNode | null>;
 
 export const iconMap: IconMap = {
   [ICONS.none]: () => null,

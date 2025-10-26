@@ -1,5 +1,144 @@
 # nextjs
 
+## 0.1.130
+
+### Patch Changes
+
+- Updated dependencies [c515ff4]
+  - @skip-go/widget@3.14.4
+
+## 0.1.129
+
+### Patch Changes
+
+- Updated dependencies [bf3b837]
+- Updated dependencies [b3f72d4]
+- Updated dependencies [9016a64]
+  - @skip-go/widget@3.14.3
+
+## 0.1.128
+
+### Patch Changes
+
+- Updated dependencies [8630eea]
+- Updated dependencies [b8f024f]
+  - @skip-go/widget@3.14.2
+
+## 0.1.127
+
+### Patch Changes
+
+- Updated dependencies [fdd2929]
+- Updated dependencies [bc9983e]
+  - @skip-go/widget@3.14.1
+
+## 0.1.126
+
+### Patch Changes
+
+- Updated dependencies [8d6226f]
+- Updated dependencies [317ef74]
+- Updated dependencies [276d1b5]
+- Updated dependencies [e4a77b0]
+- Updated dependencies [0722525]
+- Updated dependencies [3223cdf]
+- Updated dependencies [3bf601a]
+- Updated dependencies [ad28b78]
+- Updated dependencies [fea44ef]
+  - @skip-go/widget@3.14.0
+
+## 0.1.125
+
+### Patch Changes
+
+- 56bd346: deselect swap venues and bridges by default
+- Updated dependencies [d9ae5ec]
+- Updated dependencies [45c8b0e]
+- Updated dependencies [4c3b591]
+- Updated dependencies [6deedeb]
+- Updated dependencies [aa6bf9e]
+- Updated dependencies [21ec4ff]
+- Updated dependencies [591e462]
+- Updated dependencies [e508561]
+- Updated dependencies [8f8ae09]
+  - @skip-go/widget@3.13.0
+
+## 0.1.124
+
+### Patch Changes
+
+- Updated dependencies [f00f585]
+- Updated dependencies [97b6f32]
+  - @skip-go/widget@3.12.11
+
+## 0.1.123
+
+### Patch Changes
+
+- Updated dependencies [3bc90be]
+  - @skip-go/widget@3.12.10
+
+## 0.1.122
+
+### Patch Changes
+
+- Updated dependencies [bf26d8e]
+- Updated dependencies [84d3267]
+- Updated dependencies [ce8f9a4]
+  - @skip-go/widget@3.12.9
+
+## 0.1.121
+
+### Patch Changes
+
+- Updated dependencies [fabdf0b]
+- Updated dependencies [a96b623]
+  - @skip-go/widget@3.12.8
+
+## 0.1.120
+
+### Patch Changes
+
+- @skip-go/widget@3.12.7
+
+## 0.1.119
+
+### Patch Changes
+
+- Updated dependencies [069bed8]
+  - @skip-go/widget@3.12.6
+
+## 0.1.118
+
+### Patch Changes
+
+- Updated dependencies [c3838d0]
+  - @skip-go/widget@3.12.5
+
+## 0.1.117
+
+### Patch Changes
+
+- Updated dependencies [43663de]
+- Updated dependencies [9beee7c]
+- Updated dependencies [ce78bcf]
+  - @skip-go/widget@3.12.4
+
+## 0.1.116
+
+### Patch Changes
+
+- Updated dependencies [9396ecb]
+  - @skip-go/widget@3.12.3
+
+## 0.1.115
+
+### Patch Changes
+
+- Updated dependencies [fd0e0dd]
+- Updated dependencies [fd0e0dd]
+  - @skip-go/widget@3.12.2
+
 ## 0.1.114
 
 ### Patch Changes

@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Row } from "@/components/Layout";
 import { GhostButton } from "@/components/Button";
 import { SignatureIcon } from "@/icons/SignatureIcon";
@@ -15,14 +15,18 @@ import { useSettingsChanged } from "@/hooks/useSettingsChanged";
 import { useIsMobileScreenSize } from "@/hooks/useIsMobileScreenSize";
 import { useIsGoFast } from "@/hooks/useIsGoFast";
 
-import { getFeeList, getTotalFees } from "@/utils/route";
+import { convertSecondsToMinutesOrHours } from "@/utils/number";
+import { currentTransactionAtom } from "@/state/history";
+import { Routes, currentPageAtom } from "@/state/router";
 
-const Fee = ({ amount }: { amount?: string }) =>
-  amount ? (
+const EstimatedDuration = ({ seconds }: { seconds?: number }) => {
+  const formatted = seconds ? convertSecondsToMinutesOrHours(seconds) : null;
+  return formatted ? (
     <Row gap={4} align="flex-end">
-      Fee: {amount}
+      {formatted}
     </Row>
   ) : null;
+};
 
 const SettingsButton = ({
   highlight,
@@ -65,32 +69,33 @@ const RoutePreferenceLabel = ({
 
 export type SwapPageFooterItemsProps = {
   content?: React.ReactNode;
-  showRouteInfo?: boolean;
   showEstimatedTime?: boolean;
   highlightSettings?: boolean;
-  showFee?: boolean;
 };
 
 export const SwapPageFooterItems: React.FC<SwapPageFooterItemsProps> = ({
   content,
-  showRouteInfo = false,
   showEstimatedTime = false,
   highlightSettings = false,
-  showFee = false,
 }) => {
   const { data: route, isLoading } = useAtomValue(skipRouteAtom);
+  const currentPage = useAtomValue(currentPageAtom);
   const routePreference = useAtomValue(routePreferenceAtom);
   const settingsChanged = useSettingsChanged();
   const isMobile = useIsMobileScreenSize();
   const isGoFast = useIsGoFast(route);
+  const currentTransaction = useAtomValue(currentTransactionAtom);
 
-  const fees = useMemo(() => (route ? getFeeList(route) : []), [route]);
-  const totalFees = getTotalFees(fees)?.formattedUsdAmount;
-  const signaturesRequired = route?.txsRequired ?? 1;
+  const estimatedSeconds = route?.estimatedRouteDurationSeconds;
+  const signaturesRequired = route
+    ? currentPage === Routes.SwapPage
+      ? route.txsRequired
+      : route.txsRequired - (currentTransaction?.txsSigned ?? 0)
+    : 0;
 
   const leftContent = () => {
     if (content) return content;
-    if (isLoading || !showRouteInfo || !route) return null;
+    if (isLoading) return null;
 
     return (
       <Row align="flex-end" gap={10} height={isMobile ? undefined : 13}>
@@ -102,7 +107,6 @@ export const SwapPageFooterItems: React.FC<SwapPageFooterItemsProps> = ({
             />
           </>
         )}
-        {showFee && <Fee amount={totalFees} />}
         {!isMobile && signaturesRequired > 1 && (
           <SignatureRequired count={signaturesRequired} />
         )}

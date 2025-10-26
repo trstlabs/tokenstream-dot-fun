@@ -24,7 +24,6 @@ const widgetPropTypes: Required<PropDescriptors> = {
   filterOut: "any",
   filterOutUnlessUserHasBalance: "any",
   walletConnect: "any",
-  enableSentrySessionReplays: "any",
   enableAmplitudeAnalytics: "any",
   connectedAddresses: "any",
   simulate: "any",
@@ -54,6 +53,7 @@ const widgetPropTypes: Required<PropDescriptors> = {
   onDestinationAssetUpdated: "any",
   onSourceAndDestinationSwapped: "any",
   batchSignTxs: "any",
+  modalZIndex: "any",
 };
 
 const WebComponent = toWebComponent(Widget, {

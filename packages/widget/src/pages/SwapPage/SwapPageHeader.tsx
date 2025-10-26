@@ -13,11 +13,6 @@ import { SpinnerIcon } from "@/icons/SpinnerIcon";
 import { useGetAccount } from "@/hooks/useGetAccount";
 import { useTxHistory } from "@/hooks/useTxHistory";
 import { PageHeader } from "@/components/PageHeader";
-import {
-  setOverallStatusAtom,
-  skipSubmitSwapExecutionAtom,
-  swapExecutionStateAtom,
-} from "@/state/swapExecutionPage";
 
 export const SwapPageHeader = memo(() => {
   const setCurrentPage = useSetAtom(currentPageAtom);
@@ -71,7 +66,7 @@ export const SwapPageHeader = memo(() => {
     <>
       {isFetchingLastTransactionStatus && <TrackLatestTxHistoryItemStatus />}
       <PageHeader
-        // leftButton={historyPageButton}
+        leftButton={historyPageButton}
         rightContent={sourceAccount ? <ConnectedWalletContent /> : null}
       />
     </>
@@ -80,43 +75,21 @@ export const SwapPageHeader = memo(() => {
 
 export const TrackLatestTxHistoryItemStatus = memo(() => {
   const lastTxHistoryItemInTime = useAtomValue(lastTransactionInTimeAtom);
-  const setOverallStatus = useSetAtom(setOverallStatusAtom);
-  const { transactionsSigned, transactionDetailsArray } = useAtomValue(
-    swapExecutionStateAtom
-  );
-  const { isPending } = useAtomValue(skipSubmitSwapExecutionAtom);
 
-  const { transferAssetRelease } = useTxHistory({
-    txHistoryItem: lastTxHistoryItemInTime?.transactionHistoryItem,
+  useTxHistory({
+    txHistoryItem: lastTxHistoryItemInTime,
   });
-
-  if (
-    transferAssetRelease &&
-    transactionsSigned !== transactionDetailsArray.length &&
-    !isPending
-  ) {
-    setOverallStatus("failed");
-  }
 
   return null;
 });
 
 const noHistoryItemsAtom = atom((get) => {
   const txHistoryItems = get(transactionHistoryAtom);
-
   return txHistoryItems?.length === 0;
 });
 
 const isFetchingLastTransactionStatusAtom = atom((get) => {
-  const { overallStatus, route, transactionsSigned } = get(
-    swapExecutionStateAtom
-  );
   const lastTxHistoryItemInTime = get(lastTransactionInTimeAtom);
 
-  return (
-    (overallStatus === "pending" &&
-      transactionsSigned === route?.txsRequired) ||
-    (lastTxHistoryItemInTime?.transactionHistoryItem?.isSettled !== true &&
-      lastTxHistoryItemInTime?.transactionHistoryItem?.route?.txsRequired === 1)
-  );
+  return lastTxHistoryItemInTime?.status === "pending";
 });

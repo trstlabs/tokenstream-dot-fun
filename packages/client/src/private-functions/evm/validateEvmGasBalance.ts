@@ -7,17 +7,20 @@ import { formatUnits } from "viem";
 import type { GetFallbackGasAmount } from "src/types/client-types";
 import { validateEvmTokenApproval } from "./validateEvmTokenApproval";
 import { getEVMGasAmountForMessage } from "../../public-functions/getEvmGasAmountForMessage";
+import type { ExecuteRouteOptions } from "src/public-functions/executeRoute";
 
 export const validateEvmGasBalance = async ({
   signer,
   tx,
   getFallbackGasAmount,
-  useUnlimitedApproval,
+  options,
+  routeId,
 }: {
   signer: WalletClient;
   tx: EvmTx;
   getFallbackGasAmount?: GetFallbackGasAmount;
-  useUnlimitedApproval?: boolean;
+  options: ExecuteRouteOptions;
+  routeId: string;
 }) => {
   const chainId = tx?.chainId ?? "";
   const skipAssets = (await ClientState.getSkipAssets({ chainId }))?.[chainId];
@@ -55,7 +58,9 @@ export const validateEvmGasBalance = async ({
 
   const { requiredErc20Approvals } = tx;
 
-  if (requiredErc20Approvals) {
+  const { bypassApprovalCheck } = options;
+
+  if (!bypassApprovalCheck && requiredErc20Approvals) {
     try {
       await validateEvmTokenApproval({
         requiredErc20Approvals,
@@ -63,7 +68,8 @@ export const validateEvmGasBalance = async ({
         chain,
         gasBalance,
         tx,
-        useUnlimitedApproval,
+        routeId,
+        options,
       });
     } catch (error) {
       const err = error as Error;

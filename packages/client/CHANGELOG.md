@@ -1,5 +1,134 @@
 # @skip-go/client
 
+## 1.5.9
+
+### Patch Changes
+
+- 229522f: fix broken link, fix dependency security issues
+
+## 1.5.8
+
+### Patch Changes
+
+- a266ea2: update registries
+
+## 1.5.7
+
+### Patch Changes
+
+- 8dfa5c6: include sunrise-1 in hard-coded cosmosGas fees
+
+## 1.5.6
+
+### Patch Changes
+
+- 58e6688: Fix passing affiliates to widget/client library via setClientOptions
+
+## 1.5.5
+
+### Patch Changes
+
+- c8ad02e: update status and call callbacks properly when validasting evm token approvals upfront
+- 5611da4: Remove gas station logic
+- f84c866: Map LAYER_ZERO_TRANSFER_WAITING_FOR_COMPOSE transferState as "pending"
+
+## 1.5.4
+
+### Patch Changes
+
+- 39d2448: Add timeoutTx explorerLink for ibcTransfers that have been timedout, Fix Axelar explorerLinks
+- d6c4457: Update filterNeutronSwapFee to no longer check swap venue
+
+## 1.5.3
+
+### Patch Changes
+
+- 676a76b: update registries
+- d3ec136: rename feeRoute to gasRoute
+- 4cc4b68: add routeWithGasOnReceive
+- 55f7438: Add HIGH_LOSS_ERROR to Swagger API spec
+- 37241e9: get chains and assets fron client lib state
+- b1660f8: fix array query param value
+- 4920ae0: fix build warning reorder exports
+
+## 1.5.2
+
+### Patch Changes
+
+- 71fb39a: Allow calling api functions without first configuring api/client options
+
+## 1.5.1
+
+### Patch Changes
+
+- 8630eea: update registries
+- b8f024f: fix callback
+- 419982d: Update swagger docs to use referenced request schemas.
+
+## 1.5.0
+
+### Minor Changes
+
+- fc76c0f: removed beforeMsg and afterMsg changed to appendCosmosMsgs
+- 3bf601a: Gas on receive & executeMultipleRoutes
+
+## 1.4.0
+
+### Minor Changes
+
+- d9ae5ec: Refactored route status management to be handled by the client library in onRouteUpdated callback passed to executeRoute and subscribeToRouteStatus
+
+### Patch Changes
+
+- 5c85386: Fix incomplete state handling, remove SwapPageFooter from TransactionHistoryPage
+- 4c3b591: cleanup injective dependencies
+- b1441b2: Fix TrackTxRequest to include SkipApiOptions
+- e508561: Add mapping 5 and 12 error codes to "no route found" on the widget
+
+## 1.3.7
+
+### Patch Changes
+
+- 3bc90be: fix injective and evmos direct signing
+
+## 1.3.6
+
+### Patch Changes
+
+- bf26d8e: fix cannot sign on fresh address
+
+## 1.3.5
+
+### Patch Changes
+
+- a96b623: fix chains endpoint
+
+## 1.3.4
+
+### Patch Changes
+
+- f2852b6: Add svmPayer object param in executeRoute
+
+## 1.3.3
+
+### Patch Changes
+
+- 5e2f94c: Remove redundant submit function (use submitTransaction instead), remove track call for non-evm txs, increase default maxRetries to 10
+- cadc8cc: Add calling track back for svm/evm
+
+## 1.3.2
+
+### Patch Changes
+
+- c7bc3b8: Fix typo in LayerZeroTransfer, Add layerzero as bridge type
+
+## 1.3.1
+
+### Patch Changes
+
+- fd0e0dd: added onTransactionSignRequested callback
+- fd0e0dd: Add cjs version at /cjs
+
 ## 1.3.0
 
 ### Minor Changes

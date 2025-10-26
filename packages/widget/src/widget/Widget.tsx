@@ -65,11 +65,6 @@ export type WidgetProps = {
   filterOutUnlessUserHasBalance?: ChainFilter;
   walletConnect?: WalletConnect;
   /**
-   * enables sentry session replays on the widget to help with troubleshooting errors
-   * https://docs.sentry.io/product/explore/session-replay/web/
-   */
-  enableSentrySessionReplays?: boolean;
-  /**
    * Enable Amplitude analytics for the widget to improve user experience.
    */
   enableAmplitudeAnalytics?: boolean;
@@ -95,6 +90,11 @@ export type WidgetProps = {
   assetSymbolsSortedToTop?: string[];
   hideAssetsUnlessWalletTypeConnected?: boolean;
   batchSignTxs?: boolean;
+  /**
+   * Custom z-index for modals. If not provided, defaults to 10
+   * @default 10
+   */
+  modalZIndex?: number;
 } & SkipClientOptions &
   Callbacks &
   SignerGetters &
@@ -142,7 +142,7 @@ export const WidgetWithinProvider = ({ props }: { props: WidgetProps }) => {
   );
 };
 
-const WidgetWrapper = ({ children }: { children: ReactNode }) => {
+export const WidgetWrapper = ({ children }: { children: ReactNode }) => {
   const setSettingsDrawerContainer = useSetAtom(settingsDrawerAtom);
   const setStreamSettingsDrawerContainer = useSetAtom(streamSettingsDrawerAtom); // Set StreamSettingsDrawer
   const rootId = useAtomValue(rootIdAtom);

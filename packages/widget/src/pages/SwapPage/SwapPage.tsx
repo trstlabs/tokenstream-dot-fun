@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { startTransition, useCallback, useMemo } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Column } from "@/components/Layout";
 import { MainButton } from "@/components/MainButton";
@@ -22,6 +22,7 @@ import {
 import {
   setSwapExecutionStateAtom,
   chainAddressesAtom,
+  gasRouteChainAddressesAtom,
 } from "@/state/swapExecutionPage";
 import { SwapPageBridge } from "./SwapPageBridge";
 import { currentPageAtom, Routes } from "@/state/router";
@@ -35,13 +36,13 @@ import { useFetchAllBalances } from "@/hooks/useFetchAllBalances";
 import { SwapPageAssetChainInput } from "./SwapPageAssetChainInput";
 import { useGetAccount } from "@/hooks/useGetAccount";
 import { calculatePercentageChange } from "@/utils/number";
+import { getFeeList, getTotalFees } from "@/utils/fees";
 import { useCleanupDebouncedAtoms } from "./useCleanupDebouncedAtoms";
 import { useUpdateAmountWhenRouteChanges } from "./useUpdateAmountWhenRouteChanges";
 import NiceModal from "@ebay/nice-modal-react";
 import { Modals } from "@/modals/registerModals";
 import { useIsGoFast, useIsSwapOperation } from "@/hooks/useIsGoFast";
 import { useShowCosmosLedgerWarning } from "@/hooks/useShowCosmosLedgerWarning";
-import { setUser, getReplay } from "@sentry/react";
 import { useSettingsDrawer } from "@/hooks/useSettingsDrawer";
 import { setUserId, track } from "@amplitude/analytics-browser";
 import { useSwitchEvmChain } from "@/hooks/useSwitchEvmChain";
@@ -56,6 +57,8 @@ import {
 import { SwapPageHeader } from "./SwapPageHeader";
 import { useConnectToMissingCosmosChain } from "./useConnectToMissingCosmosChain";
 import { callbacksAtom } from "@/state/callbacks";
+import { startAmplitudeSessionReplay } from "@/widget/initAmplitude";
+import { SmallText } from "@/components/Typography";
 
 export const SwapPage = () => {
   const { SettingsFooter, drawerOpen } = useSettingsDrawer();
@@ -95,6 +98,8 @@ export const SwapPage = () => {
   const callbacks = useAtomValue(callbacksAtom);
 
   const setChainAddresses = useSetAtom(chainAddressesAtom);
+  const setGasRouteChainAddresses = useSetAtom(gasRouteChainAddressesAtom);
+
   useFetchAllBalances();
   useCleanupDebouncedAtoms();
   useUpdateAmountWhenRouteChanges();
@@ -256,6 +261,30 @@ export const SwapPage = () => {
     return calculatePercentageChange(route.usdAmountIn, route.usdAmountOut);
   }, [isWaitingForNewRoute, route?.usdAmountIn, route?.usdAmountOut]);
 
+  const fees = useMemo(() => (route ? getFeeList(route) : []), [route]);
+  const feeLabel = useMemo(() => {
+    const formattedUsdAmount = getTotalFees(fees)?.formattedUsdAmount;
+
+    if (formattedUsdAmount) {
+      return (
+        <>
+          <SmallText color="inherit">{formattedUsdAmount} in fees</SmallText>
+        </>
+      );
+    }
+
+    return (
+      <>
+        <SmallText color="inherit">no fees</SmallText>
+      </>
+    );
+  }, [fees]);
+
+  const feeWarning = useMemo(() => {
+    if (!route?.usdAmountIn || !route?.usdAmountOut) return false;
+    return parseFloat(route.usdAmountOut) < parseFloat(route.usdAmountIn) * 0.9;
+  }, [route?.usdAmountIn, route?.usdAmountOut]);
+
   const swapButton = useMemo(() => {
     const computeFontSize = (label: string) => (label.length > 36 ? 18 : 24);
 
@@ -366,12 +395,23 @@ export const SwapPage = () => {
     }
 
     const onClick = () => {
+      startAmplitudeSessionReplay();
       track("swap page: continue button - clicked", {
         route,
         type: isSwapOperation ? "swap" : "send",
         routePreference,
         slippage,
       });
+
+      const navigateToSwapExecutionPage = () => {
+        startTransition(() => {
+          setError(undefined);
+          setChainAddresses({});
+          setGasRouteChainAddresses({});
+          setSwapExecutionState();
+          setCurrentPage(Routes.SwapExecutionPage);
+        });
+      };
       setUserId(sourceAccount?.address);
       if (showCosmosLedgerWarning) {
         track("warning page: cosmos ledger", { route });
@@ -388,10 +428,7 @@ export const SwapPage = () => {
         setError({
           errorWarningType: ErrorWarningType.BadPriceWarning,
           onClickContinue: () => {
-            setError(undefined);
-            setChainAddresses({});
-            setCurrentPage(nextPage);
-            setSwapExecutionState();
+            navigateToSwapExecutionPage();
           },
           onClickBack: () => {
             setError(undefined);
@@ -406,10 +443,7 @@ export const SwapPage = () => {
         setError({
           errorWarningType: ErrorWarningType.LowInfoWarning,
           onClickContinue: () => {
-            setError(undefined);
-            setChainAddresses({});
-            setCurrentPage(nextPage);
-            setSwapExecutionState();
+            navigateToSwapExecutionPage();
           },
           onClickBack: () => {
             setError(undefined);
@@ -424,10 +458,7 @@ export const SwapPage = () => {
         setError({
           errorWarningType: ErrorWarningType.GoFastWarning,
           onClickContinue: () => {
-            setError(undefined);
-            setChainAddresses({});
-            setCurrentPage(nextPage);
-            setSwapExecutionState();
+            navigateToSwapExecutionPage();
           },
           onClickBack: () => {
             setCurrentPage(Routes.SwapPage);
@@ -436,14 +467,7 @@ export const SwapPage = () => {
         });
         return;
       }
-      setChainAddresses({});
-      setCurrentPage(nextPage);
-      setUser({ username: sourceAccount?.address });
-      if (sourceAccount?.address) {
-        const replay = getReplay();
-        replay?.start();
-      }
-      setSwapExecutionState();
+      navigateToSwapExecutionPage();
     };
 
     return (
@@ -480,6 +504,7 @@ export const SwapPage = () => {
     showGoFastWarning,
     isGoFast,
     setChainAddresses,
+    setGasRouteChainAddresses,
     setCurrentPage,
     setSwapExecutionState,
     setError,
@@ -524,6 +549,8 @@ export const SwapPage = () => {
           value={destinationAsset?.amount}
           priceChangePercentage={Number(priceChangePercentage)}
           badPriceWarning={route?.warning?.type === "BAD_PRICE_WARNING"}
+          feeLabel={feeLabel}
+          feeWarning={feeWarning}
           onChangeValue={(v) => {
             track("swap page: destination asset amount input - changed", {
               amount: v,

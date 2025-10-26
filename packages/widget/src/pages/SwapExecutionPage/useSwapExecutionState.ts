@@ -1,31 +1,54 @@
-// useSwapExecutionState.ts
 import { useMemo } from "react";
 import { ChainAddress } from "@/state/swapExecutionPage";
-import { SimpleStatus } from "@/utils/clientType";
 import { SwapExecutionState } from "./SwapExecutionPage";
-import { RouteResponse } from "@skip-go/client";
+import { currentTransactionAtom } from "@/state/history";
+import { useAtomValue } from "jotai";
+import { gasOnReceiveAtom } from "@/state/gasOnReceive";
 
 type UseSwapExecutionStateParams = {
   chainAddresses: Record<number, ChainAddress>;
-  route?: RouteResponse;
-  overallStatus: SimpleStatus;
-  isValidatingGasBalance?: { status: string };
-  signaturesRemaining: number;
-  isLoading: boolean;
+  gasRouteChainAddresses?: Record<number, ChainAddress>;
+  requiredChainAddresses?: string[];
+  gasRouteRequiredChainAddresses?: string[];
+  isGettingAddressesLoading: boolean;
+  isGettingGasRouteAddressesLoading?: boolean;
+  isFetchingDestinationBalance: boolean;
 };
 
 export function useSwapExecutionState({
   chainAddresses,
-  route,
-  overallStatus,
-  isValidatingGasBalance,
-  signaturesRemaining,
-  isLoading,
+  requiredChainAddresses,
+  isGettingAddressesLoading,
+  isFetchingDestinationBalance,
+  gasRouteChainAddresses,
+  gasRouteRequiredChainAddresses,
+  isGettingGasRouteAddressesLoading: isGettingGasRouteAddressesLoading,
 }: UseSwapExecutionStateParams): SwapExecutionState {
+  const currentTransaction = useAtomValue(currentTransactionAtom);
+  const isGasRouteEnabled = useAtomValue(gasOnReceiveAtom);
+
+  const showSignaturesRemaining = useMemo(() => {
+    if (!currentTransaction) return false;
+    if (
+      currentTransaction?.txsRequired >= 2 &&
+      currentTransaction?.txsSigned !== currentTransaction?.txsRequired
+    ) {
+      return true;
+    }
+
+    return false;
+  }, [currentTransaction]);
+
   return useMemo(() => {
-    if (isLoading) return SwapExecutionState.pendingGettingAddresses;
+    if (isFetchingDestinationBalance)
+      return SwapExecutionState.pendingGettingDestinationBalance;
+    if (isGettingAddressesLoading)
+      return SwapExecutionState.pendingGettingAddresses;
+    if (isGasRouteEnabled && isGettingGasRouteAddressesLoading)
+      return SwapExecutionState.pendingGettingGasRouteAddresses;
+
     if (!chainAddresses) return SwapExecutionState.destinationAddressUnset;
-    const requiredChainAddresses = route?.requiredChainAddresses;
+
     if (!requiredChainAddresses)
       return SwapExecutionState.destinationAddressUnset;
 
@@ -33,32 +56,37 @@ export function useSwapExecutionState({
       (_chainId, index) => chainAddresses[index]?.address
     );
 
+    const gasRouteAllAddressesSet = gasRouteRequiredChainAddresses?.every(
+      (_chainId, index) => gasRouteChainAddresses?.[index]?.address
+    );
+
     const lastChainAddress =
       chainAddresses[requiredChainAddresses.length - 1]?.address;
 
-    if (overallStatus === "completed") {
+    if (currentTransaction?.status === "failed") {
+      return SwapExecutionState.pendingError;
+    }
+
+    if (currentTransaction?.status === "completed") {
       return SwapExecutionState.confirmed;
     }
 
-    if (overallStatus === "pending" || overallStatus === "failed") {
-      if (signaturesRemaining > 0) {
-        return SwapExecutionState.signaturesRemaining;
-      }
+    if (currentTransaction?.status === "pending") {
       return SwapExecutionState.pending;
     }
 
-    if (overallStatus === "approving") {
+    if (currentTransaction?.status === "allowance") {
       return SwapExecutionState.approving;
     }
 
-    if (
-      isValidatingGasBalance &&
-      isValidatingGasBalance.status !== "completed"
-    ) {
+    if (currentTransaction?.status === "validating") {
       return SwapExecutionState.validatingGasBalance;
     }
 
-    if (overallStatus === "signing") {
+    if (currentTransaction?.status === "signing") {
+      if (showSignaturesRemaining) {
+        return SwapExecutionState.signaturesRemaining;
+      }
       return SwapExecutionState.waitingForSigning;
     }
 
@@ -70,13 +98,25 @@ export function useSwapExecutionState({
       return SwapExecutionState.recoveryAddressUnset;
     }
 
+    if (
+      isGasRouteEnabled &&
+      gasRouteRequiredChainAddresses &&
+      !gasRouteAllAddressesSet
+    ) {
+      return SwapExecutionState.gasRouteRecoveryAddressUnset;
+    }
+
     return SwapExecutionState.ready;
   }, [
-    isLoading,
+    isFetchingDestinationBalance,
+    isGettingAddressesLoading,
+    isGasRouteEnabled,
+    isGettingGasRouteAddressesLoading,
     chainAddresses,
-    route?.requiredChainAddresses,
-    overallStatus,
-    isValidatingGasBalance,
-    signaturesRemaining,
+    requiredChainAddresses,
+    gasRouteRequiredChainAddresses,
+    currentTransaction?.status,
+    gasRouteChainAddresses,
+    showSignaturesRemaining,
   ]);
 }

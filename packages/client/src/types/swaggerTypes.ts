@@ -10,6 +10,280 @@
  * ---------------------------------------------------------------
  */
 
+/**
+ * Indicates whether the fee is deducted from the transfer amount or charged additionally.
+ * - FEE_BEHAVIOR_DEDUCTED: Fee is subtracted from the transfer amount (default, typical for Cosmos chains)
+ * - FEE_BEHAVIOR_ADDITIONAL: Fee is charged on top of the transfer amount (typical for EVM chains with native tokens)
+ */
+export enum FeeBehavior {
+  FEE_BEHAVIOR_DEDUCTED = "FEE_BEHAVIOR_DEDUCTED",
+  FEE_BEHAVIOR_ADDITIONAL = "FEE_BEHAVIOR_ADDITIONAL",
+}
+
+/**
+ * Fee type:
+ * * SMART_RELAY - Fees for Smart relaying services.'
+ */
+export enum FeeType {
+  SMART_RELAY = "SMART_RELAY",
+}
+
+/**
+ * Transfer state:
+ * * `TRANSFER_UNKNOWN` - Transfer state is not known.
+ * * `TRANSFER_PENDING` - The send packet for the transfer has been committed and the transfer is pending.
+ * * `TRANSFER_RECEIVED` - The transfer packet has been received by the destination chain. It can still fail and revert if it is part of a multi-hop PFM transfer.
+ * * `TRANSFER_SUCCESS` - The transfer has been successfully completed and will not revert.
+ * * `TRANSFER_FAILURE`- The transfer has failed.
+ */
+export enum TransferState {
+  TRANSFER_UNKNOWN = "TRANSFER_UNKNOWN",
+  TRANSFER_PENDING = "TRANSFER_PENDING",
+  TRANSFER_RECEIVED = "TRANSFER_RECEIVED",
+  TRANSFER_SUCCESS = "TRANSFER_SUCCESS",
+  TRANSFER_FAILURE = "TRANSFER_FAILURE",
+}
+
+/**
+ * LayerZero transfer state:
+ * * `LAYER_ZERO_TRANSFER_UNKNOWN` - Unknown error
+ * * `LAYER_ZERO_TRANSFER_SENT` - The transaction on the source chain has executed
+ * * `LAYER_ZERO_TRANSFER_WAITING_FOR_COMPOSE` - The transfer has been delivered to the destination chain but there is an additional lz_compose transaction that still needs to be delivered before marking this transfer as LAYER_ZERO_TRANSFER_RECEIVED
+ * * `LAYER_ZERO_TRANSFER_RECEIVED` - The transfer has been received at the destination chain
+ * * `LAYER_ZERO_TRANSFER_FAILED` - The transfer has failed
+ */
+export enum LayerZeroTransferState {
+  LAYER_ZERO_TRANSFER_UNKNOWN = "LAYER_ZERO_TRANSFER_UNKNOWN",
+  LAYER_ZERO_TRANSFER_SENT = "LAYER_ZERO_TRANSFER_SENT",
+  LAYER_ZERO_TRANSFER_WAITING_FOR_COMPOSE = "LAYER_ZERO_TRANSFER_WAITING_FOR_COMPOSE",
+  LAYER_ZERO_TRANSFER_RECEIVED = "LAYER_ZERO_TRANSFER_RECEIVED",
+  LAYER_ZERO_TRANSFER_FAILED = "LAYER_ZERO_TRANSFER_FAILED",
+}
+
+/**
+ * OPInit transfer state:
+ * * `OPINIT_TRANSFER_UNKNOWN` - Unknown error
+ * * `OPINIT_TRANSFER_SENT` - The deposit transaction on the source chain has executed
+ * * `OPINIT_TRANSFER_RECEIVED` - OPInit transfer has been received at the destination chain
+ */
+export enum OPInitTransferState {
+  OPINIT_TRANSFER_UNKNOWN = "OPINIT_TRANSFER_UNKNOWN",
+  OPINIT_TRANSFER_SENT = "OPINIT_TRANSFER_SENT",
+  OPINIT_TRANSFER_RECEIVED = "OPINIT_TRANSFER_RECEIVED",
+}
+
+/**
+ * Transaction state:
+ * * `STATE_SUBMITTED` - The initial transaction has been submitted to Skip Go API but not observed on chain yet
+ * * `STATE_PENDING` - The initial transaction has been observed on chain, and there are still pending actions
+ * * `STATE_COMPLETED_SUCCESS` - The route has completed successfully and the user has their tokens on the destination. (indicated by `transfer_asset_release`)
+ * * `STATE_COMPLETED_ERROR` - The route errored somewhere and the user has their tokens unlocked in one of their wallets. Their tokens are either on the source chain, an intermediate chain, or the destination chain but as the wrong asset.
+ * (Again, `transfer_asset_release` indicates where the tokens are)
+ * * `STATE_ABANDONED` - Tracking for the transaction has been abandoned. This happens if the cross-chain  sequence of actions stalls for more than 10 minutes or if the initial transaction does not get observed in a block for 5 minutes.
+ * * `STATE_PENDING_ERROR` - The overall transaction will fail, pending error propagation
+ */
+export enum TransactionState {
+  STATE_SUBMITTED = "STATE_SUBMITTED",
+  STATE_PENDING = "STATE_PENDING",
+  STATE_ABANDONED = "STATE_ABANDONED",
+  STATE_COMPLETED_SUCCESS = "STATE_COMPLETED_SUCCESS",
+  STATE_COMPLETED_ERROR = "STATE_COMPLETED_ERROR",
+  STATE_PENDING_ERROR = "STATE_PENDING_ERROR",
+}
+
+/**
+ * Packet error types:
+ * * `STATUS_ERROR_UNKNOWN` - Unknown error
+ * * `STATUS_ERROR_TRANSACTION_EXECUTION` - Error was encountered during transaction execution
+ * * `STATUS_ERROR_INDEXING` - Error was encountered while indexing the transaction and packet data
+ * * `STATUS_ERROR_TRANSFER` - The transfer failed to complete successfully
+ */
+export enum StatusErrorType {
+  STATUS_ERROR_UNKNOWN = "STATUS_ERROR_UNKNOWN",
+  STATUS_ERROR_TRANSACTION_EXECUTION = "STATUS_ERROR_TRANSACTION_EXECUTION",
+  STATUS_ERROR_INDEXING = "STATUS_ERROR_INDEXING",
+  STATUS_ERROR_TRANSFER = "STATUS_ERROR_TRANSFER",
+}
+
+/**
+ * SendToken error types:
+ * * `SEND_TOKEN_EXECUTION_ERROR` - Error occurred during the execute transaction
+ */
+export enum SendTokenErrorType {
+  SEND_TOKEN_EXECUTION_ERROR = "SEND_TOKEN_EXECUTION_ERROR",
+}
+
+/**
+ * Recommendation reason:
+ * * `LOW_INFO_WARNING` - Not enough asset pricing information to determine the price safety of the route.
+ * * `BAD_PRICE_WARNING` - The execution price of the route deviates significantly from the current market price.
+ */
+export enum RoutePriceWarningType {
+  LOW_INFO_WARNING = "LOW_INFO_WARNING",
+  BAD_PRICE_WARNING = "BAD_PRICE_WARNING",
+}
+
+/**
+ * Recommendation reason:
+ * * `UNKNOWN` - Unknown recommendation reason.
+ * * `MOST_LIQUID` - Highest liquidity form of the transferred token on the destination chain.
+ * * `BASE_TOKEN` - The base token if the destination chain is the origin chain of the source token.
+ * * `DIRECT` - The token resulting from the least amount of transfers to the destination chain.
+ */
+export enum Reason {
+  UNKNOWN = "UNKNOWN",
+  MOST_LIQUID = "MOST_LIQUID",
+  BASE_TOKEN = "BASE_TOKEN",
+  DIRECT = "DIRECT",
+}
+
+/**
+ * Packet error type:
+ * * `PACKET_ERROR_UNKNOWN` - Unknown error
+ * * `PACKET_ERROR_ACKNOWLEDGEMENT` - Packet acknowledgement error
+ * * `PACKET_ERROR_TIMEOUT` - Packet timed out
+ */
+export enum PacketErrorType {
+  PACKET_ERROR_UNKNOWN = "PACKET_ERROR_UNKNOWN",
+  PACKET_ERROR_ACKNOWLEDGEMENT = "PACKET_ERROR_ACKNOWLEDGEMENT",
+  PACKET_ERROR_TIMEOUT = "PACKET_ERROR_TIMEOUT",
+}
+
+/**
+ * Hyperlane transfer state:
+ * * `HYPERLANE_TRANSFER_UNKNOWN` - Unknown error
+ * * `HYPERLANE_TRANSFER_SENT` - The Hyperlane transfer transaction on the source chain has executed
+ * * `HYPERLANE_TRANSFER_FAILED` - The Hyperlane transfer failed
+ * * `HYPERLANE_TRANSFER_RECEIVED` - The Hyperlane transfer has been received at the destination chain
+ */
+export enum HyperlaneTransferState {
+  HYPERLANE_TRANSFER_UNKNOWN = "HYPERLANE_TRANSFER_UNKNOWN",
+  HYPERLANE_TRANSFER_SENT = "HYPERLANE_TRANSFER_SENT",
+  HYPERLANE_TRANSFER_FAILED = "HYPERLANE_TRANSFER_FAILED",
+  HYPERLANE_TRANSFER_RECEIVED = "HYPERLANE_TRANSFER_RECEIVED",
+}
+
+/**
+ * ContractCallWithToken errors:
+ * * `CONTRACT_CALL_WITH_TOKEN_EXECUTION_ERROR` - Error occurred during the execute transaction
+ */
+export enum ContractCallWithTokenErrorType {
+  CONTRACT_CALL_WITH_TOKEN_EXECUTION_ERROR = "CONTRACT_CALL_WITH_TOKEN_EXECUTION_ERROR",
+}
+
+export enum ChainType {
+  Cosmos = "cosmos",
+  Evm = "evm",
+  Svm = "svm",
+}
+
+/**
+ * Bridge Type:
+ * * `IBC` - IBC Bridge
+ * * `AXELAR` - Axelar Bridge
+ * * `CCTP` - CCTP Bridge
+ * * `HYPERLANE` - Hyperlane Bridge
+ * * `OPINIT` - Opinit Bridge
+ * * `GO_FAST` - Go Fast Bridge
+ * * `STARGATE` - Stargate Bridge
+ * * `LAYER_ZERO` - Layerzero Bridge
+ * * `EUREKA` - IBC Eureka Bridge
+ */
+export enum BridgeType {
+  IBC = "IBC",
+  AXELAR = "AXELAR",
+  CCTP = "CCTP",
+  HYPERLANE = "HYPERLANE",
+  OPINIT = "OPINIT",
+  GO_FAST = "GO_FAST",
+  STARGATE = "STARGATE",
+  LAYER_ZERO = "LAYER_ZERO",
+  EUREKA = "EUREKA",
+}
+
+/**
+ * GoFast transfer state:
+ * * `GO_FAST_TRANSFER_UNKNOWN` - Unknown state
+ * * `GO_FAST_TRANSFER_SENT` - Order submitted on source chain
+ * * `GO_FAST_POST_ACTION_FAILED` - Order filled, but subsequent action (e.g., swap) failed
+ * * `GO_FAST_TRANSFER_TIMEOUT` - Order timed out
+ * * `GO_FAST_TRANSFER_FILLED` - Order filled on destination chain
+ * * `GO_FAST_TRANSFER_REFUNDED` - Order refunded
+ */
+export enum GoFastTransferState {
+  GO_FAST_TRANSFER_UNKNOWN = "GO_FAST_TRANSFER_UNKNOWN",
+  GO_FAST_TRANSFER_SENT = "GO_FAST_TRANSFER_SENT",
+  GO_FAST_POST_ACTION_FAILED = "GO_FAST_POST_ACTION_FAILED",
+  GO_FAST_TRANSFER_TIMEOUT = "GO_FAST_TRANSFER_TIMEOUT",
+  GO_FAST_TRANSFER_FILLED = "GO_FAST_TRANSFER_FILLED",
+  GO_FAST_TRANSFER_REFUNDED = "GO_FAST_TRANSFER_REFUNDED",
+}
+
+/**
+ * Stargate transfer state:
+ * * `STARGATE_TRANSFER_UNKNOWN` - Unknown error
+ * * `STARGATE_TRANSFER_SENT` - The Stargate transfer transaction on the source chain has executed
+ * * `STARGATE_TRANSFER_PENDING_CONFIRMATION` - Stargate transfer is pending confirmation
+ * * `STARGATE_TRANSFER_CONFIRMED` - Stargate transfer has been confirmed
+ * * `STARGATE_TRANSFER_RECEIVED` - Stargate transfer has been received at the destination chain
+ * * `STARGATE_TRANSFER_FAILED` - Stargate transfer failed
+ */
+export enum StargateTransferState {
+  STARGATE_TRANSFER_UNKNOWN = "STARGATE_TRANSFER_UNKNOWN",
+  STARGATE_TRANSFER_SENT = "STARGATE_TRANSFER_SENT",
+  STARGATE_TRANSFER_PENDING_CONFIRMATION = "STARGATE_TRANSFER_PENDING_CONFIRMATION",
+  STARGATE_TRANSFER_CONFIRMED = "STARGATE_TRANSFER_CONFIRMED",
+  STARGATE_TRANSFER_RECEIVED = "STARGATE_TRANSFER_RECEIVED",
+  STARGATE_TRANSFER_FAILED = "STARGATE_TRANSFER_FAILED",
+}
+
+/**
+ * CCTP transfer state:
+ * * `CCTP_TRANSFER_UNKNOWN` - Unknown error
+ * * `CCTP_TRANSFER_SENT` - The burn transaction on the source chain has executed
+ * * `CCTP_TRANSFER_PENDING_CONFIRMATION` - CCTP transfer is pending confirmation by the cctp attestation api
+ * * `CCTP_TRANSFER_CONFIRMED` - CCTP transfer has been confirmed by the cctp attestation api
+ * * `CCTP_TRANSFER_RECEIVED` - CCTP transfer has been received at the destination chain
+ */
+export enum CCTPTransferState {
+  CCTP_TRANSFER_UNKNOWN = "CCTP_TRANSFER_UNKNOWN",
+  CCTP_TRANSFER_SENT = "CCTP_TRANSFER_SENT",
+  CCTP_TRANSFER_PENDING_CONFIRMATION = "CCTP_TRANSFER_PENDING_CONFIRMATION",
+  CCTP_TRANSFER_CONFIRMED = "CCTP_TRANSFER_CONFIRMED",
+  CCTP_TRANSFER_RECEIVED = "CCTP_TRANSFER_RECEIVED",
+}
+
+/**
+ * Axelar transfer type:
+ * * `AXELAR_TRANSFER_CONTRACT_CALL_WITH_TOKEN` - GMP contract call with token transfer type
+ * * `AXELAR_TRANSFER_SEND_TOKEN` - Send token transfer type
+ */
+export enum AxelarTransferType {
+  AXELAR_TRANSFER_CONTRACT_CALL_WITH_TOKEN = "AXELAR_TRANSFER_CONTRACT_CALL_WITH_TOKEN",
+  AXELAR_TRANSFER_SEND_TOKEN = "AXELAR_TRANSFER_SEND_TOKEN",
+}
+
+/**
+ * Axelar transfer state:
+ * * `AXELAR_TRANSFER_UNKNOWN` - Unknown error
+ * * `AXELAR_TRANSFER_PENDING_CONFIRMATION` - Axelar transfer is pending confirmation
+ * * `AXELAR_TRANSFER_PENDING_RECEIPT` - Axelar transfer is pending receipt at destination
+ * * `AXELAR_TRANSFER_SUCCESS` - Axelar transfer succeeded and assets have been received
+ * * `AXELAR_TRANSFER_FAILURE` - Axelar transfer failed
+ */
+export enum AxelarTransferState {
+  AXELAR_TRANSFER_UNKNOWN = "AXELAR_TRANSFER_UNKNOWN",
+  AXELAR_TRANSFER_PENDING_CONFIRMATION = "AXELAR_TRANSFER_PENDING_CONFIRMATION",
+  AXELAR_TRANSFER_PENDING_RECEIPT = "AXELAR_TRANSFER_PENDING_RECEIPT",
+  AXELAR_TRANSFER_SUCCESS = "AXELAR_TRANSFER_SUCCESS",
+  AXELAR_TRANSFER_FAILURE = "AXELAR_TRANSFER_FAILURE",
+}
+
+export enum AutopilotAction {
+  LIQUID_STAKE = "LIQUID_STAKE",
+  CLAIM = "CLAIM",
+}
+
 export interface AcknowledgementErrorDetails {
   /** Error code */
   code?: number;
@@ -31,38 +305,38 @@ export interface ApiError {
 }
 
 export interface Asset {
-  /** Chain-id of the asset */
-  chainId: string;
-  /** Coingecko id of the asset */
-  coingeckoId?: string;
-  /** Number of decimals used for amounts of the asset */
-  decimals?: number;
   /** Denom of the asset */
   denom: string;
-  /** Description of the asset */
-  description?: string;
+  /** Chain-id of the asset */
+  chainId: string;
+  /** Denom of the origin of the asset. If this is an ibc denom, this is the original denom that the ibc token represents */
+  originDenom: string;
+  /** Chain-id of the origin of the asset. If this is an ibc denom, this is the chain-id of the asset that the ibc token represents */
+  originChainId: string;
+  /** The forward slash delimited sequence of ibc ports and channels that can be traversed to unwind an ibc token to its origin asset. */
+  trace: string;
   /** Indicates whether asset is a CW20 token */
   isCw20: boolean;
   /** Indicates whether asset is an EVM token */
   isEvm: boolean;
   /** Indicates whether asset is an SVM token */
   isSvm: boolean;
-  /** URI pointing to an image of the logo of the asset */
-  logoUri?: string;
-  /** Name of the asset */
-  name?: string;
-  /** Chain-id of the origin of the asset. If this is an ibc denom, this is the chain-id of the asset that the ibc token represents */
-  originChainId: string;
-  /** Denom of the origin of the asset. If this is an ibc denom, this is the original denom that the ibc token represents */
-  originDenom: string;
-  /** Recommended symbol of the asset used to differentiate between bridged assets with the same symbol, e.g. USDC.axl for Axelar USDC and USDC.grv for Gravity USDC */
-  recommendedSymbol?: string;
   /** Symbol of the asset, e.g. ATOM for uatom */
   symbol?: string;
+  /** Name of the asset */
+  name?: string;
+  /** URI pointing to an image of the logo of the asset */
+  logoUri?: string;
+  /** Number of decimals used for amounts of the asset */
+  decimals?: number;
   /** Address of the contract for the asset, e.g. if it is a CW20 or ERC20 token */
   tokenContract?: string;
-  /** The forward slash delimited sequence of ibc ports and channels that can be traversed to unwind an ibc token to its origin asset. */
-  trace: string;
+  /** Description of the asset */
+  description?: string;
+  /** Coingecko id of the asset */
+  coingeckoId?: string;
+  /** Recommended symbol of the asset used to differentiate between bridged assets with the same symbol, e.g. USDC.axl for Axelar USDC and USDC.grv for Gravity USDC */
+  recommendedSymbol?: string;
 }
 
 export interface AssetBetweenChains {
@@ -81,11 +355,6 @@ export interface AssetRecommendation {
   reason?: Reason;
 }
 
-export enum AutopilotAction {
-  LIQUID_STAKE = "LIQUID_STAKE",
-  CLAIM = "CLAIM",
-}
-
 export interface AutopilotMsg {
   action?: AutopilotAction;
   receiver?: string;
@@ -97,29 +366,25 @@ export interface AutopilotMsgWrapper {
 
 /** A transfer facilitated by the Axelar bridge */
 export interface AxelarTransfer {
-  /** Axelar-name of the asset to bridge */
-  asset?: string;
-  /** Amount of the fee asset to be paid as the Axelar bridge fee. This is denominated in the fee asset. */
-  feeAmount?: string;
-  feeAsset?: Asset;
-  /** Name for source chain of the bridge transaction used on Axelar */
-  fromChain?: string;
   /** Canonical chain-id of the source chain of the bridge transaction */
   fromChainId?: string;
-  /** Whether the source and destination chains are both testnets */
-  isTestnet?: boolean;
-  /** Whether to unwrap the asset at the destination chain (from ERC-20 to native) */
-  shouldUnwrap?: boolean;
-  /** Name for destination chain of the bridge transaction used on Axelar */
-  toChain?: string;
   /** Canonical chain-id of the destination chain of the bridge transaction */
   toChainId?: string;
+  /** Axelar-name of the asset to bridge */
+  asset?: string;
+  /** Whether to unwrap the asset at the destination chain (from ERC-20 to native) */
+  shouldUnwrap?: boolean;
   /** Denom of the input asset */
   denomIn?: string;
   /** Denom of the output asset */
   denomOut?: string;
+  /** Amount of the fee asset to be paid as the Axelar bridge fee. This is denominated in the fee asset. */
+  feeAmount?: string;
   /** Amount of the fee asset to be paid as the Axelar bridge fee, converted to USD value */
   usdFeeAmount?: string;
+  feeAsset?: Asset;
+  /** Whether the source and destination chains are both testnets */
+  isTestnet?: boolean;
   /** A cross-chain transfer */
   ibcTransferToAxelar?: Transfer;
   /**
@@ -131,11 +396,22 @@ export interface AxelarTransfer {
    * * `OPINIT` - Opinit Bridge
    * * `GO_FAST` - Go Fast Bridge
    * * `STARGATE` - Stargate Bridge
+   * * `LAYER_ZERO` - Layerzero Bridge
    * * `EUREKA` - IBC Eureka Bridge
    */
   bridgeId?: BridgeType;
   /** Indicates whether this transfer is relayed via Smart Relay */
   smartRelay?: boolean;
+  /**
+   * Deprecated, use from_chain_id instead. Name for source chain of the bridge transaction used on Axelar
+   * @deprecated
+   */
+  fromChain?: string;
+  /**
+   * Deprecated, use to_chain_id instead. Name for destination chain of the bridge transaction used on Axelar
+   * @deprecated
+   */
+  toChain?: string;
 }
 
 export interface AxelarTransferInfo {
@@ -154,39 +430,17 @@ export interface AxelarTransferInfo {
    * * `AXELAR_TRANSFER_FAILURE` - Axelar transfer failed
    */
   state: AxelarTransferState;
-  txs: ContractCallWithTokenTxs | SendTokenTxs;
+  txs:
+    | {
+        contractCallWithTokenTxs?: ContractCallWithTokenTxs;
+      }
+    | SendTokenTxs;
   /**
    * Axelar transfer type:
    * * `AXELAR_TRANSFER_CONTRACT_CALL_WITH_TOKEN` - GMP contract call with token transfer type
    * * `AXELAR_TRANSFER_SEND_TOKEN` - Send token transfer type
    */
   type?: AxelarTransferType;
-}
-
-/**
- * Axelar transfer state:
- * * `AXELAR_TRANSFER_UNKNOWN` - Unknown error
- * * `AXELAR_TRANSFER_PENDING_CONFIRMATION` - Axelar transfer is pending confirmation
- * * `AXELAR_TRANSFER_PENDING_RECEIPT` - Axelar transfer is pending receipt at destination
- * * `AXELAR_TRANSFER_SUCCESS` - Axelar transfer succeeded and assets have been received
- * * `AXELAR_TRANSFER_FAILURE` - Axelar transfer failed
- */
-export enum AxelarTransferState {
-  AXELAR_TRANSFER_UNKNOWN = "AXELAR_TRANSFER_UNKNOWN",
-  AXELAR_TRANSFER_PENDING_CONFIRMATION = "AXELAR_TRANSFER_PENDING_CONFIRMATION",
-  AXELAR_TRANSFER_PENDING_RECEIPT = "AXELAR_TRANSFER_PENDING_RECEIPT",
-  AXELAR_TRANSFER_SUCCESS = "AXELAR_TRANSFER_SUCCESS",
-  AXELAR_TRANSFER_FAILURE = "AXELAR_TRANSFER_FAILURE",
-}
-
-/**
- * Axelar transfer type:
- * * `AXELAR_TRANSFER_CONTRACT_CALL_WITH_TOKEN` - GMP contract call with token transfer type
- * * `AXELAR_TRANSFER_SEND_TOKEN` - Send token transfer type
- */
-export enum AxelarTransferType {
-  AXELAR_TRANSFER_CONTRACT_CALL_WITH_TOKEN = "AXELAR_TRANSFER_CONTRACT_CALL_WITH_TOKEN",
-  AXELAR_TRANSFER_SEND_TOKEN = "AXELAR_TRANSFER_SEND_TOKEN",
 }
 
 export interface AxelarTransferWrapper {
@@ -198,14 +452,14 @@ export interface AxelarTransferWrapper {
 export interface SmartRelayFeeQuote {
   /** The USDC fee amount */
   feeAmount?: string;
-  /** The fee asset denomination */
-  feeDenom?: string;
-  /** The address the fee should be sent to */
-  feePaymentAddress?: string;
   /** Address of the relayer */
   relayerAddress?: string;
   /** Expiration time of the fee quote */
   expiration?: string;
+  /** The fee asset denomination */
+  feeDenom?: string;
+  /** The address the fee should be sent to */
+  feePaymentAddress?: string;
 }
 
 /** A transfer facilitated by the CCTP bridge */
@@ -229,6 +483,7 @@ export interface CCTPTransfer {
    * * `OPINIT` - Opinit Bridge
    * * `GO_FAST` - Go Fast Bridge
    * * `STARGATE` - Stargate Bridge
+   * * `LAYER_ZERO` - Layerzero Bridge
    * * `EUREKA` - IBC Eureka Bridge
    */
   bridgeId?: BridgeType;
@@ -259,22 +514,6 @@ export interface CCTPTransferTxs {
   receiveTx?: ChainTransaction;
 }
 
-/**
- * CCTP transfer state:
- * * `CCTP_TRANSFER_UNKNOWN` - Unknown error
- * * `CCTP_TRANSFER_SENT` - The burn transaction on the source chain has executed
- * * `CCTP_TRANSFER_PENDING_CONFIRMATION` - CCTP transfer is pending confirmation by the cctp attestation api
- * * `CCTP_TRANSFER_CONFIRMED` - CCTP transfer has been confirmed by the cctp attestation api
- * * `CCTP_TRANSFER_RECEIVED` - CCTP transfer has been received at the destination chain
- */
-export enum CCTPTransferState {
-  CCTP_TRANSFER_UNKNOWN = "CCTP_TRANSFER_UNKNOWN",
-  CCTP_TRANSFER_SENT = "CCTP_TRANSFER_SENT",
-  CCTP_TRANSFER_PENDING_CONFIRMATION = "CCTP_TRANSFER_PENDING_CONFIRMATION",
-  CCTP_TRANSFER_CONFIRMED = "CCTP_TRANSFER_CONFIRMED",
-  CCTP_TRANSFER_RECEIVED = "CCTP_TRANSFER_RECEIVED",
-}
-
 export interface CCTPTransferWrapper {
   /** A transfer facilitated by the CCTP bridge */
   cctpTransfer?: CCTPTransfer;
@@ -290,6 +529,14 @@ export interface StargateTransfer {
   denomIn?: string;
   /** Denom of the output asset */
   denomOut?: string;
+  poolAddress?: string;
+  destinationEndpointId?: number;
+  oftFeeAsset?: Asset;
+  oftFeeAmount?: string;
+  oftFeeAmountUsd?: string;
+  messagingFeeAsset?: Asset;
+  messagingFeeAmount?: string;
+  messagingFeeAmountUsd?: string;
   /**
    * Bridge Type:
    * * `IBC` - IBC Bridge
@@ -299,35 +546,10 @@ export interface StargateTransfer {
    * * `OPINIT` - Opinit Bridge
    * * `GO_FAST` - Go Fast Bridge
    * * `STARGATE` - Stargate Bridge
+   * * `LAYER_ZERO` - Layerzero Bridge
    * * `EUREKA` - IBC Eureka Bridge
    */
   bridgeId?: BridgeType;
-  poolAddress?: string;
-  destinationEndpointId?: number;
-  oftFeeAsset?: Asset;
-  oftFeeAmount?: string;
-  oftFeeAmountUsd?: string;
-  messagingFeeAsset?: Asset;
-  messagingFeeAmount?: string;
-  messagingFeeAmountUsd?: string;
-}
-
-/**
- * Stargate transfer state:
- * * `STARGATE_TRANSFER_UNKNOWN` - Unknown error
- * * `STARGATE_TRANSFER_SENT` - The Stargate transfer transaction on the source chain has executed
- * * `STARGATE_TRANSFER_PENDING_CONFIRMATION` - Stargate transfer is pending confirmation
- * * `STARGATE_TRANSFER_CONFIRMED` - Stargate transfer has been confirmed
- * * `STARGATE_TRANSFER_RECEIVED` - Stargate transfer has been received at the destination chain
- * * `STARGATE_TRANSFER_FAILED` - Stargate transfer failed
- */
-export enum StargateTransferState {
-  STARGATE_TRANSFER_UNKNOWN = "STARGATE_TRANSFER_UNKNOWN",
-  STARGATE_TRANSFER_SENT = "STARGATE_TRANSFER_SENT",
-  STARGATE_TRANSFER_PENDING_CONFIRMATION = "STARGATE_TRANSFER_PENDING_CONFIRMATION",
-  STARGATE_TRANSFER_CONFIRMED = "STARGATE_TRANSFER_CONFIRMED",
-  STARGATE_TRANSFER_RECEIVED = "STARGATE_TRANSFER_RECEIVED",
-  STARGATE_TRANSFER_FAILED = "STARGATE_TRANSFER_FAILED",
 }
 
 export interface StargateTransferTxs {
@@ -365,6 +587,8 @@ export interface GoFastTransfer {
   fromChainId?: string;
   /** Canonical chain-id of the destination chain of the bridge transaction */
   toChainId?: string;
+  /** Go fast Fee */
+  fee?: GoFastFee;
   /**
    * Bridge Type:
    * * `IBC` - IBC Bridge
@@ -374,6 +598,7 @@ export interface GoFastTransfer {
    * * `OPINIT` - Opinit Bridge
    * * `GO_FAST` - Go Fast Bridge
    * * `STARGATE` - Stargate Bridge
+   * * `LAYER_ZERO` - Layerzero Bridge
    * * `EUREKA` - IBC Eureka Bridge
    */
   bridgeId?: BridgeType;
@@ -381,26 +606,10 @@ export interface GoFastTransfer {
   denomIn?: string;
   /** Denom of the output asset */
   denomOut?: string;
-  /** Go fast Fee */
-  fee?: GoFastFee;
-}
-
-/**
- * GoFast transfer state:
- * * `GO_FAST_TRANSFER_UNKNOWN` - Unknown state
- * * `GO_FAST_TRANSFER_SENT` - Order submitted on source chain
- * * `GO_FAST_POST_ACTION_FAILED` - Order filled, but subsequent action (e.g., swap) failed
- * * `GO_FAST_TRANSFER_TIMEOUT` - Order timed out
- * * `GO_FAST_TRANSFER_FILLED` - Order filled on destination chain
- * * `GO_FAST_TRANSFER_REFUNDED` - Order refunded
- */
-export enum GoFastTransferState {
-  GO_FAST_TRANSFER_UNKNOWN = "GO_FAST_TRANSFER_UNKNOWN",
-  GO_FAST_TRANSFER_SENT = "GO_FAST_TRANSFER_SENT",
-  GO_FAST_POST_ACTION_FAILED = "GO_FAST_POST_ACTION_FAILED",
-  GO_FAST_TRANSFER_TIMEOUT = "GO_FAST_TRANSFER_TIMEOUT",
-  GO_FAST_TRANSFER_FILLED = "GO_FAST_TRANSFER_FILLED",
-  GO_FAST_TRANSFER_REFUNDED = "GO_FAST_TRANSFER_REFUNDED",
+  /** Source domain ID of the transfer */
+  sourceDomain?: string;
+  /** Destination domain ID of the transfer */
+  destinationDomain?: string;
 }
 
 export interface GoFastTransferTxs {
@@ -477,6 +686,7 @@ export interface Bridge {
    * * `OPINIT` - Opinit Bridge
    * * `GO_FAST` - Go Fast Bridge
    * * `STARGATE` - Stargate Bridge
+   * * `LAYER_ZERO` - Layerzero Bridge
    * * `EUREKA` - IBC Eureka Bridge
    */
   id?: BridgeType;
@@ -484,28 +694,6 @@ export interface Bridge {
   name?: string;
   /** URI pointing to an image of the logo of the bridge */
   logoUri?: string;
-}
-
-/**
- * Bridge Type:
- * * `IBC` - IBC Bridge
- * * `AXELAR` - Axelar Bridge
- * * `CCTP` - CCTP Bridge
- * * `HYPERLANE` - Hyperlane Bridge
- * * `OPINIT` - Opinit Bridge
- * * `GO_FAST` - Go Fast Bridge
- * * `STARGATE` - Stargate Bridge
- * * `EUREKA` - IBC Eureka Bridge
- */
-export enum BridgeType {
-  IBC = "IBC",
-  AXELAR = "AXELAR",
-  CCTP = "CCTP",
-  HYPERLANE = "HYPERLANE",
-  OPINIT = "OPINIT",
-  GO_FAST = "GO_FAST",
-  STARGATE = "STARGATE",
-  EUREKA = "EUREKA",
 }
 
 export interface Chain {
@@ -535,12 +723,6 @@ export interface Chain {
   prettyName: string;
 }
 
-export enum ChainType {
-  Cosmos = "cosmos",
-  Evm = "evm",
-  Svm = "svm",
-}
-
 export interface ChainAffiliates {
   /** An array of affiliates that receives fees from a swap */
   affiliates?: Affiliate[];
@@ -554,14 +736,6 @@ export interface ContractCallWithTokenError {
    * * `CONTRACT_CALL_WITH_TOKEN_EXECUTION_ERROR` - Error occurred during the execute transaction
    */
   type?: ContractCallWithTokenErrorType;
-}
-
-/**
- * ContractCallWithToken errors:
- * * `CONTRACT_CALL_WITH_TOKEN_EXECUTION_ERROR` - Error occurred during the execute transaction
- */
-export enum ContractCallWithTokenErrorType {
-  CONTRACT_CALL_WITH_TOKEN_EXECUTION_ERROR = "CONTRACT_CALL_WITH_TOKEN_EXECUTION_ERROR",
 }
 
 export interface ContractCallWithTokenTxs {
@@ -599,8 +773,9 @@ export interface ErrorDetail {
    * Error detail:
    * * `LOW_INFO_ERROR` - Not enough asset pricing information to determine the price safety of the route.
    * * `BAD_PRICE_ERROR` - The execution price of the route deviates significantly from the current market price.
+   * * `HIGH_LOSS_ERROR` - The route would result in a USD loss exceeding the configured threshold and has been blocked.
    */
-  reason?: "LOW_INFO_ERROR" | "BAD_PRICE_ERROR";
+  reason?: "LOW_INFO_ERROR" | "BAD_PRICE_ERROR" | "HIGH_LOSS_ERROR";
 }
 
 export interface Error {
@@ -742,9 +917,9 @@ export interface HyperlaneTransfer {
   hyperlaneContractAddress?: string;
   /** Amount of the fee asset to be paid as the Hyperlane bridge fee. This is denominated in the fee asset. */
   feeAmount?: string;
-  feeAsset?: Asset;
   /** Amount of the fee asset to be paid as the Hyperlane bridge fee, converted to USD value */
   usdFeeAmount?: string;
+  feeAsset?: Asset;
   /**
    * Bridge Type:
    * * `IBC` - IBC Bridge
@@ -754,6 +929,7 @@ export interface HyperlaneTransfer {
    * * `OPINIT` - Opinit Bridge
    * * `GO_FAST` - Go Fast Bridge
    * * `STARGATE` - Stargate Bridge
+   * * `LAYER_ZERO` - Layerzero Bridge
    * * `EUREKA` - IBC Eureka Bridge
    */
   bridgeId?: BridgeType;
@@ -775,20 +951,6 @@ export interface HyperlaneTransferInfo {
    */
   state: HyperlaneTransferState;
   txs: HyperlaneTransferTransactions;
-}
-
-/**
- * Hyperlane transfer state:
- * * `HYPERLANE_TRANSFER_UNKNOWN` - Unknown error
- * * `HYPERLANE_TRANSFER_SENT` - The Hyperlane transfer transaction on the source chain has executed
- * * `HYPERLANE_TRANSFER_FAILED` - The Hyperlane transfer failed
- * * `HYPERLANE_TRANSFER_RECEIVED` - The Hyperlane transfer has been received at the destination chain
- */
-export enum HyperlaneTransferState {
-  HYPERLANE_TRANSFER_UNKNOWN = "HYPERLANE_TRANSFER_UNKNOWN",
-  HYPERLANE_TRANSFER_SENT = "HYPERLANE_TRANSFER_SENT",
-  HYPERLANE_TRANSFER_FAILED = "HYPERLANE_TRANSFER_FAILED",
-  HYPERLANE_TRANSFER_RECEIVED = "HYPERLANE_TRANSFER_RECEIVED",
 }
 
 export interface HyperlaneTransferTransactions {
@@ -851,10 +1013,10 @@ export type Operation = (
   | HyperlaneTransferWrapper
   | EvmSwapWrapper
   | OPInitTransferWrapper
-  | StargateTransferWrapper
   | GoFastTransferWrapper
-  | EurekaTransferWrapper
+  | StargateTransferWrapper
   | LayerZeroTransferWrapper
+  | EurekaTransferWrapper
 ) & {
   /** Index of the tx returned from Msgs that executes this operation */
   txIndex: number;
@@ -898,18 +1060,6 @@ export interface PacketError {
   type?: PacketErrorType;
 }
 
-/**
- * Packet error type:
- * * `PACKET_ERROR_UNKNOWN` - Unknown error
- * * `PACKET_ERROR_ACKNOWLEDGEMENT` - Packet acknowledgement error
- * * `PACKET_ERROR_TIMEOUT` - Packet timed out
- */
-export enum PacketErrorType {
-  PACKET_ERROR_UNKNOWN = "PACKET_ERROR_UNKNOWN",
-  PACKET_ERROR_ACKNOWLEDGEMENT = "PACKET_ERROR_ACKNOWLEDGEMENT",
-  PACKET_ERROR_TIMEOUT = "PACKET_ERROR_TIMEOUT",
-}
-
 export interface ChainTransaction {
   /** Chain ID the packet event occurs on */
   chainId?: string;
@@ -922,30 +1072,6 @@ export interface ChainTransaction {
 }
 
 export type PostHandler = CosmWasmContractMsgWrapper | AutopilotMsgWrapper;
-
-/**
- * Recommendation reason:
- * * `UNKNOWN` - Unknown recommendation reason.
- * * `MOST_LIQUID` - Highest liquidity form of the transferred token on the destination chain.
- * * `BASE_TOKEN` - The base token if the destination chain is the origin chain of the source token.
- * * `DIRECT` - The token resulting from the least amount of transfers to the destination chain.
- */
-export enum Reason {
-  UNKNOWN = "UNKNOWN",
-  MOST_LIQUID = "MOST_LIQUID",
-  BASE_TOKEN = "BASE_TOKEN",
-  DIRECT = "DIRECT",
-}
-
-/**
- * Recommendation reason:
- * * `LOW_INFO_WARNING` - Not enough asset pricing information to determine the price safety of the route.
- * * `BAD_PRICE_WARNING` - The execution price of the route deviates significantly from the current market price.
- */
-export enum RoutePriceWarningType {
-  LOW_INFO_WARNING = "LOW_INFO_WARNING",
-  BAD_PRICE_WARNING = "BAD_PRICE_WARNING",
-}
 
 export interface Route {
   /** Amount of source asset to be transferred or swapped */
@@ -1007,14 +1133,6 @@ export interface SendTokenError {
   type?: SendTokenErrorType;
 }
 
-/**
- * SendToken error types:
- * * `SEND_TOKEN_EXECUTION_ERROR` - Error occurred during the execute transaction
- */
-export enum SendTokenErrorType {
-  SEND_TOKEN_EXECUTION_ERROR = "SEND_TOKEN_EXECUTION_ERROR",
-}
-
 export interface SendTokenTxs {
   confirmTx?: ChainTransaction;
   error?: SendTokenError;
@@ -1036,27 +1154,13 @@ export interface StatusError {
   type?: StatusErrorType;
 }
 
-/**
- * Packet error types:
- * * `STATUS_ERROR_UNKNOWN` - Unknown error
- * * `STATUS_ERROR_TRANSACTION_EXECUTION` - Error was encountered during transaction execution
- * * `STATUS_ERROR_INDEXING` - Error was encountered while indexing the transaction and packet data
- * * `STATUS_ERROR_TRANSFER` - The transfer failed to complete successfully
- */
-export enum StatusErrorType {
-  STATUS_ERROR_UNKNOWN = "STATUS_ERROR_UNKNOWN",
-  STATUS_ERROR_TRANSACTION_EXECUTION = "STATUS_ERROR_TRANSACTION_EXECUTION",
-  STATUS_ERROR_INDEXING = "STATUS_ERROR_INDEXING",
-  STATUS_ERROR_TRANSFER = "STATUS_ERROR_TRANSFER",
-}
-
 export type Swap = (SwapInWrapper | SwapOutWrapper | SmartSwapInWrapper) & {
   /** Estimated total affiliate fee generated by the swap */
   estimatedAffiliateFee?: string;
-  /** Chain ID that the swap will be executed on */
-  chainId?: string;
   /** Chain ID that the swap will be executed on (alias for chain_id) */
   fromChainId?: string;
+  /** Chain ID that the swap will be executed on */
+  chainId?: string;
   /** Input denom of the swap */
   denomIn?: string;
   /** Output denom of the swap */
@@ -1067,24 +1171,26 @@ export type Swap = (SwapInWrapper | SwapOutWrapper | SmartSwapInWrapper) & {
 
 /** Specification of a swap with an exact amount in */
 export interface SwapExactCoinIn {
-  /** Amount to swap in */
-  swapAmountIn?: string;
-  /** Operations required to execute the swap */
-  swapOperations?: SwapOperation[];
   /** Swap venue that this swap should execute on */
   swapVenue?: SwapVenue;
+  /** Operations required to execute the swap */
+  swapOperations?: SwapOperation[];
+  /** Amount to swap in */
+  swapAmountIn?: string;
   /** Price impact of the estimated swap, if present.  Measured in percentage e.g. "0.5" is .5% */
   priceImpactPercent?: string;
+  /** The estimated amount out received from the swap */
+  estimatedAmountOut?: string;
 }
 
 /** Specification of a swap with an exact amount out */
 export interface SwapExactCoinOut {
-  /** Amount to get out of the swap */
-  swapAmountOut?: string;
-  /** Operations required to execute the swap */
-  swapOperations?: SwapOperation[];
   /** Swap venue that this swap should execute on */
   swapVenue?: SwapVenue;
+  /** Operations required to execute the swap */
+  swapOperations?: SwapOperation[];
+  /** Amount to get out of the swap */
+  swapAmountOut?: string;
   /** Price impact of the estimated swap, if present.  Measured in percentage e.g. "0.5" is .5% */
   priceImpactPercent?: string;
 }
@@ -1126,6 +1232,8 @@ export interface SmartSwapExactCoinIn {
   swapVenue?: SwapVenue;
   /** Routes to execute the swap */
   swapRoutes?: SwapRoute[];
+  /** The estimated amount out received from the swap */
+  estimatedAmountOut?: string;
 }
 
 export interface SmartSwapOptions {
@@ -1161,25 +1269,6 @@ export interface TransactionExecutionErrorDetails {
   message?: string;
 }
 
-/**
- * Transaction state:
- * * `STATE_SUBMITTED` - The initial transaction has been submitted to Skip Go API but not observed on chain yet
- * * `STATE_PENDING` - The initial transaction has been observed on chain, and there are still pending actions
- * * `STATE_COMPLETED_SUCCESS` - The route has completed successfully and the user has their tokens on the destination. (indicated by `transfer_asset_release`)
- * * `STATE_COMPLETED_ERROR` - The route errored somewhere and the user has their tokens unlocked in one of their wallets. Their tokens are either on the source chain, an intermediate chain, or the destination chain but as the wrong asset.
- * (Again, `transfer_asset_release` indicates where the tokens are)
- * * `STATE_ABANDONED` - Tracking for the transaction has been abandoned. This happens if the cross-chain  sequence of actions stalls for more than 10 minutes or if the initial transaction does not get observed in a block for 5 minutes.
- * * `STATE_PENDING_ERROR` - The overall transaction will fail, pending error propagation
- */
-export enum TransactionState {
-  STATE_SUBMITTED = "STATE_SUBMITTED",
-  STATE_PENDING = "STATE_PENDING",
-  STATE_COMPLETED_SUCCESS = "STATE_COMPLETED_SUCCESS",
-  STATE_COMPLETED_ERROR = "STATE_COMPLETED_ERROR",
-  STATE_ABANDONED = "STATE_ABANDONED",
-  STATE_PENDING_ERROR = "STATE_PENDING_ERROR",
-}
-
 /** A transfer facilitated by the OP Init bridge */
 export interface OPInitTransfer {
   /** Canonical chain-id of the source chain of the bridge transaction */
@@ -1201,6 +1290,7 @@ export interface OPInitTransfer {
    * * `OPINIT` - Opinit Bridge
    * * `GO_FAST` - Go Fast Bridge
    * * `STARGATE` - Stargate Bridge
+   * * `LAYER_ZERO` - Layerzero Bridge
    * * `EUREKA` - IBC Eureka Bridge
    */
   bridgeId?: BridgeType;
@@ -1233,48 +1323,18 @@ export interface OPInitTransferTxs {
   receiveTx?: ChainTransaction;
 }
 
-/**
- * OPInit transfer state:
- * * `OPINIT_TRANSFER_UNKNOWN` - Unknown error
- * * `OPINIT_TRANSFER_SENT` - The deposit transaction on the source chain has executed
- * * `OPINIT_TRANSFER_RECEIVED` - OPInit transfer has been received at the destination chain
- */
-export enum OPInitTransferState {
-  OPINIT_TRANSFER_UNKNOWN = "OPINIT_TRANSFER_UNKNOWN",
-  OPINIT_TRANSFER_SENT = "OPINIT_TRANSFER_SENT",
-  OPINIT_TRANSFER_RECEIVED = "OPINIT_TRANSFER_RECEIVED",
-}
-
-/**
- * LayerZero transfer state:
- * * `LAYER_ZERO_TRANSFER_UNKNOWN` - Unknown error
- * * `LAYER_ZERO_TRANSFER_SENT` - The transaction on the source chain has executed
- * * `LAYER_ZERO_TRANSFER_WAITING_FOR_COMPOSE` - The transfer has been delivered to the destination chain but there is an additional lz_compose transaction that still needs to be delivered before marking this transfer as LAYER_ZERO_TRANSFER_RECEIVED
- * * `LAYER_ZERO_TRANSFER_RECEIVED` - The transfer has been received at the destination chain
- * * `LAYER_ZERO_TRANSFER_FAILED` - The transfer has failed
- */
-export enum LayerZeroTransferState {
-  LAYER_ZERO_TRANSFER_UNKNOWN = "LAYER_ZERO_TRANSFER_UNKNOWN",
-  LAYER_ZERO_TRANSFER_SENT = "LAYER_ZERO_TRANSFER_SENT",
-  LAYER_ZERO_TRANSFER_WAITING_FOR_COMPOSE = "LAYER_ZERO_TRANSFER_WAITING_FOR_COMPOSE",
-  LAYER_ZERO_TRANSFER_RECEIVED = "LAYER_ZERO_TRANSFER_RECEIVED",
-  LAYER_ZERO_TRANSFER_FAILED = "LAYER_ZERO_TRANSFER_FAILED",
-}
-
 /** A cross-chain transfer */
 export interface Transfer {
+  /** Port to use to initiate the transfer */
+  port?: string;
+  /** Channel to use to initiate the transfer */
+  channel?: string;
   /** Chain-id on which the transfer is initiated */
   fromChainId?: string;
   /** Chain-id on which the transfer is received */
   toChainId?: string;
-  /** Channel to use to initiate the transfer */
-  channel?: string;
-  /** Denom of the destination asset of the transfer */
-  destDenom?: string;
   /** Whether pfm is enabled on the chain where the transfer is initiated */
   pfmEnabled?: boolean;
-  /** Port to use to initiate the transfer */
-  port?: string;
   /** Whether the transfer chain supports a memo */
   supportsMemo?: boolean;
   /** Denom of the input asset of the transfer */
@@ -1283,9 +1343,6 @@ export interface Transfer {
   denomOut?: string;
   /** Amount of the fee asset to be paid as the transfer fee if applicable. */
   feeAmount?: string;
-  /** Address of the entry contract on the destination chain */
-  toChainEntryContractAddress?: string;
-  toChainCallbackContractAddress?: string;
   /** Amount of the fee asset to be paid as the transfer fee if applicable, converted to USD value */
   usdFeeAmount?: string;
   /** Asset to be paid as the transfer fee if applicable. */
@@ -1299,11 +1356,21 @@ export interface Transfer {
    * * `OPINIT` - Opinit Bridge
    * * `GO_FAST` - Go Fast Bridge
    * * `STARGATE` - Stargate Bridge
+   * * `LAYER_ZERO` - Layerzero Bridge
    * * `EUREKA` - IBC Eureka Bridge
    */
   bridgeId?: BridgeType;
   /** Indicates whether this transfer is relayed via Smart Relay */
   smartRelay?: boolean;
+  /** Address of the entry contract on the destination chain */
+  toChainEntryContractAddress?: string;
+  /** Address of the callback contract on the destination chain */
+  toChainCallbackContractAddress?: string;
+  /**
+   * Deprecated, use denom_out instead. Denom of the destination asset of the transfer
+   * @deprecated
+   */
+  destDenom?: string;
 }
 
 export interface TransferEvent {
@@ -1316,22 +1383,6 @@ export interface TransferEvent {
   goFastTransfer?: GoFastTransferInfo;
   eurekaTransfer?: EurekaTransferInfo;
   layerZeroTransfer?: LayerZeroTransferInfo;
-}
-
-/**
- * Transfer state:
- * * `TRANSFER_UNKNOWN` - Transfer state is not known.
- * * `TRANSFER_PENDING` - The send packet for the transfer has been committed and the transfer is pending.
- * * `TRANSFER_RECEIVED` - The transfer packet has been received by the destination chain. It can still fail and revert if it is part of a multi-hop PFM transfer.
- * * `TRANSFER_SUCCESS` - The transfer has been successfully completed and will not revert.
- * * `TRANSFER_FAILURE`- The transfer has failed.
- */
-export enum TransferState {
-  TRANSFER_UNKNOWN = "TRANSFER_UNKNOWN",
-  TRANSFER_PENDING = "TRANSFER_PENDING",
-  TRANSFER_RECEIVED = "TRANSFER_RECEIVED",
-  TRANSFER_SUCCESS = "TRANSFER_SUCCESS",
-  TRANSFER_FAILURE = "TRANSFER_FAILURE",
 }
 
 /** Indicates location and denom of transfer asset release. */
@@ -1347,12 +1398,6 @@ export interface TransferAssetRelease {
 }
 
 export interface TransferStatus {
-  error?: StatusError;
-  /** Indicates which entry in the `transfer_sequence` field that the transfer is blocked on. Will be null if there is no blocked transfer. */
-  nextBlockingTransfer?: {
-    /** The index of the entry in the `transfer_sequence` field that the transfer is blocked on. */
-    transferSequenceIndex?: number;
-  };
   /**
    * Transaction state:
    * * `STATE_SUBMITTED` - The initial transaction has been submitted to Skip Go API but not observed on chain yet
@@ -1364,10 +1409,16 @@ export interface TransferStatus {
    * * `STATE_PENDING_ERROR` - The overall transaction will fail, pending error propagation
    */
   state?: TransactionState;
-  /** Indicates location and denom of transfer asset release. */
-  transferAssetRelease?: TransferAssetRelease;
   /** Lists any IBC and Axelar transfers as they are seen. */
   transferSequence?: TransferEvent[];
+  /** Indicates which entry in the `transfer_sequence` field that the transfer is blocked on. Will be null if there is no blocked transfer. */
+  nextBlockingTransfer?: {
+    /** The index of the entry in the `transfer_sequence` field that the transfer is blocked on. */
+    transferSequenceIndex?: number;
+  };
+  /** Indicates location and denom of transfer asset release. */
+  transferAssetRelease?: TransferAssetRelease;
+  error?: StatusError;
 }
 
 export interface TransferWrapper {
@@ -1406,6 +1457,7 @@ export interface EurekaTransfer {
    * * `OPINIT` - Opinit Bridge
    * * `GO_FAST` - Go Fast Bridge
    * * `STARGATE` - Stargate Bridge
+   * * `LAYER_ZERO` - Layerzero Bridge
    * * `EUREKA` - IBC Eureka Bridge
    */
   bridgeId?: BridgeType;
@@ -1450,7 +1502,7 @@ export interface LayerZeroTransfer {
   denomIn: string;
   /** Denom of the output asset of the transfer */
   denomOut: string;
-  sourceOftCntractAddress: string;
+  sourceOftContractAddress: string;
   destinationEndpointId: number;
   messagingFeeAsset: Asset;
   messagingFeeAmount: string;
@@ -1464,6 +1516,7 @@ export interface LayerZeroTransfer {
    * * `OPINIT` - Opinit Bridge
    * * `GO_FAST` - Go Fast Bridge
    * * `STARGATE` - Stargate Bridge
+   * * `LAYER_ZERO` - Layerzero Bridge
    * * `EUREKA` - IBC Eureka Bridge
    */
   bridgeId: BridgeType;
@@ -1520,24 +1573,6 @@ export interface IbcCapabilities {
   cosmosAutopilot?: boolean;
 }
 
-/**
- * Fee type:
- * * SMART_RELAY - Fees for Smart relaying services.'
- */
-export enum FeeType {
-  SMART_RELAY = "SMART_RELAY",
-}
-
-/**
- * Indicates whether the fee is deducted from the transfer amount or charged additionally.
- * - FEE_BEHAVIOR_DEDUCTED: Fee is subtracted from the transfer amount (default, typical for Cosmos chains)
- * - FEE_BEHAVIOR_ADDITIONAL: Fee is charged on top of the transfer amount (typical for EVM chains with native tokens)
- */
-export enum FeeBehavior {
-  FEE_BEHAVIOR_DEDUCTED = "FEE_BEHAVIOR_DEDUCTED",
-  FEE_BEHAVIOR_ADDITIONAL = "FEE_BEHAVIOR_ADDITIONAL",
-}
-
 export interface Fee {
   /**
    * Fee type:
@@ -1553,6 +1588,7 @@ export interface Fee {
    * * `OPINIT` - Opinit Bridge
    * * `GO_FAST` - Go Fast Bridge
    * * `STARGATE` - Stargate Bridge
+   * * `LAYER_ZERO` - Layerzero Bridge
    * * `EUREKA` - IBC Eureka Bridge
    */
   bridgeId?: BridgeType;
@@ -1569,6 +1605,259 @@ export interface Fee {
   operationIndex?: number;
   /** Indicates whether this fee is deducted from the transfer amount or charged additionally */
   feeBehavior?: FeeBehavior;
+}
+
+export interface BalancesRequest {
+  chains?: Record<string, BalanceRequestChainEntry>;
+}
+
+export interface AssetsFromSourceRequest {
+  /** Denom of the source asset */
+  sourceAssetDenom: string;
+  /** Chain-id of the source asset */
+  sourceAssetChainId: string;
+  /**
+   * Whether to include recommendations requiring multiple transactions to reach the destination
+   * @default false
+   */
+  allowMultiTx?: boolean;
+  /** Optional reason for recommending assets */
+  recommendationReason?: Reason;
+  /**
+   * Whether to include swap routes
+   * @default false
+   */
+  includeSwaps?: boolean;
+  /** Swap venues to consider if including swap routes */
+  swapVenues?: SwapVenue[];
+  /**
+   * Whether to only return native assets
+   * @default false
+   */
+  nativeOnly?: boolean;
+  /** Optional grouping key for results */
+  groupBy?: string;
+  /**
+   * Whether to include CW20 tokens
+   * @default false
+   */
+  includeCw20Assets?: boolean;
+}
+
+export interface RouteRequest {
+  /** Denom of the source asset */
+  sourceAssetDenom?: string;
+  /** Chain-id of the source asset */
+  sourceAssetChainId?: string;
+  /** Denom of the destination asset */
+  destAssetDenom?: string;
+  /** Chain-id of the destination asset */
+  destAssetChainId?: string;
+  /** Amount of source asset to be transferred or swapped. Only one of amount_in and amount_out should be provided. */
+  amountIn?: string;
+  /** Amount of destination asset to receive. Only one of amount_in and amount_out should be provided. If amount_out is provided for a swap, the route will be computed to give exactly amount_out. */
+  amountOut?: string;
+  /** Cumulative fee to be distributed to affiliates, in bps (optional) */
+  cumulativeAffiliateFeeBps?: string;
+  /** Swap venues to consider, if provided (optional) */
+  swapVenues?: SwapVenue[];
+  /** Toggles whether the api should return routes that fail price safety checks. */
+  allowUnsafe?: boolean;
+  /** Array of experimental features to enable */
+  experimentalFeatures?: string[];
+  /**
+   * Whether to allow route responses requiring multiple
+   * transactions
+   */
+  allowMultiTx?: boolean;
+  /** Array of bridges to use */
+  bridges?: BridgeType[];
+  /** Indicates whether this transfer route should be relayed via Skip's Smart Relay service - true by default. */
+  smartRelay?: boolean;
+  smartSwapOptions?: SmartSwapOptions;
+  /** Whether to allow swaps in the route */
+  allowSwaps?: boolean;
+  /** Whether to enable Go Fast routes */
+  goFast?: boolean;
+}
+
+export interface MsgsRequest {
+  /** Denom of the source asset */
+  sourceAssetDenom?: string;
+  /** Chain-id of the source asset */
+  sourceAssetChainId?: string;
+  /** Denom of the destination asset */
+  destAssetDenom?: string;
+  /** Chain-id of the destination asset */
+  destAssetChainId?: string;
+  /** Amount of source asset to be transferred or swapped */
+  amountIn?: string;
+  /** Amount of destination asset out */
+  amountOut?: string;
+  /** Array of receipient and/or sender address for each chain in the path, corresponding to the required_chain_addresses array returned from a route request */
+  addressList?: string[];
+  /** Array of operations required to perform the transfer or swap */
+  operations?: Operation[];
+  estimatedAmountOut?: string;
+  /** Percent tolerance for slippage on swap, if a swap is performed */
+  slippageTolerancePercent?: string;
+  /** Map of chain-ids to arrays of affiliates. The API expects all chains to have the same cumulative affiliate fee bps for each chain specified. If any of the provided affiliate arrays does not have the same cumulative fee, the API will return an error. */
+  chainIdsToAffiliates?: Record<string, ChainAffiliates>;
+  postRouteHandler?: PostHandler;
+  /** Number of seconds for the IBC transfer timeout, defaults to 5 minutes */
+  timeoutSeconds?: string;
+  /**
+   * Whether to enable gas warnings for intermediate and destination chains
+   * @default false
+   */
+  enableGasWarnings?: boolean;
+  /**
+   * Alternative address to use for paying for fees, currently only for SVM source CCTP transfers, in b58 format.
+   * @default false
+   */
+  feePayerAddress?: string;
+}
+
+export interface MsgsDirectRequest {
+  /** Denom of the source asset */
+  sourceAssetDenom?: string;
+  /** Chain-id of the source asset */
+  sourceAssetChainId?: string;
+  /** Denom of the destination asset */
+  destAssetDenom?: string;
+  /** Chain-id of the destination asset */
+  destAssetChainId?: string;
+  /** Amount of source asset to be transferred or swapped. If this is a swap, only one of amount_in and amount_out should be provided. */
+  amountIn?: string;
+  /** Amount of destination asset out. If this is a swap, only one of amount_in and amount_out should be provided. If amount_out is provided for a swap, the route will be computed to give exactly amount_out. */
+  amountOut?: string;
+  /** Map of chain-ids to receipient and/or sender address for each chain in the path. Since the path is not known to the caller beforehand, the caller should attempt to provide addresses for all chains in the path, and the API will return an error if the path cannot be constructed. */
+  chainIdsToAddresses?: Record<string, string>;
+  /** Swap venues to consider, if provided (optional) */
+  swapVenues?: SwapVenue[];
+  /** Percent tolerance for slippage on swap, if a swap is performed */
+  slippageTolerancePercent?: string;
+  /** Map of chain-ids to arrays of affiliates. Since cumulative_affiliate_fee_bps must be provided to retrieve a route, and the swap chain is not known at this time, all chains must have the same cumulative_affiliate_fee_bps otherwise the API will return an error. */
+  chainIdsToAffiliates?: Record<string, ChainAffiliates>;
+  postRouteHandler?: PostHandler;
+  /** Number of seconds for the IBC transfer timeout, defaults to 5 minutes */
+  timeoutSeconds?: string;
+  /** Toggles whether the api should return routes that fail price safety checks. */
+  allowUnsafe?: boolean;
+  /** Array of experimental features to enable */
+  experimentalFeatures?: string[];
+  /**
+   * Whether to allow route responses requiring multiple
+   * transactions
+   */
+  allowMultiTx?: boolean;
+  /** Array of bridges to use */
+  bridges?: BridgeType[];
+  /** Indicates whether this transfer route should be relayed via Skip's Smart Relay service */
+  smartRelay?: boolean;
+  smartSwapOptions?: SmartSwapOptions;
+  /** Whether to allow swaps in the route */
+  allowSwaps?: boolean;
+  /**
+   * Whether to enable gas warnings for intermediate and destination chains
+   * @default false
+   */
+  enableGasWarnings?: boolean;
+  /** Whether to enable Go Fast routes */
+  goFast?: boolean;
+  /**
+   * Alternative address to use for paying for fees, currently only for SVM source CCTP transfers, in b58 format.
+   * @default false
+   */
+  feePayerAddress?: string;
+}
+
+export interface AssetRecommendationsRequest {
+  /** Array where each entry corresponds to a distinct asset recommendation request. */
+  requests?: RecommendationRequest[];
+}
+
+export interface SubmitTxRequest {
+  /** Signed base64 encoded transaction */
+  tx?: string;
+  /** Chain ID of the transaction */
+  chainId?: string;
+}
+
+export interface TrackTxRequest {
+  /** Hex encoded hash of the transaction to track */
+  txHash: string;
+  /** Chain ID of the transaction */
+  chainId: string;
+}
+
+export interface TrackTxResponse {
+  /** Hash of the transaction */
+  txHash: string;
+  /** Link to the transaction on the relevant block explorer */
+  explorerLink: string;
+}
+
+export interface StatusTxResponse {
+  /** Transfer status for all transfers initiated by the transaction in the order they were initiated. */
+  transfers?: TransferStatus[];
+  /** The overall state reflecting the end-to-end status of all transfers initiated by the original transaction. */
+  state: TransactionState;
+  /** Details about the next transfer in the sequence that is preventing further progress, if any. */
+  nextBlockingTransfer?: {
+    transferSequenceIndex?: number;
+  };
+  /** Indicates location and denom of transfer asset release. */
+  transferAssetRelease?: TransferAssetRelease;
+  /** Details about any error encountered during the transaction or its subsequent transfers. */
+  error?: StatusError;
+  /**
+   * **DEPRECATED.** This field provides a flat list of all transfer events. For a more structured and detailed status of each transfer leg, including its individual events, please use the 'transfers' array instead. This field may be removed in a future version.
+   * @deprecated
+   */
+  transferSequence: TransferEvent[];
+  /**
+   * A high-level status indicator for the transaction's completion state.
+   * @example "STATE_COMPLETED"
+   */
+  status?: string;
+}
+
+export interface IbcOriginAssetsRequest {
+  /** Array of assets to get origin assets for */
+  assets?: {
+    /** Denom of the asset */
+    denom?: string;
+    /** Chain-id of the asset */
+    chainId?: string;
+  }[];
+}
+
+export interface AssetsBetweenChainsRequest {
+  /** Chain-id of the source chain */
+  sourceChainId?: string;
+  /** Chain-id of the destination chain */
+  destChainId?: string;
+  /**
+   * Whether to include assets without metadata (symbol, name, logo_uri, etc.)
+   * @default false
+   */
+  includeNoMetadataAssets?: boolean;
+  /**
+   * Whether to include CW20 tokens
+   * @default false
+   */
+  includeCw20Assets?: boolean;
+  /**
+   * Whether to include EVM tokens
+   * @default false
+   */
+  includeEvmAssets?: boolean;
+  /**
+   * Whether to include recommendations requiring multiple transactions to reach the destination
+   * @default false
+   */
+  allowMultiTx?: boolean;
 }
 
 export interface ChainsRequest {
@@ -1689,12 +1978,7 @@ export interface SubmitResponse {
   explorerLink?: string;
 }
 
-export interface TrackResponse {
-  /** Hash of the transaction */
-  txHash: string;
-  /** Link to the transaction on the relevant block explorer */
-  explorerLink: string;
-}
+export type TrackResponse = TrackTxResponse;
 
 export interface StatusRequest {
   /**
@@ -1709,30 +1993,7 @@ export interface StatusRequest {
   chainId: string;
 }
 
-export interface StatusResponse {
-  /** Transfer status for all transfers initiated by the transaction in the order they were initiated. */
-  transfers?: TransferStatus[];
-  /** The overall state reflecting the end-to-end status of all transfers initiated by the original transaction. */
-  state: TransactionState;
-  /**
-   * **DEPRECATED.** This field provides a flat list of all transfer events. For a more structured and detailed status of each transfer leg, including its individual events, please use the 'transfers' array instead. This field may be removed in a future version.
-   * @deprecated
-   */
-  transferSequence: TransferEvent[];
-  /** Details about the next transfer in the sequence that is preventing further progress, if any. */
-  nextBlockingTransfer?: {
-    transfer_sequence_index?: number;
-  };
-  /** Indicates location and denom of transfer asset release. */
-  transferAssetRelease?: TransferAssetRelease;
-  /** Details about any error encountered during the transaction or its subsequent transfers. */
-  error?: StatusError | null;
-  /**
-   * A high-level status indicator for the transaction's completion state.
-   * @example "STATE_COMPLETED"
-   */
-  status?: string;
-}
+export type StatusResponse = StatusTxResponse;
 
 export interface IbcOriginAssetsResponse {
   originAssets?: OptionalAsset[];
@@ -1764,16 +2025,22 @@ export interface FullRequestParams extends Omit<RequestInit, "body"> {
   cancelToken?: CancelToken;
 }
 
-export type RequestParams = Omit<FullRequestParams, "body" | "method" | "query" | "path">;
+export type RequestParams = Omit<
+  FullRequestParams,
+  "body" | "method" | "query" | "path"
+>;
 
 export interface ApiConfig<SecurityDataType = unknown> {
   baseUrl?: string;
   baseApiParams?: Omit<RequestParams, "baseUrl" | "cancelToken" | "signal">;
-  securityWorker?: (securityData: SecurityDataType | null) => Promise<RequestParams | void> | RequestParams | void;
+  securityWorker?: (
+    securityData: SecurityDataType | null,
+  ) => Promise<RequestParams | void> | RequestParams | void;
   customFetch?: typeof fetch;
 }
 
-export interface HttpResponse<D extends unknown, E extends unknown = unknown> extends Response {
+export interface HttpResponse<D extends unknown, E extends unknown = unknown>
+  extends Response {
   data: D;
   error: E;
 }
@@ -1782,6 +2049,7 @@ type CancelToken = Symbol | string | number;
 
 export enum ContentType {
   Json = "application/json",
+  JsonApi = "application/vnd.api+json",
   FormData = "multipart/form-data",
   UrlEncoded = "application/x-www-form-urlencoded",
   Text = "text/plain",
@@ -1792,7 +2060,8 @@ export class HttpClient<SecurityDataType = unknown> {
   private securityData: SecurityDataType | null = null;
   private securityWorker?: ApiConfig<SecurityDataType>["securityWorker"];
   private abortControllers = new Map<CancelToken, AbortController>();
-  private customFetch = (...fetchParams: Parameters<typeof fetch>) => fetch(...fetchParams);
+  private customFetch = (...fetchParams: Parameters<typeof fetch>) =>
+    fetch(...fetchParams);
 
   private baseApiParams: RequestParams = {
     credentials: "same-origin",
@@ -1825,9 +2094,15 @@ export class HttpClient<SecurityDataType = unknown> {
 
   protected toQueryString(rawQuery?: QueryParamsType): string {
     const query = rawQuery || {};
-    const keys = Object.keys(query).filter((key) => "undefined" !== typeof query[key]);
+    const keys = Object.keys(query).filter(
+      (key) => "undefined" !== typeof query[key],
+    );
     return keys
-      .map((key) => (Array.isArray(query[key]) ? this.addArrayQueryParam(query, key) : this.addQueryParam(query, key)))
+      .map((key) =>
+        Array.isArray(query[key])
+          ? this.addArrayQueryParam(query, key)
+          : this.addQueryParam(query, key),
+      )
       .join("&");
   }
 
@@ -1838,10 +2113,23 @@ export class HttpClient<SecurityDataType = unknown> {
 
   private contentFormatters: Record<ContentType, (input: any) => any> = {
     [ContentType.Json]: (input: any) =>
-      input !== null && (typeof input === "object" || typeof input === "string") ? JSON.stringify(input) : input,
-    [ContentType.Text]: (input: any) => (input !== null && typeof input !== "string" ? JSON.stringify(input) : input),
-    [ContentType.FormData]: (input: any) =>
-      Object.keys(input || {}).reduce((formData, key) => {
+      input !== null && (typeof input === "object" || typeof input === "string")
+        ? JSON.stringify(input)
+        : input,
+    [ContentType.JsonApi]: (input: any) =>
+      input !== null && (typeof input === "object" || typeof input === "string")
+        ? JSON.stringify(input)
+        : input,
+    [ContentType.Text]: (input: any) =>
+      input !== null && typeof input !== "string"
+        ? JSON.stringify(input)
+        : input,
+    [ContentType.FormData]: (input: any) => {
+      if (input instanceof FormData) {
+        return input;
+      }
+
+      return Object.keys(input || {}).reduce((formData, key) => {
         const property = input[key];
         formData.append(
           key,
@@ -1852,11 +2140,15 @@ export class HttpClient<SecurityDataType = unknown> {
               : `${property}`,
         );
         return formData;
-      }, new FormData()),
+      }, new FormData());
+    },
     [ContentType.UrlEncoded]: (input: any) => this.toQueryString(input),
   };
 
-  protected mergeRequestParams(params1: RequestParams, params2?: RequestParams): RequestParams {
+  protected mergeRequestParams(
+    params1: RequestParams,
+    params2?: RequestParams,
+  ): RequestParams {
     return {
       ...this.baseApiParams,
       ...params1,
@@ -1869,7 +2161,9 @@ export class HttpClient<SecurityDataType = unknown> {
     };
   }
 
-  protected createAbortSignal = (cancelToken: CancelToken): AbortSignal | undefined => {
+  protected createAbortSignal = (
+    cancelToken: CancelToken,
+  ): AbortSignal | undefined => {
     if (this.abortControllers.has(cancelToken)) {
       const abortController = this.abortControllers.get(cancelToken);
       if (abortController) {
@@ -1913,15 +2207,26 @@ export class HttpClient<SecurityDataType = unknown> {
     const payloadFormatter = this.contentFormatters[type || ContentType.Json];
     const responseFormat = format || requestParams.format;
 
-    return this.customFetch(`${baseUrl || this.baseUrl || ""}${path}${queryString ? `?${queryString}` : ""}`, {
-      ...requestParams,
-      headers: {
-        ...(requestParams.headers || {}),
-        ...(type && type !== ContentType.FormData ? { "Content-Type": type } : {}),
+    return this.customFetch(
+      `${baseUrl || this.baseUrl || ""}${path}${queryString ? `?${queryString}` : ""}`,
+      {
+        ...requestParams,
+        headers: {
+          ...(requestParams.headers || {}),
+          ...(type && type !== ContentType.FormData
+            ? { "Content-Type": type }
+            : {}),
+        },
+        signal:
+          (cancelToken
+            ? this.createAbortSignal(cancelToken)
+            : requestParams.signal) || null,
+        body:
+          typeof body === "undefined" || body === null
+            ? null
+            : payloadFormatter(body),
       },
-      signal: (cancelToken ? this.createAbortSignal(cancelToken) : requestParams.signal) || null,
-      body: typeof body === "undefined" || body === null ? null : payloadFormatter(body),
-    }).then(async (response) => {
+    ).then(async (response) => {
       const r = response.clone() as HttpResponse<T, E>;
       r.data = null as unknown as T;
       r.error = null as unknown as E;
@@ -1959,7 +2264,9 @@ export class HttpClient<SecurityDataType = unknown> {
  *
  * Simple APIs to build seamless cross-chain products that do more with fewer transactions. For devs with all levels of cross-chain experience.
  */
-export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDataType> {
+export class Api<
+  SecurityDataType extends unknown,
+> extends HttpClient<SecurityDataType> {
   /**
    * @description Get all supported chains along with additional data useful for building applications + frontends that interface with them (e.g. logo URI, IBC capabilities, fee assets, bech32 prefix, etc...)
    *
@@ -1985,12 +2292,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * @request POST:/v2/info/balances
    * @response `200` `BalancesResponse` The balances of the assets
    */
-  balances = (
-    data: {
-      chains?: Record<string, BalanceRequestChainEntry>;
-    },
-    params: RequestParams = {},
-  ) =>
+  balances = (data: BalancesRequest, params: RequestParams = {}) =>
     this.request<BalancesResponse, any>({
       path: `/v2/info/balances`,
       method: "POST",
@@ -2063,22 +2365,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * @response `500` `Error` Internal server error
    */
   assetsFromSource = (
-    data: {
-      /** Denom of the source asset */
-      source_asset_denom: string;
-      /** Chain-id of the source asset */
-      source_asset_chain_id: string;
-      /**
-       * Whether to include recommendations requiring multiple transactions to reach the destination
-       * @default false
-       */
-      allow_multi_tx?: boolean;
-      /**
-       * Whether to include CW20 tokens
-       * @default false
-       */
-      include_cw20_assets?: boolean;
-    },
+    data: AssetsFromSourceRequest,
     params: RequestParams = {},
   ) =>
     this.request<AssetsFromSourceResponse, Error>({
@@ -2100,42 +2387,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * @response `400` `Error` The request was invalid, e.g. an invalid amount was passed or the swap size is unsafe
    * @response `500` `Error` Internal server error
    */
-  route = (
-    data: {
-      /** Amount of source asset to be transferred or swapped. Only one of amount_in and amount_out should be provided. */
-      amount_in?: string;
-      /** Amount of destination asset to receive. Only one of amount_in and amount_out should be provided. If amount_out is provided for a swap, the route will be computed to give exactly amount_out. */
-      amount_out?: string;
-      /** Denom of the source asset */
-      source_asset_denom?: string;
-      /** Chain-id of the source asset */
-      source_asset_chain_id?: string;
-      /** Denom of the destination asset */
-      dest_asset_denom?: string;
-      /** Chain-id of the destination asset */
-      dest_asset_chain_id?: string;
-      /** Cumulative fee to be distributed to affiliates, in bps (optional) */
-      cumulative_affiliate_fee_bps?: string | null;
-      /** Swap venues to consider, if provided (optional) */
-      swap_venues?: SwapVenue[];
-      /** Whether to allow route responses requiring multiple transactions */
-      allow_multi_tx?: boolean;
-      /** Toggles whether the api should return routes that fail price safety checks. */
-      allow_unsafe?: boolean;
-      /** Array of experimental features to enable */
-      experimental_features?: string[];
-      /** Array of bridges to use */
-      bridges?: BridgeType[];
-      /** Indicates whether this transfer route should be relayed via Skip's Smart Relay service - true by default. */
-      smart_relay?: boolean;
-      smart_swap_options?: SmartSwapOptions;
-      /** Whether to allow swaps in the route */
-      allow_swaps?: boolean;
-      /** Whether to enable Go Fast routes */
-      go_fast?: boolean;
-    },
-    params: RequestParams = {},
-  ) =>
+  route = (data: RouteRequest, params: RequestParams = {}) =>
     this.request<RouteResponse, Error>({
       path: `/v2/fungible/route`,
       method: "POST",
@@ -2155,42 +2407,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * @response `400` `Error` The request was invalid, e.g. an invalid amount was passed.
    * @response `500` `Error` Internal server error
    */
-  msgs = (
-    data: {
-      /** Denom of the source asset */
-      source_asset_denom: string;
-      /** Chain-id of the source asset */
-      source_asset_chain_id: string;
-      /** Denom of the destination asset */
-      dest_asset_denom: string;
-      /** Chain-id of the destination asset */
-      dest_asset_chain_id: string;
-      /** Amount of source asset to be transferred or swapped */
-      amount_in: string;
-      /** Amount of destination asset out */
-      amount_out: string;
-      /** Array of receipient and/or sender address for each chain in the path, corresponding to the chain_ids array returned from a route request */
-      address_list: string[];
-      /** Array of operations required to perform the transfer or swap */
-      operations: Operation[];
-      estimated_amount_out?: string;
-      /** Percent tolerance for slippage on swap, if a swap is performed */
-      slippage_tolerance_percent?: string;
-      /** Number of seconds for the IBC transfer timeout, defaults to 5 minutes */
-      timeout_seconds?: string;
-      post_route_handler?: PostHandler;
-      /** Map of chain-ids to arrays of affiliates. The API expects all chains to have the same cumulative affiliate fee bps for each chain specified. If any of the provided affiliate arrays does not have the same cumulative fee, the API will return an error. */
-      chain_ids_to_affiliates?: Record<string, ChainAffiliates>;
-      /**
-       * Whether to enable gas warnings for intermediate and destination chains
-       * @default false
-       */
-      enable_gas_warnings?: boolean;
-      /** Alternative address to use for paying for fees, currently only for SVM source CCTP transfers, in b58 format. */
-      fee_payer_address?: string;
-    },
-    params: RequestParams = {},
-  ) =>
+  msgs = (data: MsgsRequest, params: RequestParams = {}) =>
     this.request<MsgsResponse, Error>({
       path: `/v2/fungible/msgs`,
       method: "POST",
@@ -2210,56 +2427,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * @response `400` `Error` The request was invalid, e.g. an invalid amount was passed or the swap size is unsafe
    * @response `500` `Error` Internal server error
    */
-  msgsDirect = (
-    data: {
-      /** Denom of the source asset */
-      source_asset_denom?: string;
-      /** Chain-id of the source asset */
-      source_asset_chain_id?: string;
-      /** Denom of the destination asset */
-      dest_asset_denom?: string;
-      /** Chain-id of the destination asset */
-      dest_asset_chain_id?: string;
-      /** Amount of source asset to be transferred or swapped. If this is a swap, only one of amount_in and amount_out should be provided. */
-      amount_in?: string;
-      /** Amount of destination asset out. If this is a swap, only one of amount_in and amount_out should be provided. If amount_out is provided for a swap, the route will be computed to give exactly amount_out. */
-      amount_out?: string;
-      /** Map of chain-ids to receipient and/or sender address for each chain in the path. Since the path is not known to the caller beforehand, the caller should attempt to provide addresses for all chains in the path, and the API will return an error if the path cannot be constructed. */
-      chain_ids_to_addresses?: Record<string, string>;
-      /** Swap venues to consider, if provided (optional) */
-      swap_venues?: SwapVenue[];
-      /** Percent tolerance for slippage on swap, if a swap is performed */
-      slippage_tolerance_percent?: string;
-      /** Number of seconds for the IBC transfer timeout, defaults to 5 minutes */
-      timeout_seconds?: string;
-      /** Map of chain-ids to arrays of affiliates. Since cumulative_affiliate_fee_bps must be provided to retrieve a route, and the swap chain is not known at this time, all chains must have the same cumulative_affiliate_fee_bps otherwise the API will return an error. */
-      chain_ids_to_affiliates?: Record<string, ChainAffiliates>;
-      post_route_handler?: PostHandler;
-      /** Whether to allow route responses requiring multiple transactions */
-      allow_multi_tx?: boolean;
-      /** Toggles whether the api should return routes that fail price safety checks. */
-      allow_unsafe?: boolean;
-      /** Array of experimental features to enable */
-      experimental_features?: string[];
-      /** Array of bridges to use */
-      bridges?: BridgeType[];
-      /** Indicates whether this transfer route should be relayed via Skip's Smart Relay service */
-      smart_relay?: boolean;
-      smart_swap_options?: SmartSwapOptions;
-      /** Whether to allow swaps in the route */
-      allow_swaps?: boolean;
-      /** Whether to enable Go Fast routes */
-      go_fast?: boolean;
-      /**
-       * Whether to enable gas warnings for intermediate and destination chains
-       * @default false
-       */
-      enable_gas_warnings?: boolean;
-      /** Alternative address to use for paying for fees, currently only for SVM source CCTP transfers, in b58 format. */
-      fee_payer_address?: string;
-    },
-    params: RequestParams = {},
-  ) =>
+  msgsDirect = (data: MsgsDirectRequest, params: RequestParams = {}) =>
     this.request<MsgsDirectResponse, Error>({
       path: `/v2/fungible/msgs_direct`,
       method: "POST",
@@ -2281,10 +2449,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * @response `500` `Error` Internal server error
    */
   assetRecommendations = (
-    data: {
-      /** Array where each entry corresponds to a distinct asset recommendation request. */
-      requests?: RecommendationRequest[];
-    },
+    data: AssetRecommendationsRequest,
     params: RequestParams = {},
   ) =>
     this.request<AssetRecommendationsResponse, Error>({
@@ -2307,21 +2472,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * @response `404` `Error` The specified chain is not supported.
    * @response `500` `Error` Internal server error
    */
-  submit = (
-    data: {
-      /**
-       * Signed base64 encoded transaction
-       * @example "base64 encoded transaction"
-       */
-      tx?: string;
-      /**
-       * Chain ID of the transaction
-       * @example "osmosis-1"
-       */
-      chain_id?: string;
-    },
-    params: RequestParams = {},
-  ) =>
+  submit = (data: SubmitTxRequest, params: RequestParams = {}) =>
     this.request<SubmitResponse, Error>({
       path: `/v2/tx/submit`,
       method: "POST",
@@ -2342,21 +2493,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * @response `404` `Error` The specified chain is not supported or the specified transaction was not found.
    * @response `500` `Error` Internal server error
    */
-  track = (
-    data: {
-      /**
-       * Hex encoded hash of the transaction to track
-       * @example "F30790E79987F18F3A4DA8C7A9BA9FD837043EF59D8236CA85180E1078BC607F"
-       */
-      tx_hash: string;
-      /**
-       * Chain ID of the transaction
-       * @example "osmosis-1"
-       */
-      chain_id: string;
-    },
-    params: RequestParams = {},
-  ) =>
+  track = (data: TrackTxRequest, params: RequestParams = {}) =>
     this.request<TrackResponse, Error>({
       path: `/v2/tx/track`,
       method: "POST",
@@ -2396,15 +2533,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * @response `500` `Error` Internal server error
    */
   ibcOriginAssets = (
-    data: {
-      /** Array of assets to get origin assets for */
-      assets?: {
-        /** Denom of the asset */
-        denom?: string;
-        /** Chain-id of the asset */
-        chain_id?: string;
-      }[];
-    },
+    data: IbcOriginAssetsRequest,
     params: RequestParams = {},
   ) =>
     this.request<IbcOriginAssetsResponse, Error>({
@@ -2427,32 +2556,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * @response `500` `Error` Internal server error
    */
   fungibleAssetsBetweenChainsCreate = (
-    data: {
-      /** Chain-id of the source chain */
-      source_chain_id?: string;
-      /** Chain-id of the destination chain */
-      dest_chain_id?: string;
-      /**
-       * Whether to include assets without metadata (symbol, name, logo_uri, etc.)
-       * @default false
-       */
-      include_no_metadata_assets?: boolean;
-      /**
-       * Whether to include CW20 tokens
-       * @default false
-       */
-      include_cw20_assets?: boolean;
-      /**
-       * Whether to include EVM tokens
-       * @default false
-       */
-      include_evm_assets?: boolean;
-      /**
-       * Whether to include recommendations requiring multiple transactions to reach the destination
-       * @default false
-       */
-      allow_multi_tx?: boolean;
-    },
+    data: AssetsBetweenChainsRequest,
     params: RequestParams = {},
   ) =>
     this.request<FungibleAssetsBetweenChainsCreateResponse, Error>({

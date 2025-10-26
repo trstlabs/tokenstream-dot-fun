@@ -20,6 +20,7 @@ export type ValidateCosmosGasBalanceProps = {
   txIndex?: number;
   simulate?: ExecuteRouteOptions["simulate"];
   getCosmosPriorityFeeDenom?: ExecuteRouteOptions["getCosmosPriorityFeeDenom"];
+  isMultiRoutes?: boolean;
 };
 
 /**
@@ -36,6 +37,7 @@ export const validateCosmosGasBalance = async ({
   txIndex,
   simulate,
   getCosmosPriorityFeeDenom,
+  isMultiRoutes,
 }: ValidateCosmosGasBalanceProps) => {
   const skipAssets = (await ClientState.getSkipAssets({ chainId }))?.[chainId];
   const skipChains = await ClientState.getSkipChains();
@@ -52,7 +54,7 @@ export const validateCosmosGasBalance = async ({
   }
   const estimatedGasAmount = await (async () => {
     try {
-      if (!simulate) throw new Error("simulate");
+      if (simulate === false) throw new Error("simulate");
       // Skip gas estimation for noble-1 in multi tx route
       if (txIndex !== 0 && chainId === "noble-1") {
         return "0";
@@ -107,6 +109,12 @@ export const validateCosmosGasBalance = async ({
       return null;
     }
     if (chainId === "noble-1") {
+      if (isMultiRoutes && txIndex === 0) {
+        return calculateFee(
+          Math.ceil(parseFloat(estimatedGasAmount)),
+          gasPrice
+        );
+      }
       if (
         asset.denom.toLowerCase() ===
         "ibc/EF48E6B1A1A19F47ECAEA62F5670C37C0580E86A9E88498B7E393EB6F49F33C0".toLowerCase()

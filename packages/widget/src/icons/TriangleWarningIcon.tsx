@@ -1,9 +1,13 @@
-type IconProps = {
-  backgroundColor?: string;
-};
+import { IconProps } from ".";
 
-export const TriangleWarningIcon = ({ backgroundColor }: IconProps) => (
-  <svg width="47" height="41" viewBox="0 0 47 41" fill="none" xmlns="http://www.w3.org/2000/svg">
+export const TriangleWarningIcon = ({ backgroundColor, width = 47, height = 41 }: IconProps) => (
+  <svg
+    width={width}
+    height={height}
+    viewBox="0 0 47 41"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
     <path
       fillRule="evenodd"
       clipRule="evenodd"

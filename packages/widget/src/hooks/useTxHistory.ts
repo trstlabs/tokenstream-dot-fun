@@ -1,87 +1,64 @@
 import {
-  TxsStatus,
-  useBroadcastedTxsStatus,
-} from "@/pages/SwapExecutionPage/useBroadcastedTxs";
-import { useSyncTxStatus } from "@/pages/SwapExecutionPage/useSyncTxStatus";
-import { TransactionHistoryItem } from "@/state/history";
-import { skipChainsAtom } from "@/state/skipClient";
-import { SimpleStatus } from "@/utils/clientType";
-import { useQuery } from "@tanstack/react-query";
-import { useAtomValue } from "jotai";
+  RouteDetailsWithRelatedRoutes,
+  setTransactionHistoryAtom,
+} from "@/state/history";
+import { track } from "@amplitude/analytics-browser";
+import { RouteDetails, subscribeToRouteStatus } from "@skip-go/client";
+import { useSetAtom } from "jotai";
+import { useEffect, useRef } from "react";
 
 type useTxHistoryProps = {
-  txHistoryItem?: TransactionHistoryItem;
+  txHistoryItem?: RouteDetailsWithRelatedRoutes;
 };
 
 export const useTxHistory = ({ txHistoryItem }: useTxHistoryProps) => {
-  const { data: chains } = useAtomValue(skipChainsAtom);
+  const setTransactionHistory = useSetAtom(setTransactionHistoryAtom);
+  const unsubscribersRef = useRef<(() => void)[] | null>(null);
+  const subscribedIdsRef = useRef<Set<string>>(new Set());
 
-  const transactionDetails = txHistoryItem?.transactionDetails;
+  useEffect(() => {
+    if (!txHistoryItem) return;
 
-  const chainIdFound = chains?.some((chain: any) =>
-    transactionDetails?.map((tx) => tx.chainId).includes(chain.chainId ?? "")
-  );
+    const unsubscribers: (() => void)[] = [];
+    const subscribedRouteIds = new Set<string>();
 
-  const txsRequired = txHistoryItem?.route?.txsRequired;
+    const subscribe = (route: RouteDetails) => {
+      if (!route.id || subscribedRouteIds.has(route.id)) return;
+      subscribedRouteIds.add(route.id);
 
-  let statusData: TxsStatus = {
-    isSuccess: false,
-    isSettled: false,
-    transferEvents: [],
-    ...txHistoryItem,
-    transactionDetails: transactionDetails ?? [],
-  };
+      unsubscribers.push(
+        subscribeToRouteStatus({
+          routeDetails: route,
+          onRouteStatusUpdated: (routeStatus) => {
+            const failedGasRoute = routeStatus?.relatedRoutes?.find(
+              (relatedRoute) => relatedRoute.status === "failed"
+            );
+            if (failedGasRoute) {
+              track("gas on receive: fee route failed", {
+                gasRoute: failedGasRoute,
+              });
+            }
+            setTransactionHistory(routeStatus);
+          },
+        })
+      );
+    };
 
-  const shouldFetchStatus =
-    !txHistoryItem?.isSettled &&
-    transactionDetails !== undefined &&
-    chainIdFound;
+    subscribe(txHistoryItem);
 
-  const { data, isFetching, isPending } = useBroadcastedTxsStatus({
-    txsRequired,
-    transactionDetails,
-    enabled: shouldFetchStatus,
-  });
+    txHistoryItem.relatedRoutes?.forEach((relatedRoute) => {
+      if (relatedRoute && relatedRoute.id) {
+        subscribe(relatedRoute as RouteDetails);
+      }
+    });
 
-  if (data !== undefined) {
-    statusData = data;
-  }
+    unsubscribersRef.current = unsubscribers;
+    subscribedIdsRef.current = subscribedRouteIds;
 
-  useSyncTxStatus({
-    statusData,
-    timestamp: txHistoryItem?.timestamp,
-  });
+    return () => {
+      unsubscribers.forEach((unsub) => unsub());
+    };
+  }, [txHistoryItem, setTransactionHistory]);
 
-  const explorerLinks = new Set();
-  statusData?.transferEvents?.forEach((transferEvent) => {
-    explorerLinks.add(transferEvent.fromExplorerLink);
-    explorerLinks.add(transferEvent.toExplorerLink);
-  });
-
-  const query = useQuery({
-    queryKey: [
-      "tx-history-status",
-      { transactionDetails, txsRequired, statusData },
-    ],
-    queryFn: () => {
-      // Incomplete is when multiple transactions are required but not all txs are signed/tracked
-      if (transactionDetails?.length !== txsRequired) return "incomplete";
-      if (isFetching && isPending) return "unconfirmed";
-      if (statusData?.isSettled && statusData?.isSuccess) return "completed";
-      if ((statusData?.isSettled && !statusData?.isSuccess) || !chainIdFound)
-        return "failed";
-      return "pending";
-    },
-    enabled:
-      transactionDetails !== undefined &&
-      txsRequired !== undefined &&
-      statusData !== undefined,
-  });
-
-  return {
-    status: query.data as SimpleStatus,
-    explorerLinks: Array.from(explorerLinks).filter((link) => link) as string[],
-    transferAssetRelease:
-      statusData?.transferAssetRelease ?? txHistoryItem?.transferAssetRelease,
-  };
+  return txHistoryItem;
 };

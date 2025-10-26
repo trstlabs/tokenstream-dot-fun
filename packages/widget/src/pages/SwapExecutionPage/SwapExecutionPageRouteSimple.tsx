@@ -4,22 +4,23 @@ import { useAtomValue } from "jotai";
 import { SwapExecutionPageRouteSimpleRow } from "./SwapExecutionPageRouteSimpleRow";
 import { BridgeArrowIcon } from "@/icons/BridgeArrowIcon";
 import { ICONS } from "@/icons";
-import { ClientOperation, SimpleStatus } from "@/utils/clientType";
+import { ClientOperation } from "@/utils/clientType";
 import { swapExecutionStateAtom } from "@/state/swapExecutionPage";
-import { TxsStatus } from "./useBroadcastedTxs";
 import { SwapExecutionState } from "./SwapExecutionPage";
 import { useMemo } from "react";
 import { streamSettingsAtom } from "@/state/streamSettings";
 import { SwapExecutionPageRouteSimpleRowIntento } from "./SwapExecutionPageRouteSimpleRowIntento";
-import { convertToPxValue } from "@/utils/style";
+
+import { RouteDetails, TransferEventStatus } from "@skip-go/client";
 
 export type SwapExecutionPageRouteProps = {
   operations: ClientOperation[];
   onClickEditDestinationWallet?: () => void;
-  statusData?: TxsStatus;
+  statusData?: RouteDetails;
   swapExecutionState?: SwapExecutionState;
-  firstOperationStatus?: SimpleStatus | undefined;
-  secondOperationStatus?: SimpleStatus | undefined;
+  firstOperationStatus?: TransferEventStatus | undefined;
+  secondOperationStatus?: TransferEventStatus | undefined;
+  bottomContent?: React.ReactNode;
 };
 
 export const SwapExecutionPageRouteSimple = ({
@@ -28,6 +29,7 @@ export const SwapExecutionPageRouteSimple = ({
   onClickEditDestinationWallet,
   swapExecutionState,
   firstOperationStatus,
+  bottomContent,
 }: SwapExecutionPageRouteProps) => {
   const theme = useTheme();
   const { route } = useAtomValue(swapExecutionStateAtom);
@@ -86,6 +88,10 @@ export const SwapExecutionPageRouteSimple = ({
       shouldStream && streamMode === "RECUR_INPUT"
         ? (Number(route?.usdAmountIn) * recurrences).toString()
         : route?.usdAmountIn,
+    // denom: originalRoute?.sourceAssetDenom,
+    // tokenAmount: originalRoute?.amountIn ?? "",
+    // chainId: originalRoute?.sourceAssetChainId,
+    // usdValue: originalRoute?.usdAmountIn,
   };
 
   const destination = {
@@ -133,14 +139,7 @@ export const SwapExecutionPageRouteSimple = ({
         context="destination"
         isSwapStream={shouldStream && source.denom !== destination.denom}
       />
-      {/* {shouldStream && (
-        <SmallText normalTextColor fontWeight="bold" textWrap="nowrap">
-          Note: Streaming mode is{" "}
-          {streamMode === "RECUR_INPUT"
-            ? "Recurring Token Input"
-            : "Splitting Token Input"}
-        </SmallText>
-      )} */}
+      {bottomContent}
     </StyledSwapExecutionPageRoute>
   );
 };
@@ -152,7 +151,5 @@ const StyledBridgeArrowIcon = styled(BridgeArrowIcon)`
 
 const StyledSwapExecutionPageRoute = styled(Column)`
   padding: 30px;
-  background: ${({ theme }) => theme.primary.background.normal};
-  border-radius: ${({ theme }) => convertToPxValue(theme.borderRadius?.main)};
   min-height: 225px;
 `;

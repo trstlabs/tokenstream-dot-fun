@@ -48,10 +48,10 @@ export const convertSecondsToMinutesOrHours = (seconds?: number) => {
  */
 export function shouldReduceFontSize(value: string | number | undefined): boolean {
   if (!value) return false;
-  
+
   // Convert to string and remove commas
   const valueWithoutCommas = value.toString().replace(/,/g, "");
-  
+
   // Return true if character count is 14 or more
   return valueWithoutCommas.length >= 14;
 }
@@ -65,20 +65,16 @@ type FormatAmountOptions = {
 
 export const formatDisplayAmount = (
   input: number | string | undefined,
-  options: FormatAmountOptions = {}
+  options: FormatAmountOptions = {},
 ): string => {
-  const {
-    showLessThanSign = true,
-    decimals = DEFAULT_DECIMAL_PLACES,
-    abbreviate = true,
-  } = options;
+  const { showLessThanSign = true, decimals = DEFAULT_DECIMAL_PLACES, abbreviate = true } = options;
 
   if (input === undefined) {
-    return '';
+    return "";
   }
 
   let num: number;
-  if (typeof input === 'string') {
+  if (typeof input === "string") {
     num = Number(input);
     if (isNaN(num)) {
       return input;
@@ -88,6 +84,7 @@ export const formatDisplayAmount = (
   }
 
   const abs = Math.abs(num);
+  const absRounded = Math.abs(Number(num.toFixed(decimals)));
   const THRESHOLD = 10 ** -decimals;
 
   if (abs > 0 && abs < THRESHOLD) {
@@ -97,25 +94,36 @@ export const formatDisplayAmount = (
 
   if (abbreviate) {
     const scales = [
-      { value: 1e6, symbol: 'M' },
-      { value: 1e3, symbol: 'K' },
+      { value: 1e9, symbol: "B" },
+      { value: 1e6, symbol: "M" },
+      { value: 1e3, symbol: "K" },
     ];
 
-    for (const { value, symbol } of scales) {
-      if (abs >= value) {
-        const formatted = (num / value)
-          .toFixed(2)
-          .replace(/\.?0+$/, '');
-        return `${formatted}${symbol}`;
+    for (let i = 0; i < scales.length; i++) {
+      const { value, symbol } = scales[i];
+      if (absRounded >= value) {
+        const scaled = num / value;
+        let formattedNumber = Number(scaled.toFixed(2));
+
+        if (formattedNumber >= 1000 && i > 0) {
+          const next = scales[i - 1];
+          formattedNumber = Number((num / next.value).toFixed(2));
+          return `${formattedNumber
+            .toString()
+            .replace(/(\.\d*?[1-9])0+$/, "$1")
+            .replace(/\.0+$/, "")}${next.symbol}`;
+        }
+
+        return `${formattedNumber
+          .toString()
+          .replace(/(\.\d*?[1-9])0+$/, "$1")
+          .replace(/\.0+$/, "")}${symbol}`;
       }
     }
   }
 
-  return num
-    .toFixed(decimals)
-    .replace(/\.?0+$/, '');
+  return num.toFixed(decimals).replace(/\.?0+$/, "");
 };
-
 
 export function limitDecimalsDisplayed(
   input: string | number | undefined,
@@ -144,12 +152,10 @@ export function limitDecimalsDisplayed(
 }
 
 export function removeTrailingZeros(input: string | number | undefined): string {
-  if (input == null) return '';
+  if (input == null) return "";
 
   const str = input.toString();
-  if (!str.includes('.')) return str;
+  if (!str.includes(".")) return str;
 
-  return str
-    .replace(/(\.\d*?[1-9])0+$/g, '$1') 
-    .replace(/\.0+$/g, '');
+  return str.replace(/(\.\d*?[1-9])0+$/g, "$1").replace(/\.0+$/g, "");
 }

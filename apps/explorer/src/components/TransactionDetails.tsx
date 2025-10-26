@@ -1,0 +1,91 @@
+import { Container } from "@/components/Container";
+import { Row } from "@/components/Layout";
+import { SmallText } from '@/components/Typography';
+import { ReactNode, useMemo } from "react";
+import { TransactionState } from "@skip-go/client";
+import { useAtomValue } from "@/jotai";
+import { skipChainsAtom } from "@/state/skipClient";
+import { Button } from "@/components/Button";
+import { getTruncatedAddress } from "@/utils/crypto";
+import { useClipboard } from "@/hooks/useClipboard";
+import Image from "next/image";
+import { useTransactionHistoryItemFromUrlParams } from "../hooks/useTransactionHistoryItemFromUrlParams";
+import { formatDisplayAmount } from "@/utils/number";
+import { useOverallStatusLabelAndColor } from "../hooks/useOverallStatusLabelAndColor";
+
+export type TransactionDetailsProps = {
+  txHash: string;
+  state?: TransactionState;
+  chainIds?: string[];
+}
+
+export const TransactionDetails = ({ txHash, state, chainIds }: TransactionDetailsProps) => {
+  const skipChains = useAtomValue(skipChainsAtom);
+  const { saveToClipboard, isCopied } = useClipboard();
+  const { sourceAsset, destAsset, sourceAmount, destAmount } = useTransactionHistoryItemFromUrlParams();
+
+  const statusLabelAndColor = useOverallStatusLabelAndColor({ state });
+
+  const chains = chainIds?.map((chainId) => skipChains?.data?.find((chain) => chain.chainId === chainId));
+
+  const transaction = useMemo(() => {
+    if (sourceAsset && destAsset) {
+      return (
+        <Row gap={5}>
+          <SmallText normalTextColor>{formatDisplayAmount(sourceAmount, { decimals: 2, abbreviate: true })} {sourceAsset?.symbol}</SmallText>
+          <SmallText>→</SmallText>
+          <SmallText normalTextColor>{formatDisplayAmount(destAmount, { decimals: 2, abbreviate: true })} {destAsset?.symbol}</SmallText>
+        </Row>
+      );  
+    }
+    return (
+      <Row gap={5}>
+        <SmallText normalTextColor>{chains?.at(0)?.prettyName}</SmallText>
+        <SmallText>→</SmallText>
+        <SmallText normalTextColor>{chains?.at(-1)?.prettyName}</SmallText>
+      </Row>
+    )
+  }, [chains, destAmount, destAsset, sourceAmount, sourceAsset]);
+  
+  return (
+    <Container gap={20} width="100%" borderRadius={16}>
+      <DetailsRow
+        label="Transaction"
+        value={transaction}
+      />
+      <DetailsRow
+        label="Status"
+        value={<SmallText color={statusLabelAndColor?.color}>{statusLabelAndColor?.label}</SmallText>}
+      />
+      <DetailsRow onClick={() => saveToClipboard(txHash)} label="Transaction Hash" value={isCopied ? "Copied!" : getTruncatedAddress(txHash)} />
+      <DetailsRow
+        label="Route"
+        value={
+          <Row gap={5}>
+            {chains?.map((chain, index) => (
+              <Row key={`${chain?.chainId}-${index}`} gap={8} align="center">
+                {chain?.logoUri && <Image src={chain?.logoUri} alt={chain?.chainName} width={20} height={20} />}
+                <SmallText>{index < chains.length - 1 && "→"}</SmallText>
+              </Row>
+            ))}
+          </Row>
+        }
+      />
+    </Container>
+  );
+};
+
+export const DetailsRow = ({ label, value, onClick }: { label: string, value: ReactNode, onClick?: () => void }) => {
+  return (
+    <Button as={onClick === undefined ? "div" : "button"} onClick={onClick} align="center" justify="space-between">
+      <SmallText>{label}</SmallText>
+      {
+        typeof value === "string" || typeof value === "number" ? (
+          <SmallText normalTextColor>{value}</SmallText>
+        ) : (
+          value
+        )
+      }
+    </Button>
+  )
+}

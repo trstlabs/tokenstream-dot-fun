@@ -21,13 +21,15 @@
               "general/overview-and-typical-usage",
               "general/supported-ecosystems-and-bridges",
               "general/multi-chain-realtime-transaction-and-packet-tracking",
+              "general/explorer-integration",
               "general/api-keys",
               "general/smart-relay",
               "general/post-route-actions",
               "general/affiliate-fees",
               "general/fee-info",
-              "general/faq",
-              "general/upcoming-features"
+              "contracts/skip-go-contracts",
+              "general/transaction-support",
+              "general/faq"
             ]
           },
           {
@@ -35,6 +37,7 @@
             "pages": [
               "widget/getting-started",
               "widget/configuration",
+              "widget/gas-on-receive",
               "widget/web-component",
               "widget/migration-guide",
               "widget/faq"
@@ -46,6 +49,7 @@
               "client/getting-started",
               "client/balance-gas-and-fee-tooling",
               "client/executing-a-route",
+              "client/gas-on-receive",
               "client/advanced-features",
               "client/migration-guide"
             ]
@@ -77,7 +81,8 @@
             "pages": [
               "support-requirements/chain-support-requirements",
               "support-requirements/token-support-requirements",
-              "support-requirements/swap-venue-requirements"
+              "support-requirements/swap-venue-requirements",
+              "support-requirements/chain-integration-request"
             ]
           },
           {
@@ -164,7 +169,7 @@
       "anchors": [
         {
           "anchor": "Support",
-          "href": "https://discord.com/channels/1010553709987639406/1210022796797677589",
+          "href": "https://discord.com/channels/669268347736686612/1365254948782342175",
           "icon": "headset"
         }
       ]

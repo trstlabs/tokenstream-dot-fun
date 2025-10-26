@@ -1,5 +1,271 @@
 ## 0.0.15
 
+## 3.14.14
+
+### Patch Changes
+
+- db163fa: Fix formatDisplayAmount bug throwing an error when a number in the billions was passed to it
+
+## 3.14.13
+
+### Patch Changes
+
+- 229522f: fix broken link, fix dependency security issues
+- Updated dependencies [229522f]
+  - @skip-go/client@1.5.9
+
+## 3.14.12
+
+### Patch Changes
+
+- a266ea2: update registries
+- cabf9f4: fix abbreviate formatting
+- 2c0ec19: Limit the number of history items to 400
+- 8e5fdc9: Add modalZIndex Prop to specify custom z-index on all modals
+- Updated dependencies [a266ea2]
+  - @skip-go/client@1.5.8
+
+## 3.14.11
+
+### Patch Changes
+
+- 0c598dd: Update keplr icon
+- e55abae: Fix showing error even if statusData is undefined
+- a66d014: Fix showing error even if statusData is undefined
+- Updated dependencies [8dfa5c6]
+  - @skip-go/client@1.5.7
+
+## 3.14.10
+
+### Patch Changes
+
+- 58e6688: Fix passing affiliates to widget/client library via setClientOptions
+- f854996: Remove routePreference selector entirely if goFast:false is passed
+- 55c337b: Show extra message on mobile for bad price warning
+- Updated dependencies [58e6688]
+  - @skip-go/client@1.5.6
+
+## 3.14.9
+
+### Patch Changes
+
+- cd93838: Update gasFeeTokenAmount for EVM to also check for 0x denoms
+
+## 3.14.8
+
+### Patch Changes
+
+- c860b8a: Fix display of operation type in detailed view
+- bbbeda4: Fix formatDisplayAmount logic
+- e7030f0: Add caching assets, chains, bridges, venues for faster subsequent pageload on slower internet speeds
+- 5611da4: Remove gas station logic
+- f84c866: Map LAYER_ZERO_TRANSFER_WAITING_FOR_COMPOSE transferState as "pending"
+- Updated dependencies [c8ad02e]
+- Updated dependencies [5611da4]
+- Updated dependencies [f84c866]
+  - @skip-go/client@1.5.5
+
+## 3.14.7
+
+### Patch Changes
+
+- 0ca46bb: Fix tooltips to be wrapped by ShadowDomAndProviders now that they use react portal
+
+## 3.14.6
+
+### Patch Changes
+
+- d6c4457: Update filterNeutronSwapFee to no longer check swap venue
+- 05c1e7f: fix fee decimal display for usd amounts of 0
+- e26ddbe: Truncate sender and receiver addresses in transaction history details.
+- Updated dependencies [39d2448]
+- Updated dependencies [d6c4457]
+  - @skip-go/client@1.5.4
+
+## 3.14.5
+
+### Patch Changes
+
+- 676a76b: update registries
+- 451aa75: don't show gas on receive if same chain and address
+- 048f144: prioritize chainIds filtering for gasOnReceive
+- d3ec136: rename feeRoute to gasRoute
+- 145f274: fix banksend tooltip
+- c1cab03: Stop using SVGProps<SVGSVGElement> for the sake of react 19 compatibility
+- 81d3a11: fix inconsistent main and original route
+- 55f7438: Add HIGH_LOSS_ERROR to Swagger API spec
+- 6682a4c: Check userAgent instead of screen size to determine whether to disable 2tx routes
+- 37241e9: get chains and assets fron client lib state
+- 693b1c2: Switch SolanaProvider to use React Query for wallet list.
+- 87b86a1: fix destinationFeeAssets not using the actual asset decimals
+- Updated dependencies [676a76b]
+- Updated dependencies [d3ec136]
+- Updated dependencies [4cc4b68]
+- Updated dependencies [55f7438]
+- Updated dependencies [37241e9]
+- Updated dependencies [b1660f8]
+- Updated dependencies [4920ae0]
+  - @skip-go/client@1.5.3
+
+## 3.14.4
+
+### Patch Changes
+
+- c515ff4: hot fix gas on receive amountIn
+
+## 3.14.3
+
+### Patch Changes
+
+- bf3b837: Deprioritize asset images from wormhole
+- b3f72d4: Use proxy api for amplitude
+- 9016a64: fix missing multi tx route indicator
+- Updated dependencies [71fb39a]
+  - @skip-go/client@1.5.2
+
+## 3.14.2
+
+### Patch Changes
+
+- 8630eea: update registries
+- b8f024f: fix callback
+- Updated dependencies [8630eea]
+- Updated dependencies [b8f024f]
+- Updated dependencies [419982d]
+  - @skip-go/client@1.5.1
+
+## 3.14.1
+
+### Patch Changes
+
+- fdd2929: add isFeeRouteAvailable for track
+- bc9983e: numbers and switch component fix
+
+## 3.14.0
+
+### Minor Changes
+
+- 3bf601a: Gas on receive & executeMultipleRoutes
+
+### Patch Changes
+
+- 8d6226f: Reduce number of session replays by beginning after confirm button is clicked
+- 317ef74: Enable passing apiKey from widget to client library
+- 276d1b5: Avoid showing loading animation instead of wallet icon for manual address input
+- e4a77b0: Add showing sender and receiver address to history items
+- 0722525: Revert changes in #1460, fix hydration error by avoiding nested buttons
+- 3223cdf: Add spacing between signature required and and row above in detailed swap view
+- ad28b78: Add tracking in amplitude for the destination wallet source
+- fea44ef: Limit automatic input value updates to five decimal places after route changes.
+- Updated dependencies [fc76c0f]
+- Updated dependencies [3bf601a]
+  - @skip-go/client@1.5.0
+
+## 3.13.0
+
+### Minor Changes
+
+- d9ae5ec: Refactored route status management to be handled by the client library in onRouteUpdated callback passed to executeRoute and subscribeToRouteStatus
+
+### Patch Changes
+
+- 45c8b0e: Remove sentry
+- 4c3b591: cleanup injective dependencies
+- 6deedeb: Assume status for a route is finalized if top level status is complete, failed or incomplete and dont ever fetch from api in those cases
+- aa6bf9e: Never show no fees in red
+- 21ec4ff: show swap settings if route error or no route
+- 591e462: Fix bug with history page causing scrolling to be overwritten by expanded history item being scrolled into view after initially opening the item
+- e508561: Add mapping 5 and 12 error codes to "no route found" on the widget
+- 8f8ae09: bump graz 0.3.3
+- Updated dependencies [d9ae5ec]
+- Updated dependencies [5c85386]
+- Updated dependencies [4c3b591]
+- Updated dependencies [b1441b2]
+- Updated dependencies [e508561]
+  - @skip-go/client@1.4.0
+
+## 3.12.11
+
+### Patch Changes
+
+- f00f585: Add showing "< $0.01 in fees" and "no fees"
+- 97b6f32: fix stuck getting addresses on connectedAddress
+
+## 3.12.10
+
+### Patch Changes
+
+- 3bc90be: fix injective and evmos direct signing
+- Updated dependencies [3bc90be]
+  - @skip-go/client@1.3.7
+
+## 3.12.9
+
+### Patch Changes
+
+- bf26d8e: fix cannot sign on fresh address
+- 84d3267: fix client side error when filter denoms null
+- ce8f9a4: Prioritize exact asset symbol matches in the search modal.
+- Updated dependencies [bf26d8e]
+  - @skip-go/client@1.3.6
+
+## 3.12.8
+
+### Patch Changes
+
+- fabdf0b: Track general unexpected error event in amplitude.
+- a96b623: fix chains endpoint
+- Updated dependencies [a96b623]
+  - @skip-go/client@1.3.5
+
+## 3.12.7
+
+### Patch Changes
+
+- Updated dependencies [f2852b6]
+  - @skip-go/client@1.3.4
+
+## 3.12.6
+
+### Patch Changes
+
+- 069bed8: Move fee display from footer to destination input and show warning when output value is 90% or less of input.
+- Updated dependencies [5e2f94c]
+- Updated dependencies [cadc8cc]
+  - @skip-go/client@1.3.3
+
+## 3.12.5
+
+### Patch Changes
+
+- c3838d0: Add LAYER_ZERO_TRANSFER_WAITING_FOR_COMPOSE state map to pending
+
+## 3.12.4
+
+### Patch Changes
+
+- 43663de: Enable auto-reconnect for cosmos
+- 9beee7c: Refactor fees code to get data from estimated_fees, Include missing bridge types
+- ce78bcf: Fix flickering of select asset button when changing assets
+- Updated dependencies [c7bc3b8]
+  - @skip-go/client@1.3.2
+
+## 3.12.3
+
+### Patch Changes
+
+- 9396ecb: Fix react error 426 by wrapping page transition with startTransition and ensuring setCurrentPage is the last step
+
+## 3.12.2
+
+### Patch Changes
+
+- fd0e0dd: Revert indexedDb back to localStorage, add transactionHistoryVersion
+- fd0e0dd: added onTransactionSignRequested callback
+- Updated dependencies [fd0e0dd]
+- Updated dependencies [fd0e0dd]
+  - @skip-go/client@1.3.1
+
 ## 3.12.1
 
 ### Patch Changes

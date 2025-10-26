@@ -4,23 +4,25 @@ import { Column, Row } from "@/components/Layout";
 import { SmallText, Text } from "@/components/Typography";
 import { ICONS } from "@/icons";
 import { useMemo } from "react";
-import { ChainTransaction } from "@skip-go/client";
+import { ChainTransaction, TransferEventStatus } from "@skip-go/client";
 import { StyledAnimatedBorder } from "./SwapExecutionPageRouteDetailedRow";
 import { ChainIcon } from "@/icons/ChainIcon";
 import { PenIcon } from "@/icons/PenIcon";
 import { useGetAssetDetails } from "@/hooks/useGetAssetDetails";
-import { ClientOperation, SimpleStatus } from "@/utils/clientType";
-import { chainAddressesAtom } from "@/state/swapExecutionPage";
+import { ClientOperation } from "@/utils/clientType";
+import { chainAddressesAtom, swapExecutionStateAtom } from "@/state/swapExecutionPage";
 import { useAtomValue } from "jotai";
 import { getTruncatedAddress } from "@/utils/crypto";
 import { formatUSD } from "@/utils/intl";
 import { formatDisplayAmount } from "@/utils/number";
 import { useIsMobileScreenSize } from "@/hooks/useIsMobileScreenSize";
-import { useCopyAddress } from "@/hooks/useCopyAddress";
+import { useClipboard } from "@/hooks/useClipboard";
 import { useGroupedAssetByRecommendedSymbol } from "@/modals/AssetAndChainSelectorModal/useGroupedAssetsByRecommendedSymbol";
 import { GroupedAssetImage } from "@/components/GroupedAssetImage";
 import { useCroppedImage } from "@/hooks/useCroppedImage";
 import { SkeletonElement } from "@/components/Skeleton";
+import { gasOnReceiveAtom } from "@/state/gasOnReceive";
+import { skipAssetsAtom } from "@/state/skipClient";
 
 export type SwapExecutionPageRouteSimpleRowProps = {
   denom: ClientOperation["denomIn"] | ClientOperation["denomOut"];
@@ -29,7 +31,7 @@ export type SwapExecutionPageRouteSimpleRowProps = {
   chainId: ClientOperation["fromChainId"] | ClientOperation["chainId"];
   onClickEditDestinationWallet?: () => void;
   explorerLink?: ChainTransaction["explorerLink"];
-  status?: SimpleStatus;
+  status?: TransferEventStatus;
   icon?: ICONS;
   context: "source" | "destination";
   isSwapStream?: boolean;
@@ -48,7 +50,7 @@ export const SwapExecutionPageRouteSimpleRow = ({
 }: SwapExecutionPageRouteSimpleRowProps) => {
   const theme = useTheme();
   const isMobileScreenSize = useIsMobileScreenSize();
-  const { copyAddress, isShowingCopyAddressFeedback } = useCopyAddress();
+  const { saveToClipboard: copyAddress, isCopied: isShowingCopyAddressFeedback } = useClipboard();
 
   const assetDetails = useGetAssetDetails({
     assetDenom: denom,
@@ -60,6 +62,24 @@ export const SwapExecutionPageRouteSimpleRow = ({
     (i) => i.id === assetDetails?.symbol
   );
 
+  const { gasRoute } = useAtomValue(swapExecutionStateAtom);
+  const isGorEnabled = useAtomValue(gasOnReceiveAtom);
+  const { data: assets } = useAtomValue(skipAssetsAtom);
+
+  const gasOnReceiveAsset = useMemo(() => {
+    const gasAsset = {
+      chainId: gasRoute?.destAssetChainId,
+      denom: gasRoute?.destAssetDenom,
+    };
+
+    if (!gasAsset) return;
+
+    const asset = assets?.find(
+      (a) => a.chainId === gasAsset?.chainId && a.denom === gasAsset?.denom,
+    );
+    return asset;
+  }, [assets, gasRoute?.destAssetChainId, gasRoute?.destAssetDenom]);
+
   const chainAddresses = useAtomValue(chainAddressesAtom);
 
   const source = useMemo(() => {
@@ -68,6 +88,7 @@ export const SwapExecutionPageRouteSimpleRow = ({
       case "source": {
         const selected = chainAddressArray[0];
         return {
+          source: selected?.source,
           address: selected?.address,
           image:
             (selected?.source === "wallet" &&
@@ -78,6 +99,7 @@ export const SwapExecutionPageRouteSimpleRow = ({
       case "destination": {
         const selected = chainAddressArray[chainAddressArray.length - 1];
         return {
+          source: selected?.source,
           address: selected?.address,
           image:
             (selected?.source === "wallet" &&
@@ -91,11 +113,26 @@ export const SwapExecutionPageRouteSimpleRow = ({
   const walletImage = useCroppedImage(source.image);
 
   const renderWalletImage = useMemo(() => {
+    if (source.source === "injected" || source.source === "input") return;
     if (!source.address) return;
     if (walletImage) return <img height={12} width={12} src={walletImage} />;
 
     return <SkeletonElement height={12} width={12} />;
-  }, [source.address, walletImage]);
+  }, [source.address, source.source, walletImage]);
+
+  const renderGasRouteAmount = useMemo(() => {
+    if (!isGorEnabled) return;
+    if (context === "source") return;
+    if (!gasOnReceiveAsset) return;
+
+    const amountUsd = gasRoute?.usdAmountOut;
+
+    if (!amountUsd) return;
+
+    const assetSymbol = gasOnReceiveAsset?.recommendedSymbol?.toUpperCase() ?? "";
+
+    return `+ ${formatUSD(amountUsd)} in ${assetSymbol}`;
+  }, [context, gasRoute?.usdAmountOut, gasOnReceiveAsset, isGorEnabled]);
 
   const renderExplorerLink = useMemo(() => {
     if (!explorerLink) return;
@@ -137,7 +174,11 @@ export const SwapExecutionPageRouteSimpleRow = ({
           {context === "destination" && isSwapStream ? "~" : ""}{" "}
           {formatDisplayAmount(assetDetails.amount)} {assetDetails?.symbol}
         </StyledSymbolAndAmount>
-        {usdValue && <SmallText>{formatUSD(usdValue)}</SmallText>}
+        {usdValue && (
+          <SmallText>
+            {formatUSD(usdValue)} {renderGasRouteAmount}
+          </SmallText>
+        )}
 
         <Row align="center" height={18} gap={5}>
           <StyledChainName normalTextColor textWrap="nowrap">

@@ -18,14 +18,18 @@ export type { BalanceRequest, BalanceResponse } from "./api/postBalances";
 
 export { route } from "./api/postRoute";
 export type { RouteRequest } from "./api/postRoute";
+export { getRouteWithGasOnReceive } from "./public-functions/getRouteWithGasOnReceive";
 
 export { submitTransaction } from "./api/postSubmitTransaction";
+export type { SubmitTransactionRequest, SubmitTransactionResponse } from "./api/postSubmitTransaction";
 export { trackTransaction } from "./api/postTrackTransaction";
 export { transactionStatus } from "./api/postTransactionStatus";
 export type { TxStatusResponse } from "./api/postTransactionStatus";
 
 export { executeRoute } from "./public-functions/executeRoute";
 export type { ExecuteRouteOptions } from "./public-functions/executeRoute";
+export { executeMultipleRoutes } from "./public-functions/executeMultipleRoutes";
+export type { ExecuteMultipleRoutesOptions } from "./public-functions/executeMultipleRoutes";
 
 export { getSigningStargateClient } from "./public-functions/getSigningStargateClient";
 export type { getSigningStargateClientProps } from "./public-functions/getSigningStargateClient";
@@ -35,15 +39,16 @@ export { getRecommendedGasPrice } from "./public-functions/getRecommendedGasPric
 export { getFeeInfoForChain } from "./public-functions/getFeeInfoForChain";
 export { setApiOptions } from "./public-functions/setApiOptions";
 export type { SetApiOptionsProps } from "./public-functions/setApiOptions";
-export { waitForTransaction } from "./public-functions/waitForTransaction";
+export { waitForTransaction, waitForTransactionWithCancel } from "./public-functions/waitForTransaction";
 
 export { getCosmosGasAmountForMessage } from "./public-functions/getCosmosGasAmountForMessage";
 export { getEVMGasAmountForMessage } from "./public-functions/getEvmGasAmountForMessage";
 export { validateCosmosGasBalance } from "./public-functions/validateCosmosGasBalance";
 
+export { subscribeToRouteStatus } from "./public-functions/subscribeToRouteStatus";
+export type { RouteDetails, TransactionDetails, RouteStatus, TransactionStatus } from "./public-functions/subscribeToRouteStatus";
+export type { TransferEventStatus, ClientTransferEvent, OverallStatus } from "./utils/clientType"
+export { getTransferEventsFromTxStatusResponse, TransferType, getSimpleOverallStatus } from "./utils/clientType"
+
+export { ClientState } from "./state/clientState";
 export type { SkipClientOptions } from "./state/clientState";
-
-export { submit } from "./api/postSubmit";
-export type { SubmitRequest, SubmitResponse } from "./api/postSubmit";
-
-export { GAS_STATION_CHAIN_IDS } from "./constants/constants";

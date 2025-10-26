@@ -47,6 +47,7 @@ export type AssetAndChainSelectorModalProps = ModalProps & {
   selectedAsset?: ClientAsset;
   selectChain?: boolean;
   context: SelectorContext;
+  onlySelectChain?: boolean;
 };
 
 const ITEM_HEIGHT = 65;
@@ -54,17 +55,41 @@ const ITEM_HEIGHT = 65;
 export const AssetAndChainSelectorModal = createModal(
   (modalProps: AssetAndChainSelectorModalProps) => {
     const modal = useModal();
-    const { onSelect: _onSelect, selectedAsset, selectChain, context } = modalProps;
-    const { data: assets, isFetching, isPending } = useAtomValue(skipAssetsAtom);
+    const {
+      onSelect: _onSelect,
+      selectedAsset,
+      selectChain,
+      context,
+      onlySelectChain,
+    } = modalProps;
+    const {
+      data: assets,
+      isFetching: isFetchingAssets,
+      isPending: isPendingAssets,
+    } = useAtomValue(skipAssetsAtom);
     const ibcEurekaHighlightedAssets = useAtomValue(ibcEurekaHighlightedAssetsAtom);
-    const { isLoading: isChainsLoading } = useAtomValue(skipChainsAtom);
-    const isLoading = (isFetching && isPending) || isChainsLoading;
+    const { isFetching: isFetchingChains, isPending: isPendingChains } =
+      useAtomValue(skipChainsAtom);
+    const isLoading =
+      (isFetchingAssets && isPendingAssets) || (isFetchingChains && isPendingChains);
 
     const [showSkeleton, setShowSkeleton] = useState(true);
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [groupedAssetSelected, setGroupedAssetSelected] = useState<GroupedAsset | null>(null);
 
     const listHeight = useListHeight(ITEM_HEIGHT);
+
+    const uniqueAssetsBySymbol = useMemo(() => {
+      const seen = new Map<string, ClientAsset>();
+      assets?.forEach((asset) => {
+        const chainId = asset.chainId;
+        if (chainId && !seen.has(chainId)) {
+          seen.set(chainId, asset);
+        }
+      });
+
+      return Array.from(seen.values());
+    }, [assets]);
 
     const resetInput = () => {
       setSearchQuery("");
@@ -91,12 +116,22 @@ export const AssetAndChainSelectorModal = createModal(
     const groupedAssetsByRecommendedSymbol = useGroupedAssetByRecommendedSymbol({ context });
 
     const selectedGroup = useMemo(() => {
+      if (onlySelectChain)
+        return {
+          assets: uniqueAssetsBySymbol,
+        } as GroupedAsset;
       const asset = groupedAssetSelected?.assets[0] || selectedAsset;
       if (!asset) return;
       return groupedAssetsByRecommendedSymbol?.find(
         (group) => group.id === asset.recommendedSymbol,
       );
-    }, [groupedAssetSelected?.assets, selectedAsset, groupedAssetsByRecommendedSymbol]);
+    }, [
+      onlySelectChain,
+      uniqueAssetsBySymbol,
+      groupedAssetSelected?.assets,
+      selectedAsset,
+      groupedAssetsByRecommendedSymbol,
+    ]);
 
     const filteredAssets = useFilteredAssets({ groupedAssetsByRecommendedSymbol, searchQuery });
     const filteredChains = useFilteredChains({
@@ -106,7 +141,7 @@ export const AssetAndChainSelectorModal = createModal(
     });
 
     useEffect(() => {
-      if (!isLoading && assets) {
+      if (!isLoading) {
         setShowSkeleton(false);
       }
     }, [isLoading, assets]);
@@ -115,7 +150,7 @@ export const AssetAndChainSelectorModal = createModal(
       setSearchQuery("");
     }, [modal.visible]);
 
-    const componentName = `${context} ${selectChain ? "chain" : "asset"} modal`;
+    const componentName = `${context} ${selectChain || onlySelectChain ? "chain" : "asset"} modal`;
 
     const handleSearch = (term: string) => {
       track(`${componentName}: search input - changed`, { term });
@@ -197,6 +232,7 @@ export const AssetAndChainSelectorModal = createModal(
           searchTerm={searchQuery}
           setSearchTerm={setSearchQuery}
           onKeyDown={onKeyDown}
+          overrideSelectedGroup={onlySelectChain}
         />
         {showSkeleton || (!filteredAssets && !filteredChains) ? (
           <StyledColumn height={listHeight}>
