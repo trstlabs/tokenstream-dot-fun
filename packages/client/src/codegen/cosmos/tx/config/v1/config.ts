@@ -19,12 +19,7 @@ export interface ConfigProtoMsg {
   typeUrl: "/cosmos.tx.config.v1.Config";
   value: Uint8Array;
 }
-/**
- * Config is the config object of the x/auth/tx package.
- * @name ConfigAmino
- * @package cosmos.tx.config.v1
- * @see proto type: cosmos.tx.config.v1.Config
- */
+/** Config is the config object of the x/auth/tx package. */
 export interface ConfigAmino {
   /**
    * skip_ante_handler defines whether the ante handler registration should be skipped in case an app wants to override

@@ -49,7 +49,8 @@ function calculateGrantExpiration(
 } {
   const now = Math.floor(Date.now() / 1000);
   // Stream starts after `interval` if startAt is 0, otherwise after `startAt`
-  const streamStart = startAt === 0 ? now + Number(interval) : now + Number(startAt);
+  const streamStart =
+    startAt === 0 ? now + Number(interval) : now + Number(startAt);
   const streamEnd = streamStart + Number(duration);
   const requiredExpiration = streamEnd + GRANT_EXPIRATION_BUFFER_SECONDS;
   if (existing?.expiration) {
@@ -376,7 +377,7 @@ export async function createMessagesForAuthzExec({
         streamSettings.startAt === 0
           ? "0"
           : Math.floor(Date.now() / 1000 + streamSettings.startAt).toString(),
-      stop_on_fail: "true",
+      save_responses: "true",
       label: "tokenstream.fun",
       owner: intoAddress,
       fallback: "true",

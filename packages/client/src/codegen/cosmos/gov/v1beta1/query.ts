@@ -13,16 +13,9 @@ export interface QueryProposalRequestProtoMsg {
   typeUrl: "/cosmos.gov.v1beta1.QueryProposalRequest";
   value: Uint8Array;
 }
-/**
- * QueryProposalRequest is the request type for the Query/Proposal RPC method.
- * @name QueryProposalRequestAmino
- * @package cosmos.gov.v1beta1
- * @see proto type: cosmos.gov.v1beta1.QueryProposalRequest
- */
+/** QueryProposalRequest is the request type for the Query/Proposal RPC method. */
 export interface QueryProposalRequestAmino {
-  /**
-   * proposal_id defines the unique id of the proposal.
-   */
+  /** proposal_id defines the unique id of the proposal. */
   proposal_id?: string;
 }
 export interface QueryProposalRequestAminoMsg {
@@ -41,12 +34,7 @@ export interface QueryProposalResponseProtoMsg {
   typeUrl: "/cosmos.gov.v1beta1.QueryProposalResponse";
   value: Uint8Array;
 }
-/**
- * QueryProposalResponse is the response type for the Query/Proposal RPC method.
- * @name QueryProposalResponseAmino
- * @package cosmos.gov.v1beta1
- * @see proto type: cosmos.gov.v1beta1.QueryProposalResponse
- */
+/** QueryProposalResponse is the response type for the Query/Proposal RPC method. */
 export interface QueryProposalResponseAmino {
   proposal: ProposalAmino;
 }
@@ -73,28 +61,15 @@ export interface QueryProposalsRequestProtoMsg {
   typeUrl: "/cosmos.gov.v1beta1.QueryProposalsRequest";
   value: Uint8Array;
 }
-/**
- * QueryProposalsRequest is the request type for the Query/Proposals RPC method.
- * @name QueryProposalsRequestAmino
- * @package cosmos.gov.v1beta1
- * @see proto type: cosmos.gov.v1beta1.QueryProposalsRequest
- */
+/** QueryProposalsRequest is the request type for the Query/Proposals RPC method. */
 export interface QueryProposalsRequestAmino {
-  /**
-   * proposal_status defines the status of the proposals.
-   */
+  /** proposal_status defines the status of the proposals. */
   proposal_status?: ProposalStatus;
-  /**
-   * voter defines the voter address for the proposals.
-   */
+  /** voter defines the voter address for the proposals. */
   voter?: string;
-  /**
-   * depositor defines the deposit addresses from the proposals.
-   */
+  /** depositor defines the deposit addresses from the proposals. */
   depositor?: string;
-  /**
-   * pagination defines an optional pagination for the request.
-   */
+  /** pagination defines an optional pagination for the request. */
   pagination?: PageRequestAmino;
 }
 export interface QueryProposalsRequestAminoMsg {
@@ -125,18 +100,11 @@ export interface QueryProposalsResponseProtoMsg {
 /**
  * QueryProposalsResponse is the response type for the Query/Proposals RPC
  * method.
- * @name QueryProposalsResponseAmino
- * @package cosmos.gov.v1beta1
- * @see proto type: cosmos.gov.v1beta1.QueryProposalsResponse
  */
 export interface QueryProposalsResponseAmino {
-  /**
-   * proposals defines all the requested governance proposals.
-   */
+  /** proposals defines all the requested governance proposals. */
   proposals: ProposalAmino[];
-  /**
-   * pagination defines the pagination in the response.
-   */
+  /** pagination defines the pagination in the response. */
   pagination?: PageResponseAmino;
 }
 export interface QueryProposalsResponseAminoMsg {
@@ -162,20 +130,11 @@ export interface QueryVoteRequestProtoMsg {
   typeUrl: "/cosmos.gov.v1beta1.QueryVoteRequest";
   value: Uint8Array;
 }
-/**
- * QueryVoteRequest is the request type for the Query/Vote RPC method.
- * @name QueryVoteRequestAmino
- * @package cosmos.gov.v1beta1
- * @see proto type: cosmos.gov.v1beta1.QueryVoteRequest
- */
+/** QueryVoteRequest is the request type for the Query/Vote RPC method. */
 export interface QueryVoteRequestAmino {
-  /**
-   * proposal_id defines the unique id of the proposal.
-   */
+  /** proposal_id defines the unique id of the proposal. */
   proposal_id?: string;
-  /**
-   * voter defines the voter address for the proposals.
-   */
+  /** voter defines the voter address for the proposals. */
   voter?: string;
 }
 export interface QueryVoteRequestAminoMsg {
@@ -196,16 +155,9 @@ export interface QueryVoteResponseProtoMsg {
   typeUrl: "/cosmos.gov.v1beta1.QueryVoteResponse";
   value: Uint8Array;
 }
-/**
- * QueryVoteResponse is the response type for the Query/Vote RPC method.
- * @name QueryVoteResponseAmino
- * @package cosmos.gov.v1beta1
- * @see proto type: cosmos.gov.v1beta1.QueryVoteResponse
- */
+/** QueryVoteResponse is the response type for the Query/Vote RPC method. */
 export interface QueryVoteResponseAmino {
-  /**
-   * vote defines the queried vote.
-   */
+  /** vote defines the queried vote. */
   vote: VoteAmino;
 }
 export interface QueryVoteResponseAminoMsg {
@@ -227,20 +179,11 @@ export interface QueryVotesRequestProtoMsg {
   typeUrl: "/cosmos.gov.v1beta1.QueryVotesRequest";
   value: Uint8Array;
 }
-/**
- * QueryVotesRequest is the request type for the Query/Votes RPC method.
- * @name QueryVotesRequestAmino
- * @package cosmos.gov.v1beta1
- * @see proto type: cosmos.gov.v1beta1.QueryVotesRequest
- */
+/** QueryVotesRequest is the request type for the Query/Votes RPC method. */
 export interface QueryVotesRequestAmino {
-  /**
-   * proposal_id defines the unique id of the proposal.
-   */
+  /** proposal_id defines the unique id of the proposal. */
   proposal_id?: string;
-  /**
-   * pagination defines an optional pagination for the request.
-   */
+  /** pagination defines an optional pagination for the request. */
   pagination?: PageRequestAmino;
 }
 export interface QueryVotesRequestAminoMsg {
@@ -263,20 +206,11 @@ export interface QueryVotesResponseProtoMsg {
   typeUrl: "/cosmos.gov.v1beta1.QueryVotesResponse";
   value: Uint8Array;
 }
-/**
- * QueryVotesResponse is the response type for the Query/Votes RPC method.
- * @name QueryVotesResponseAmino
- * @package cosmos.gov.v1beta1
- * @see proto type: cosmos.gov.v1beta1.QueryVotesResponse
- */
+/** QueryVotesResponse is the response type for the Query/Votes RPC method. */
 export interface QueryVotesResponseAmino {
-  /**
-   * votes defines the queried votes.
-   */
+  /** votes defines the queried votes. */
   votes: VoteAmino[];
-  /**
-   * pagination defines the pagination in the response.
-   */
+  /** pagination defines the pagination in the response. */
   pagination?: PageResponseAmino;
 }
 export interface QueryVotesResponseAminoMsg {
@@ -300,12 +234,7 @@ export interface QueryParamsRequestProtoMsg {
   typeUrl: "/cosmos.gov.v1beta1.QueryParamsRequest";
   value: Uint8Array;
 }
-/**
- * QueryParamsRequest is the request type for the Query/Params RPC method.
- * @name QueryParamsRequestAmino
- * @package cosmos.gov.v1beta1
- * @see proto type: cosmos.gov.v1beta1.QueryParamsRequest
- */
+/** QueryParamsRequest is the request type for the Query/Params RPC method. */
 export interface QueryParamsRequestAmino {
   /**
    * params_type defines which parameters to query for, can be one of "voting",
@@ -334,24 +263,13 @@ export interface QueryParamsResponseProtoMsg {
   typeUrl: "/cosmos.gov.v1beta1.QueryParamsResponse";
   value: Uint8Array;
 }
-/**
- * QueryParamsResponse is the response type for the Query/Params RPC method.
- * @name QueryParamsResponseAmino
- * @package cosmos.gov.v1beta1
- * @see proto type: cosmos.gov.v1beta1.QueryParamsResponse
- */
+/** QueryParamsResponse is the response type for the Query/Params RPC method. */
 export interface QueryParamsResponseAmino {
-  /**
-   * voting_params defines the parameters related to voting.
-   */
+  /** voting_params defines the parameters related to voting. */
   voting_params: VotingParamsAmino;
-  /**
-   * deposit_params defines the parameters related to deposit.
-   */
+  /** deposit_params defines the parameters related to deposit. */
   deposit_params: DepositParamsAmino;
-  /**
-   * tally_params defines the parameters related to tally.
-   */
+  /** tally_params defines the parameters related to tally. */
   tally_params: TallyParamsAmino;
 }
 export interface QueryParamsResponseAminoMsg {
@@ -375,20 +293,11 @@ export interface QueryDepositRequestProtoMsg {
   typeUrl: "/cosmos.gov.v1beta1.QueryDepositRequest";
   value: Uint8Array;
 }
-/**
- * QueryDepositRequest is the request type for the Query/Deposit RPC method.
- * @name QueryDepositRequestAmino
- * @package cosmos.gov.v1beta1
- * @see proto type: cosmos.gov.v1beta1.QueryDepositRequest
- */
+/** QueryDepositRequest is the request type for the Query/Deposit RPC method. */
 export interface QueryDepositRequestAmino {
-  /**
-   * proposal_id defines the unique id of the proposal.
-   */
+  /** proposal_id defines the unique id of the proposal. */
   proposal_id?: string;
-  /**
-   * depositor defines the deposit addresses from the proposals.
-   */
+  /** depositor defines the deposit addresses from the proposals. */
   depositor?: string;
 }
 export interface QueryDepositRequestAminoMsg {
@@ -409,16 +318,9 @@ export interface QueryDepositResponseProtoMsg {
   typeUrl: "/cosmos.gov.v1beta1.QueryDepositResponse";
   value: Uint8Array;
 }
-/**
- * QueryDepositResponse is the response type for the Query/Deposit RPC method.
- * @name QueryDepositResponseAmino
- * @package cosmos.gov.v1beta1
- * @see proto type: cosmos.gov.v1beta1.QueryDepositResponse
- */
+/** QueryDepositResponse is the response type for the Query/Deposit RPC method. */
 export interface QueryDepositResponseAmino {
-  /**
-   * deposit defines the requested deposit.
-   */
+  /** deposit defines the requested deposit. */
   deposit: DepositAmino;
 }
 export interface QueryDepositResponseAminoMsg {
@@ -440,20 +342,11 @@ export interface QueryDepositsRequestProtoMsg {
   typeUrl: "/cosmos.gov.v1beta1.QueryDepositsRequest";
   value: Uint8Array;
 }
-/**
- * QueryDepositsRequest is the request type for the Query/Deposits RPC method.
- * @name QueryDepositsRequestAmino
- * @package cosmos.gov.v1beta1
- * @see proto type: cosmos.gov.v1beta1.QueryDepositsRequest
- */
+/** QueryDepositsRequest is the request type for the Query/Deposits RPC method. */
 export interface QueryDepositsRequestAmino {
-  /**
-   * proposal_id defines the unique id of the proposal.
-   */
+  /** proposal_id defines the unique id of the proposal. */
   proposal_id?: string;
-  /**
-   * pagination defines an optional pagination for the request.
-   */
+  /** pagination defines an optional pagination for the request. */
   pagination?: PageRequestAmino;
 }
 export interface QueryDepositsRequestAminoMsg {
@@ -476,20 +369,11 @@ export interface QueryDepositsResponseProtoMsg {
   typeUrl: "/cosmos.gov.v1beta1.QueryDepositsResponse";
   value: Uint8Array;
 }
-/**
- * QueryDepositsResponse is the response type for the Query/Deposits RPC method.
- * @name QueryDepositsResponseAmino
- * @package cosmos.gov.v1beta1
- * @see proto type: cosmos.gov.v1beta1.QueryDepositsResponse
- */
+/** QueryDepositsResponse is the response type for the Query/Deposits RPC method. */
 export interface QueryDepositsResponseAmino {
-  /**
-   * deposits defines the requested deposits.
-   */
+  /** deposits defines the requested deposits. */
   deposits: DepositAmino[];
-  /**
-   * pagination defines the pagination in the response.
-   */
+  /** pagination defines the pagination in the response. */
   pagination?: PageResponseAmino;
 }
 export interface QueryDepositsResponseAminoMsg {
@@ -510,16 +394,9 @@ export interface QueryTallyResultRequestProtoMsg {
   typeUrl: "/cosmos.gov.v1beta1.QueryTallyResultRequest";
   value: Uint8Array;
 }
-/**
- * QueryTallyResultRequest is the request type for the Query/Tally RPC method.
- * @name QueryTallyResultRequestAmino
- * @package cosmos.gov.v1beta1
- * @see proto type: cosmos.gov.v1beta1.QueryTallyResultRequest
- */
+/** QueryTallyResultRequest is the request type for the Query/Tally RPC method. */
 export interface QueryTallyResultRequestAmino {
-  /**
-   * proposal_id defines the unique id of the proposal.
-   */
+  /** proposal_id defines the unique id of the proposal. */
   proposal_id?: string;
 }
 export interface QueryTallyResultRequestAminoMsg {
@@ -539,16 +416,9 @@ export interface QueryTallyResultResponseProtoMsg {
   typeUrl: "/cosmos.gov.v1beta1.QueryTallyResultResponse";
   value: Uint8Array;
 }
-/**
- * QueryTallyResultResponse is the response type for the Query/Tally RPC method.
- * @name QueryTallyResultResponseAmino
- * @package cosmos.gov.v1beta1
- * @see proto type: cosmos.gov.v1beta1.QueryTallyResultResponse
- */
+/** QueryTallyResultResponse is the response type for the Query/Tally RPC method. */
 export interface QueryTallyResultResponseAmino {
-  /**
-   * tally defines the requested tally.
-   */
+  /** tally defines the requested tally. */
   tally: TallyResultAmino;
 }
 export interface QueryTallyResultResponseAminoMsg {
@@ -580,7 +450,7 @@ export const QueryProposalRequest = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.proposalId = reader.uint64() as Long;
+          message.proposalId = (reader.uint64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -613,7 +483,7 @@ export const QueryProposalRequest = {
   },
   toAmino(message: QueryProposalRequest): QueryProposalRequestAmino {
     const obj: any = {};
-    obj.proposal_id = !message.proposalId.isZero() ? message.proposalId?.toString() : undefined;
+    obj.proposal_id = !message.proposalId.isZero() ? message.proposalId.toString() : undefined;
     return obj;
   },
   fromAminoMsg(object: QueryProposalRequestAminoMsg): QueryProposalRequest {
@@ -750,7 +620,7 @@ export const QueryProposalsRequest = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.proposalStatus = reader.int32() as any;
+          message.proposalStatus = (reader.int32() as any);
           break;
         case 2:
           message.voter = reader.string();
@@ -962,7 +832,7 @@ export const QueryVoteRequest = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.proposalId = reader.uint64() as Long;
+          message.proposalId = (reader.uint64() as Long);
           break;
         case 2:
           message.voter = reader.string();
@@ -1004,7 +874,7 @@ export const QueryVoteRequest = {
   },
   toAmino(message: QueryVoteRequest): QueryVoteRequestAmino {
     const obj: any = {};
-    obj.proposal_id = !message.proposalId.isZero() ? message.proposalId?.toString() : undefined;
+    obj.proposal_id = !message.proposalId.isZero() ? message.proposalId.toString() : undefined;
     obj.voter = message.voter === "" ? undefined : message.voter;
     return obj;
   },
@@ -1134,7 +1004,7 @@ export const QueryVotesRequest = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.proposalId = reader.uint64() as Long;
+          message.proposalId = (reader.uint64() as Long);
           break;
         case 2:
           message.pagination = PageRequest.decode(reader, reader.uint32());
@@ -1176,7 +1046,7 @@ export const QueryVotesRequest = {
   },
   toAmino(message: QueryVotesRequest): QueryVotesRequestAmino {
     const obj: any = {};
-    obj.proposal_id = !message.proposalId.isZero() ? message.proposalId?.toString() : undefined;
+    obj.proposal_id = !message.proposalId.isZero() ? message.proposalId.toString() : undefined;
     obj.pagination = message.pagination ? PageRequest.toAmino(message.pagination) : undefined;
     return obj;
   },
@@ -1512,7 +1382,7 @@ export const QueryDepositRequest = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.proposalId = reader.uint64() as Long;
+          message.proposalId = (reader.uint64() as Long);
           break;
         case 2:
           message.depositor = reader.string();
@@ -1554,7 +1424,7 @@ export const QueryDepositRequest = {
   },
   toAmino(message: QueryDepositRequest): QueryDepositRequestAmino {
     const obj: any = {};
-    obj.proposal_id = !message.proposalId.isZero() ? message.proposalId?.toString() : undefined;
+    obj.proposal_id = !message.proposalId.isZero() ? message.proposalId.toString() : undefined;
     obj.depositor = message.depositor === "" ? undefined : message.depositor;
     return obj;
   },
@@ -1684,7 +1554,7 @@ export const QueryDepositsRequest = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.proposalId = reader.uint64() as Long;
+          message.proposalId = (reader.uint64() as Long);
           break;
         case 2:
           message.pagination = PageRequest.decode(reader, reader.uint32());
@@ -1726,7 +1596,7 @@ export const QueryDepositsRequest = {
   },
   toAmino(message: QueryDepositsRequest): QueryDepositsRequestAmino {
     const obj: any = {};
-    obj.proposal_id = !message.proposalId.isZero() ? message.proposalId?.toString() : undefined;
+    obj.proposal_id = !message.proposalId.isZero() ? message.proposalId.toString() : undefined;
     obj.pagination = message.pagination ? PageRequest.toAmino(message.pagination) : undefined;
     return obj;
   },
@@ -1872,7 +1742,7 @@ export const QueryTallyResultRequest = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.proposalId = reader.uint64() as Long;
+          message.proposalId = (reader.uint64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -1905,7 +1775,7 @@ export const QueryTallyResultRequest = {
   },
   toAmino(message: QueryTallyResultRequest): QueryTallyResultRequestAmino {
     const obj: any = {};
-    obj.proposal_id = !message.proposalId.isZero() ? message.proposalId?.toString() : undefined;
+    obj.proposal_id = !message.proposalId.isZero() ? message.proposalId.toString() : undefined;
     return obj;
   },
   fromAminoMsg(object: QueryTallyResultRequestAminoMsg): QueryTallyResultRequest {

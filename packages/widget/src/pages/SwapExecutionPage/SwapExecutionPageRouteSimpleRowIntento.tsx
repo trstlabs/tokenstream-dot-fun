@@ -4,20 +4,20 @@ import { Column, Row } from "@/components/Layout";
 import { SmallText, Text } from "@/components/Typography";
 import { ICONS } from "@/icons";
 import { useMemo } from "react";
-import { ChainTransaction } from "@skip-go/client";
+import { ChainTransaction, TransferEventStatus } from "@skip-go/client";
 import { StyledAnimatedBorder } from "./SwapExecutionPageRouteDetailedRow";
 import { ChainIcon } from "@/icons/ChainIcon";
 import { PenIcon } from "@/icons/PenIcon";
 import { useGetAssetDetails } from "@/hooks/useGetAssetDetails";
-import { ClientOperation, SimpleStatus } from "@/utils/clientType";
+import { ClientOperation } from "@/utils/clientType";
 import { chainAddressesAtom } from "@/state/swapExecutionPage";
 import { useAtomValue } from "jotai";
 import { getTruncatedAddress } from "@/utils/crypto";
 import { formatUSD } from "@/utils/intl";
 import { formatDisplayAmount } from "@/utils/number";
 import { useIsMobileScreenSize } from "@/hooks/useIsMobileScreenSize";
-import { useCopyAddress } from "@/hooks/useCopyAddress";
 import { fromBech32, toBech32 } from "@cosmjs/encoding";
+import { useClipboard } from "@/hooks/useClipboard";
 
 export type SwapExecutionPageRouteSimpleRowIntentoProps = {
   denom: ClientOperation["denomIn"] | ClientOperation["denomOut"];
@@ -26,7 +26,7 @@ export type SwapExecutionPageRouteSimpleRowIntentoProps = {
   chainId: ClientOperation["fromChainId"] | ClientOperation["chainId"];
   onClickEditDestinationWallet?: () => void;
   explorerLink?: ChainTransaction["explorerLink"];
-  status?: SimpleStatus;
+  status?: TransferEventStatus;
   icon?: ICONS;
   recurrences?: number;
 };
@@ -43,7 +43,10 @@ export const SwapExecutionPageRouteSimpleRowIntento = ({
 }: SwapExecutionPageRouteSimpleRowIntentoProps) => {
   const theme = useTheme();
   const isMobileScreenSize = useIsMobileScreenSize();
-  const { copyAddress, isShowingCopyAddressFeedback } = useCopyAddress();
+  const {
+    saveToClipboard: copyAddress,
+    isCopied: isShowingCopyAddressFeedback,
+  } = useClipboard();
 
   const assetDetails = useGetAssetDetails({
     assetDenom: denom,

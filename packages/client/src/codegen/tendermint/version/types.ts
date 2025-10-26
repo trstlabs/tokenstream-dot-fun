@@ -19,9 +19,6 @@ export interface AppProtoMsg {
  * App includes the protocol and software version for the application.
  * This information is included in ResponseInfo. The App.Protocol can be
  * updated in ResponseEndBlock.
- * @name AppAmino
- * @package tendermint.version
- * @see proto type: tendermint.version.App
  */
 export interface AppAmino {
   protocol?: string;
@@ -57,9 +54,6 @@ export interface ConsensusProtoMsg {
  * Consensus captures the consensus rules for processing a block in the blockchain,
  * including all blockchain data structures and the rules of the application's
  * state transition machine.
- * @name ConsensusAmino
- * @package tendermint.version
- * @see proto type: tendermint.version.Consensus
  */
 export interface ConsensusAmino {
   block?: string;
@@ -103,7 +97,7 @@ export const App = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.protocol = reader.uint64() as Long;
+          message.protocol = (reader.uint64() as Long);
           break;
         case 2:
           message.software = reader.string();
@@ -145,7 +139,7 @@ export const App = {
   },
   toAmino(message: App): AppAmino {
     const obj: any = {};
-    obj.protocol = !message.protocol.isZero() ? message.protocol?.toString() : undefined;
+    obj.protocol = !message.protocol.isZero() ? message.protocol.toString() : undefined;
     obj.software = message.software === "" ? undefined : message.software;
     return obj;
   },
@@ -190,10 +184,10 @@ export const Consensus = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.block = reader.uint64() as Long;
+          message.block = (reader.uint64() as Long);
           break;
         case 2:
-          message.app = reader.uint64() as Long;
+          message.app = (reader.uint64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -232,8 +226,8 @@ export const Consensus = {
   },
   toAmino(message: Consensus): ConsensusAmino {
     const obj: any = {};
-    obj.block = !message.block.isZero() ? message.block?.toString() : undefined;
-    obj.app = !message.app.isZero() ? message.app?.toString() : undefined;
+    obj.block = !message.block.isZero() ? message.block.toString() : undefined;
+    obj.app = !message.app.isZero() ? message.app.toString() : undefined;
     return obj;
   },
   fromAminoMsg(object: ConsensusAminoMsg): Consensus {

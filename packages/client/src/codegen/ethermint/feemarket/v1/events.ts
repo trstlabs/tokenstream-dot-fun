@@ -11,16 +11,9 @@ export interface EventFeeMarketProtoMsg {
   typeUrl: "/ethermint.feemarket.v1.EventFeeMarket";
   value: Uint8Array;
 }
-/**
- * EventFeeMarket is the event type for the fee market module
- * @name EventFeeMarketAmino
- * @package ethermint.feemarket.v1
- * @see proto type: ethermint.feemarket.v1.EventFeeMarket
- */
+/** EventFeeMarket is the event type for the fee market module */
 export interface EventFeeMarketAmino {
-  /**
-   * base_fee for EIP-1559 blocks
-   */
+  /** base_fee for EIP-1559 blocks */
   base_fee?: string;
 }
 export interface EventFeeMarketAminoMsg {
@@ -42,20 +35,11 @@ export interface EventBlockGasProtoMsg {
   typeUrl: "/ethermint.feemarket.v1.EventBlockGas";
   value: Uint8Array;
 }
-/**
- * EventBlockGas defines an Ethereum block gas event
- * @name EventBlockGasAmino
- * @package ethermint.feemarket.v1
- * @see proto type: ethermint.feemarket.v1.EventBlockGas
- */
+/** EventBlockGas defines an Ethereum block gas event */
 export interface EventBlockGasAmino {
-  /**
-   * height of the block
-   */
+  /** height of the block */
   height?: string;
-  /**
-   * amount of gas wanted by the block
-   */
+  /** amount of gas wanted by the block */
   amount?: string;
 }
 export interface EventBlockGasAminoMsg {

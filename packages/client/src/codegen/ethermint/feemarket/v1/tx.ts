@@ -17,16 +17,9 @@ export interface MsgUpdateParamsProtoMsg {
   typeUrl: "/ethermint.feemarket.v1.MsgUpdateParams";
   value: Uint8Array;
 }
-/**
- * MsgUpdateParams defines a Msg for updating the x/feemarket module parameters.
- * @name MsgUpdateParamsAmino
- * @package ethermint.feemarket.v1
- * @see proto type: ethermint.feemarket.v1.MsgUpdateParams
- */
+/** MsgUpdateParams defines a Msg for updating the x/feemarket module parameters. */
 export interface MsgUpdateParamsAmino {
-  /**
-   * authority is the address of the governance account.
-   */
+  /** authority is the address of the governance account. */
   authority?: string;
   /**
    * params defines the x/feemarket parameters to update.
@@ -55,9 +48,6 @@ export interface MsgUpdateParamsResponseProtoMsg {
 /**
  * MsgUpdateParamsResponse defines the response structure for executing a
  * MsgUpdateParams message.
- * @name MsgUpdateParamsResponseAmino
- * @package ethermint.feemarket.v1
- * @see proto type: ethermint.feemarket.v1.MsgUpdateParamsResponse
  */
 export interface MsgUpdateParamsResponseAmino {}
 export interface MsgUpdateParamsResponseAminoMsg {

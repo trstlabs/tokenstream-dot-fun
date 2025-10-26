@@ -5,7 +5,7 @@ import { Any, AnyAmino, AnySDKType } from "../../../google/protobuf/any";
 import { Duration, DurationAmino, DurationSDKType } from "../../../google/protobuf/duration";
 import { Coin, CoinAmino, CoinSDKType } from "../../base/v1beta1/coin";
 import { ValidatorUpdate, ValidatorUpdateAmino, ValidatorUpdateSDKType } from "../../../tendermint/abci/types";
-import { Long, isSet, toTimestamp, fromTimestamp, fromJsonTimestamp } from "../../../helpers";
+import { Long, isSet, padDecimal, toTimestamp, fromTimestamp, fromJsonTimestamp } from "../../../helpers";
 import _m0 from "protobufjs/minimal.js";
 import { JsonSafe } from "../../../json-safe";
 import { Decimal } from "@cosmjs/math";
@@ -120,9 +120,6 @@ export interface HistoricalInfoProtoMsg {
  * It is stored as part of staking module's state, which persists the `n` most
  * recent HistoricalInfo
  * (`n` is set by the staking module's `historical_entries` parameter).
- * @name HistoricalInfoAmino
- * @package cosmos.staking.v1beta1
- * @see proto type: cosmos.staking.v1beta1.HistoricalInfo
  */
 export interface HistoricalInfoAmino {
   header: HeaderAmino;
@@ -161,22 +158,13 @@ export interface CommissionRatesProtoMsg {
 /**
  * CommissionRates defines the initial commission rates to be used for creating
  * a validator.
- * @name CommissionRatesAmino
- * @package cosmos.staking.v1beta1
- * @see proto type: cosmos.staking.v1beta1.CommissionRates
  */
 export interface CommissionRatesAmino {
-  /**
-   * rate is the commission rate charged to delegators, as a fraction.
-   */
+  /** rate is the commission rate charged to delegators, as a fraction. */
   rate?: string;
-  /**
-   * max_rate defines the maximum commission rate which validator can ever charge, as a fraction.
-   */
+  /** max_rate defines the maximum commission rate which validator can ever charge, as a fraction. */
   max_rate?: string;
-  /**
-   * max_change_rate defines the maximum daily increase of the validator commission, as a fraction.
-   */
+  /** max_change_rate defines the maximum daily increase of the validator commission, as a fraction. */
   max_change_rate?: string;
 }
 export interface CommissionRatesAminoMsg {
@@ -203,20 +191,11 @@ export interface CommissionProtoMsg {
   typeUrl: "/cosmos.staking.v1beta1.Commission";
   value: Uint8Array;
 }
-/**
- * Commission defines commission parameters for a given validator.
- * @name CommissionAmino
- * @package cosmos.staking.v1beta1
- * @see proto type: cosmos.staking.v1beta1.Commission
- */
+/** Commission defines commission parameters for a given validator. */
 export interface CommissionAmino {
-  /**
-   * commission_rates defines the initial commission rates to be used for creating a validator.
-   */
+  /** commission_rates defines the initial commission rates to be used for creating a validator. */
   commission_rates: CommissionRatesAmino;
-  /**
-   * update_time is the last time the commission rate was changed.
-   */
+  /** update_time is the last time the commission rate was changed. */
   update_time: string;
 }
 export interface CommissionAminoMsg {
@@ -245,32 +224,17 @@ export interface DescriptionProtoMsg {
   typeUrl: "/cosmos.staking.v1beta1.Description";
   value: Uint8Array;
 }
-/**
- * Description defines a validator description.
- * @name DescriptionAmino
- * @package cosmos.staking.v1beta1
- * @see proto type: cosmos.staking.v1beta1.Description
- */
+/** Description defines a validator description. */
 export interface DescriptionAmino {
-  /**
-   * moniker defines a human-readable name for the validator.
-   */
+  /** moniker defines a human-readable name for the validator. */
   moniker?: string;
-  /**
-   * identity defines an optional identity signature (ex. UPort or Keybase).
-   */
+  /** identity defines an optional identity signature (ex. UPort or Keybase). */
   identity?: string;
-  /**
-   * website defines an optional website link.
-   */
+  /** website defines an optional website link. */
   website?: string;
-  /**
-   * security_contact defines an optional email for security contact.
-   */
+  /** security_contact defines an optional email for security contact. */
   security_contact?: string;
-  /**
-   * details define other optional details.
-   */
+  /** details define other optional details. */
   details?: string;
 }
 export interface DescriptionAminoMsg {
@@ -340,50 +304,27 @@ export interface ValidatorProtoMsg {
  * bond shares is based on the amount of coins delegated divided by the current
  * exchange rate. Voting power can be calculated as total bonded shares
  * multiplied by exchange rate.
- * @name ValidatorAmino
- * @package cosmos.staking.v1beta1
- * @see proto type: cosmos.staking.v1beta1.Validator
  */
 export interface ValidatorAmino {
-  /**
-   * operator_address defines the address of the validator's operator; bech encoded in JSON.
-   */
+  /** operator_address defines the address of the validator's operator; bech encoded in JSON. */
   operator_address?: string;
-  /**
-   * consensus_pubkey is the consensus public key of the validator, as a Protobuf Any.
-   */
+  /** consensus_pubkey is the consensus public key of the validator, as a Protobuf Any. */
   consensus_pubkey?: AnyAmino;
-  /**
-   * jailed defined whether the validator has been jailed from bonded status or not.
-   */
+  /** jailed defined whether the validator has been jailed from bonded status or not. */
   jailed?: boolean;
-  /**
-   * status is the validator status (bonded/unbonding/unbonded).
-   */
+  /** status is the validator status (bonded/unbonding/unbonded). */
   status?: BondStatus;
-  /**
-   * tokens define the delegated tokens (incl. self-delegation).
-   */
+  /** tokens define the delegated tokens (incl. self-delegation). */
   tokens?: string;
-  /**
-   * delegator_shares defines total shares issued to a validator's delegators.
-   */
+  /** delegator_shares defines total shares issued to a validator's delegators. */
   delegator_shares?: string;
-  /**
-   * description defines the description terms for the validator.
-   */
+  /** description defines the description terms for the validator. */
   description: DescriptionAmino;
-  /**
-   * unbonding_height defines, if unbonding, the height at which this validator has begun unbonding.
-   */
+  /** unbonding_height defines, if unbonding, the height at which this validator has begun unbonding. */
   unbonding_height?: string;
-  /**
-   * unbonding_time defines, if unbonding, the min time for the validator to complete unbonding.
-   */
+  /** unbonding_time defines, if unbonding, the min time for the validator to complete unbonding. */
   unbonding_time: string;
-  /**
-   * commission defines the commission parameters.
-   */
+  /** commission defines the commission parameters. */
   commission: CommissionAmino;
   /**
    * min_self_delegation is the validator's self declared minimum self delegation.
@@ -391,13 +332,9 @@ export interface ValidatorAmino {
    * Since: cosmos-sdk 0.46
    */
   min_self_delegation?: string;
-  /**
-   * strictly positive if this validator's unbonding has been stopped by external modules
-   */
+  /** strictly positive if this validator's unbonding has been stopped by external modules */
   unbonding_on_hold_ref_count?: string;
-  /**
-   * list of unbonding ids, each uniquely identifing an unbonding of this validator
-   */
+  /** list of unbonding ids, each uniquely identifing an unbonding of this validator */
   unbonding_ids?: string[];
 }
 export interface ValidatorAminoMsg {
@@ -437,12 +374,7 @@ export interface ValAddressesProtoMsg {
   typeUrl: "/cosmos.staking.v1beta1.ValAddresses";
   value: Uint8Array;
 }
-/**
- * ValAddresses defines a repeated set of validator addresses.
- * @name ValAddressesAmino
- * @package cosmos.staking.v1beta1
- * @see proto type: cosmos.staking.v1beta1.ValAddresses
- */
+/** ValAddresses defines a repeated set of validator addresses. */
 export interface ValAddressesAmino {
   addresses?: string[];
 }
@@ -471,9 +403,6 @@ export interface DVPairProtoMsg {
  * DVPair is struct that just has a delegator-validator pair with no other data.
  * It is intended to be used as a marshalable pointer. For example, a DVPair can
  * be used to construct the key to getting an UnbondingDelegation from state.
- * @name DVPairAmino
- * @package cosmos.staking.v1beta1
- * @see proto type: cosmos.staking.v1beta1.DVPair
  */
 export interface DVPairAmino {
   delegator_address?: string;
@@ -500,12 +429,7 @@ export interface DVPairsProtoMsg {
   typeUrl: "/cosmos.staking.v1beta1.DVPairs";
   value: Uint8Array;
 }
-/**
- * DVPairs defines an array of DVPair objects.
- * @name DVPairsAmino
- * @package cosmos.staking.v1beta1
- * @see proto type: cosmos.staking.v1beta1.DVPairs
- */
+/** DVPairs defines an array of DVPair objects. */
 export interface DVPairsAmino {
   pairs: DVPairAmino[];
 }
@@ -537,9 +461,6 @@ export interface DVVTripletProtoMsg {
  * with no other data. It is intended to be used as a marshalable pointer. For
  * example, a DVVTriplet can be used to construct the key to getting a
  * Redelegation from state.
- * @name DVVTripletAmino
- * @package cosmos.staking.v1beta1
- * @see proto type: cosmos.staking.v1beta1.DVVTriplet
  */
 export interface DVVTripletAmino {
   delegator_address?: string;
@@ -569,12 +490,7 @@ export interface DVVTripletsProtoMsg {
   typeUrl: "/cosmos.staking.v1beta1.DVVTriplets";
   value: Uint8Array;
 }
-/**
- * DVVTriplets defines an array of DVVTriplet objects.
- * @name DVVTripletsAmino
- * @package cosmos.staking.v1beta1
- * @see proto type: cosmos.staking.v1beta1.DVVTriplets
- */
+/** DVVTriplets defines an array of DVVTriplet objects. */
 export interface DVVTripletsAmino {
   triplets: DVVTripletAmino[];
 }
@@ -607,22 +523,13 @@ export interface DelegationProtoMsg {
  * Delegation represents the bond with tokens held by an account. It is
  * owned by one delegator, and is associated with the voting power of one
  * validator.
- * @name DelegationAmino
- * @package cosmos.staking.v1beta1
- * @see proto type: cosmos.staking.v1beta1.Delegation
  */
 export interface DelegationAmino {
-  /**
-   * delegator_address is the bech32-encoded address of the delegator.
-   */
+  /** delegator_address is the bech32-encoded address of the delegator. */
   delegator_address?: string;
-  /**
-   * validator_address is the bech32-encoded address of the validator.
-   */
+  /** validator_address is the bech32-encoded address of the validator. */
   validator_address?: string;
-  /**
-   * shares define the delegation shares received.
-   */
+  /** shares define the delegation shares received. */
   shares?: string;
 }
 export interface DelegationAminoMsg {
@@ -658,22 +565,13 @@ export interface UnbondingDelegationProtoMsg {
 /**
  * UnbondingDelegation stores all of a single delegator's unbonding bonds
  * for a single validator in an time-ordered list.
- * @name UnbondingDelegationAmino
- * @package cosmos.staking.v1beta1
- * @see proto type: cosmos.staking.v1beta1.UnbondingDelegation
  */
 export interface UnbondingDelegationAmino {
-  /**
-   * delegator_address is the bech32-encoded address of the delegator.
-   */
+  /** delegator_address is the bech32-encoded address of the delegator. */
   delegator_address?: string;
-  /**
-   * validator_address is the bech32-encoded address of the validator.
-   */
+  /** validator_address is the bech32-encoded address of the validator. */
   validator_address?: string;
-  /**
-   * entries are the unbonding delegation entries.
-   */
+  /** entries are the unbonding delegation entries. */
   entries: UnbondingDelegationEntryAmino[];
 }
 export interface UnbondingDelegationAminoMsg {
@@ -708,36 +606,19 @@ export interface UnbondingDelegationEntryProtoMsg {
   typeUrl: "/cosmos.staking.v1beta1.UnbondingDelegationEntry";
   value: Uint8Array;
 }
-/**
- * UnbondingDelegationEntry defines an unbonding object with relevant metadata.
- * @name UnbondingDelegationEntryAmino
- * @package cosmos.staking.v1beta1
- * @see proto type: cosmos.staking.v1beta1.UnbondingDelegationEntry
- */
+/** UnbondingDelegationEntry defines an unbonding object with relevant metadata. */
 export interface UnbondingDelegationEntryAmino {
-  /**
-   * creation_height is the height which the unbonding took place.
-   */
+  /** creation_height is the height which the unbonding took place. */
   creation_height?: string;
-  /**
-   * completion_time is the unix time for unbonding completion.
-   */
+  /** completion_time is the unix time for unbonding completion. */
   completion_time: string;
-  /**
-   * initial_balance defines the tokens initially scheduled to receive at completion.
-   */
+  /** initial_balance defines the tokens initially scheduled to receive at completion. */
   initial_balance?: string;
-  /**
-   * balance defines the tokens to receive at completion.
-   */
+  /** balance defines the tokens to receive at completion. */
   balance?: string;
-  /**
-   * Incrementing id that uniquely identifies this entry
-   */
+  /** Incrementing id that uniquely identifies this entry */
   unbonding_id?: string;
-  /**
-   * Strictly positive if this entry's unbonding has been stopped by external modules
-   */
+  /** Strictly positive if this entry's unbonding has been stopped by external modules */
   unbonding_on_hold_ref_count?: string;
 }
 export interface UnbondingDelegationEntryAminoMsg {
@@ -772,36 +653,19 @@ export interface RedelegationEntryProtoMsg {
   typeUrl: "/cosmos.staking.v1beta1.RedelegationEntry";
   value: Uint8Array;
 }
-/**
- * RedelegationEntry defines a redelegation object with relevant metadata.
- * @name RedelegationEntryAmino
- * @package cosmos.staking.v1beta1
- * @see proto type: cosmos.staking.v1beta1.RedelegationEntry
- */
+/** RedelegationEntry defines a redelegation object with relevant metadata. */
 export interface RedelegationEntryAmino {
-  /**
-   * creation_height  defines the height which the redelegation took place.
-   */
+  /** creation_height  defines the height which the redelegation took place. */
   creation_height?: string;
-  /**
-   * completion_time defines the unix time for redelegation completion.
-   */
+  /** completion_time defines the unix time for redelegation completion. */
   completion_time: string;
-  /**
-   * initial_balance defines the initial balance when redelegation started.
-   */
+  /** initial_balance defines the initial balance when redelegation started. */
   initial_balance?: string;
-  /**
-   * shares_dst is the amount of destination-validator shares created by redelegation.
-   */
+  /** shares_dst is the amount of destination-validator shares created by redelegation. */
   shares_dst?: string;
-  /**
-   * Incrementing id that uniquely identifies this entry
-   */
+  /** Incrementing id that uniquely identifies this entry */
   unbonding_id?: string;
-  /**
-   * Strictly positive if this entry's unbonding has been stopped by external modules
-   */
+  /** Strictly positive if this entry's unbonding has been stopped by external modules */
   unbonding_on_hold_ref_count?: string;
 }
 export interface RedelegationEntryAminoMsg {
@@ -838,26 +702,15 @@ export interface RedelegationProtoMsg {
 /**
  * Redelegation contains the list of a particular delegator's redelegating bonds
  * from a particular source validator to a particular destination validator.
- * @name RedelegationAmino
- * @package cosmos.staking.v1beta1
- * @see proto type: cosmos.staking.v1beta1.Redelegation
  */
 export interface RedelegationAmino {
-  /**
-   * delegator_address is the bech32-encoded address of the delegator.
-   */
+  /** delegator_address is the bech32-encoded address of the delegator. */
   delegator_address?: string;
-  /**
-   * validator_src_address is the validator redelegation source operator address.
-   */
+  /** validator_src_address is the validator redelegation source operator address. */
   validator_src_address?: string;
-  /**
-   * validator_dst_address is the validator redelegation destination operator address.
-   */
+  /** validator_dst_address is the validator redelegation destination operator address. */
   validator_dst_address?: string;
-  /**
-   * entries are the redelegation entries.
-   */
+  /** entries are the redelegation entries. */
   entries: RedelegationEntryAmino[];
 }
 export interface RedelegationAminoMsg {
@@ -893,36 +746,19 @@ export interface ParamsProtoMsg {
   typeUrl: "/cosmos.staking.v1beta1.Params";
   value: Uint8Array;
 }
-/**
- * Params defines the parameters for the x/staking module.
- * @name ParamsAmino
- * @package cosmos.staking.v1beta1
- * @see proto type: cosmos.staking.v1beta1.Params
- */
+/** Params defines the parameters for the x/staking module. */
 export interface ParamsAmino {
-  /**
-   * unbonding_time is the time duration of unbonding.
-   */
+  /** unbonding_time is the time duration of unbonding. */
   unbonding_time: DurationAmino;
-  /**
-   * max_validators is the maximum number of validators.
-   */
+  /** max_validators is the maximum number of validators. */
   max_validators?: number;
-  /**
-   * max_entries is the max entries for either unbonding delegation or redelegation (per pair/trio).
-   */
+  /** max_entries is the max entries for either unbonding delegation or redelegation (per pair/trio). */
   max_entries?: number;
-  /**
-   * historical_entries is the number of historical entries to persist.
-   */
+  /** historical_entries is the number of historical entries to persist. */
   historical_entries?: number;
-  /**
-   * bond_denom defines the bondable coin denomination.
-   */
+  /** bond_denom defines the bondable coin denomination. */
   bond_denom?: string;
-  /**
-   * min_commission_rate is the chain-wide minimum commission rate that a validator can charge their delegators
-   */
+  /** min_commission_rate is the chain-wide minimum commission rate that a validator can charge their delegators */
   min_commission_rate?: string;
 }
 export interface ParamsAminoMsg {
@@ -953,9 +789,6 @@ export interface DelegationResponseProtoMsg {
 /**
  * DelegationResponse is equivalent to Delegation except that it contains a
  * balance in addition to shares which is more suitable for client responses.
- * @name DelegationResponseAmino
- * @package cosmos.staking.v1beta1
- * @see proto type: cosmos.staking.v1beta1.DelegationResponse
  */
 export interface DelegationResponseAmino {
   delegation: DelegationAmino;
@@ -990,9 +823,6 @@ export interface RedelegationEntryResponseProtoMsg {
  * RedelegationEntryResponse is equivalent to a RedelegationEntry except that it
  * contains a balance in addition to shares which is more suitable for client
  * responses.
- * @name RedelegationEntryResponseAmino
- * @package cosmos.staking.v1beta1
- * @see proto type: cosmos.staking.v1beta1.RedelegationEntryResponse
  */
 export interface RedelegationEntryResponseAmino {
   redelegation_entry: RedelegationEntryAmino;
@@ -1028,9 +858,6 @@ export interface RedelegationResponseProtoMsg {
  * RedelegationResponse is equivalent to a Redelegation except that its entries
  * contain a balance in addition to shares which is more suitable for client
  * responses.
- * @name RedelegationResponseAmino
- * @package cosmos.staking.v1beta1
- * @see proto type: cosmos.staking.v1beta1.RedelegationResponse
  */
 export interface RedelegationResponseAmino {
   redelegation: RedelegationAmino;
@@ -1064,9 +891,6 @@ export interface PoolProtoMsg {
 /**
  * Pool is used for tracking bonded and not-bonded token supply of the bond
  * denomination.
- * @name PoolAmino
- * @package cosmos.staking.v1beta1
- * @see proto type: cosmos.staking.v1beta1.Pool
  */
 export interface PoolAmino {
   not_bonded_tokens: string;
@@ -1098,9 +922,6 @@ export interface ValidatorUpdatesProtoMsg {
 /**
  * ValidatorUpdates defines an array of abci.ValidatorUpdate objects.
  * TODO: explore moving this to proto/cosmos/base to separate modules from tendermint dependence
- * @name ValidatorUpdatesAmino
- * @package cosmos.staking.v1beta1
- * @see proto type: cosmos.staking.v1beta1.ValidatorUpdates
  */
 export interface ValidatorUpdatesAmino {
   updates: ValidatorUpdateAmino[];
@@ -1295,9 +1116,9 @@ export const CommissionRates = {
   },
   toAmino(message: CommissionRates): CommissionRatesAmino {
     const obj: any = {};
-    obj.rate = message.rate === "" ? undefined : Decimal.fromUserInput(message.rate, 18).atomics;
-    obj.max_rate = message.maxRate === "" ? undefined : Decimal.fromUserInput(message.maxRate, 18).atomics;
-    obj.max_change_rate = message.maxChangeRate === "" ? undefined : Decimal.fromUserInput(message.maxChangeRate, 18).atomics;
+    obj.rate = padDecimal(message.rate) === "" ? undefined : padDecimal(message.rate);
+    obj.max_rate = padDecimal(message.maxRate) === "" ? undefined : padDecimal(message.maxRate);
+    obj.max_change_rate = padDecimal(message.maxChangeRate) === "" ? undefined : padDecimal(message.maxChangeRate);
     return obj;
   },
   fromAminoMsg(object: CommissionRatesAminoMsg): CommissionRates {
@@ -1630,7 +1451,7 @@ export const Validator = {
           message.jailed = reader.bool();
           break;
         case 4:
-          message.status = reader.int32() as any;
+          message.status = (reader.int32() as any);
           break;
         case 5:
           message.tokens = reader.string();
@@ -1642,7 +1463,7 @@ export const Validator = {
           message.description = Description.decode(reader, reader.uint32());
           break;
         case 8:
-          message.unbondingHeight = reader.int64() as Long;
+          message.unbondingHeight = (reader.int64() as Long);
           break;
         case 9:
           message.unbondingTime = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
@@ -1654,16 +1475,16 @@ export const Validator = {
           message.minSelfDelegation = reader.string();
           break;
         case 12:
-          message.unbondingOnHoldRefCount = reader.int64() as Long;
+          message.unbondingOnHoldRefCount = (reader.int64() as Long);
           break;
         case 13:
           if ((tag & 7) === 2) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
-              message.unbondingIds.push(reader.uint64() as Long);
+              message.unbondingIds.push((reader.uint64() as Long));
             }
           } else {
-            message.unbondingIds.push(reader.uint64() as Long);
+            message.unbondingIds.push((reader.uint64() as Long));
           }
           break;
         default:
@@ -1776,13 +1597,13 @@ export const Validator = {
     obj.jailed = message.jailed === false ? undefined : message.jailed;
     obj.status = message.status === 0 ? undefined : message.status;
     obj.tokens = message.tokens === "" ? undefined : message.tokens;
-    obj.delegator_shares = message.delegatorShares === "" ? undefined : Decimal.fromUserInput(message.delegatorShares, 18).atomics;
+    obj.delegator_shares = padDecimal(message.delegatorShares) === "" ? undefined : padDecimal(message.delegatorShares);
     obj.description = message.description ? Description.toAmino(message.description) : Description.toAmino(Description.fromPartial({}));
-    obj.unbonding_height = !message.unbondingHeight.isZero() ? message.unbondingHeight?.toString() : undefined;
+    obj.unbonding_height = !message.unbondingHeight.isZero() ? message.unbondingHeight.toString() : undefined;
     obj.unbonding_time = message.unbondingTime ? Timestamp.toAmino(toTimestamp(message.unbondingTime)) : new Date();
     obj.commission = message.commission ? Commission.toAmino(message.commission) : Commission.toAmino(Commission.fromPartial({}));
     obj.min_self_delegation = message.minSelfDelegation === "" ? undefined : message.minSelfDelegation;
-    obj.unbonding_on_hold_ref_count = !message.unbondingOnHoldRefCount.isZero() ? message.unbondingOnHoldRefCount?.toString() : undefined;
+    obj.unbonding_on_hold_ref_count = !message.unbondingOnHoldRefCount.isZero() ? message.unbondingOnHoldRefCount.toString() : undefined;
     if (message.unbondingIds) {
       obj.unbonding_ids = message.unbondingIds.map(e => e);
     } else {
@@ -2349,7 +2170,7 @@ export const Delegation = {
     const obj: any = {};
     obj.delegator_address = message.delegatorAddress === "" ? undefined : message.delegatorAddress;
     obj.validator_address = message.validatorAddress === "" ? undefined : message.validatorAddress;
-    obj.shares = message.shares === "" ? undefined : Decimal.fromUserInput(message.shares, 18).atomics;
+    obj.shares = padDecimal(message.shares) === "" ? undefined : padDecimal(message.shares);
     return obj;
   },
   fromAminoMsg(object: DelegationAminoMsg): Delegation {
@@ -2528,7 +2349,7 @@ export const UnbondingDelegationEntry = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.creationHeight = reader.int64() as Long;
+          message.creationHeight = (reader.int64() as Long);
           break;
         case 2:
           message.completionTime = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
@@ -2540,10 +2361,10 @@ export const UnbondingDelegationEntry = {
           message.balance = reader.string();
           break;
         case 5:
-          message.unbondingId = reader.uint64() as Long;
+          message.unbondingId = (reader.uint64() as Long);
           break;
         case 6:
-          message.unbondingOnHoldRefCount = reader.int64() as Long;
+          message.unbondingOnHoldRefCount = (reader.int64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -2606,12 +2427,12 @@ export const UnbondingDelegationEntry = {
   },
   toAmino(message: UnbondingDelegationEntry): UnbondingDelegationEntryAmino {
     const obj: any = {};
-    obj.creation_height = !message.creationHeight.isZero() ? message.creationHeight?.toString() : undefined;
+    obj.creation_height = !message.creationHeight.isZero() ? message.creationHeight.toString() : undefined;
     obj.completion_time = message.completionTime ? Timestamp.toAmino(toTimestamp(message.completionTime)) : new Date();
     obj.initial_balance = message.initialBalance === "" ? undefined : message.initialBalance;
     obj.balance = message.balance === "" ? undefined : message.balance;
-    obj.unbonding_id = !message.unbondingId.isZero() ? message.unbondingId?.toString() : undefined;
-    obj.unbonding_on_hold_ref_count = !message.unbondingOnHoldRefCount.isZero() ? message.unbondingOnHoldRefCount?.toString() : undefined;
+    obj.unbonding_id = !message.unbondingId.isZero() ? message.unbondingId.toString() : undefined;
+    obj.unbonding_on_hold_ref_count = !message.unbondingOnHoldRefCount.isZero() ? message.unbondingOnHoldRefCount.toString() : undefined;
     return obj;
   },
   fromAminoMsg(object: UnbondingDelegationEntryAminoMsg): UnbondingDelegationEntry {
@@ -2677,7 +2498,7 @@ export const RedelegationEntry = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.creationHeight = reader.int64() as Long;
+          message.creationHeight = (reader.int64() as Long);
           break;
         case 2:
           message.completionTime = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
@@ -2689,10 +2510,10 @@ export const RedelegationEntry = {
           message.sharesDst = Decimal.fromAtomics(reader.string(), 18).toString();
           break;
         case 5:
-          message.unbondingId = reader.uint64() as Long;
+          message.unbondingId = (reader.uint64() as Long);
           break;
         case 6:
-          message.unbondingOnHoldRefCount = reader.int64() as Long;
+          message.unbondingOnHoldRefCount = (reader.int64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -2755,12 +2576,12 @@ export const RedelegationEntry = {
   },
   toAmino(message: RedelegationEntry): RedelegationEntryAmino {
     const obj: any = {};
-    obj.creation_height = !message.creationHeight.isZero() ? message.creationHeight?.toString() : undefined;
+    obj.creation_height = !message.creationHeight.isZero() ? message.creationHeight.toString() : undefined;
     obj.completion_time = message.completionTime ? Timestamp.toAmino(toTimestamp(message.completionTime)) : new Date();
     obj.initial_balance = message.initialBalance === "" ? undefined : message.initialBalance;
-    obj.shares_dst = message.sharesDst === "" ? undefined : Decimal.fromUserInput(message.sharesDst, 18).atomics;
-    obj.unbonding_id = !message.unbondingId.isZero() ? message.unbondingId?.toString() : undefined;
-    obj.unbonding_on_hold_ref_count = !message.unbondingOnHoldRefCount.isZero() ? message.unbondingOnHoldRefCount?.toString() : undefined;
+    obj.shares_dst = padDecimal(message.sharesDst) === "" ? undefined : padDecimal(message.sharesDst);
+    obj.unbonding_id = !message.unbondingId.isZero() ? message.unbondingId.toString() : undefined;
+    obj.unbonding_on_hold_ref_count = !message.unbondingOnHoldRefCount.isZero() ? message.unbondingOnHoldRefCount.toString() : undefined;
     return obj;
   },
   fromAminoMsg(object: RedelegationEntryAminoMsg): RedelegationEntry {
@@ -3036,7 +2857,7 @@ export const Params = {
     obj.max_entries = message.maxEntries === 0 ? undefined : message.maxEntries;
     obj.historical_entries = message.historicalEntries === 0 ? undefined : message.historicalEntries;
     obj.bond_denom = message.bondDenom === "" ? undefined : message.bondDenom;
-    obj.min_commission_rate = message.minCommissionRate === "" ? undefined : Decimal.fromUserInput(message.minCommissionRate, 18).atomics;
+    obj.min_commission_rate = padDecimal(message.minCommissionRate) === "" ? undefined : padDecimal(message.minCommissionRate);
     return obj;
   },
   fromAminoMsg(object: ParamsAminoMsg): Params {

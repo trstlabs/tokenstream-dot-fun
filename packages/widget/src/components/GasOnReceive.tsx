@@ -27,14 +27,17 @@ export type GasOnReceiveProps = {
   hideContainer?: boolean;
 };
 
-export const GasOnReceive = ({ routeDetails, hideContainer }: GasOnReceiveProps = {}) => {
+export const GasOnReceive = ({
+  routeDetails,
+  hideContainer,
+}: GasOnReceiveProps = {}) => {
   const theme = useTheme();
   const [gasOnReceive, setGasOnReceive] = useAtom(gasOnReceiveAtom);
   const { isLoading: fetchingGasRoute } = useAtomValue(gasOnReceiveRouteAtom);
   const { gasRoute } = useAtomValue(swapExecutionStateAtom);
   const { data: assets } = useAtomValue(skipAssetsAtom);
   const isSomeDestinationFeeBalanceAvailable = useAtomValue(
-    isSomeDestinationFeeBalanceAvailableAtom,
+    isSomeDestinationFeeBalanceAvailableAtom
   );
 
   const currentTransaction = useAtomValue(currentTransactionAtom);
@@ -42,14 +45,15 @@ export const GasOnReceive = ({ routeDetails, hideContainer }: GasOnReceiveProps 
   const isFetchingBalance = isSomeDestinationFeeBalanceAvailable.isLoading;
   const gasOnReceiveAsset = useMemo(() => {
     const gasAsset = {
-      chainId: routeDetails?.route?.destAssetChainId ?? gasRoute?.destAssetChainId,
+      chainId:
+        routeDetails?.route?.destAssetChainId ?? gasRoute?.destAssetChainId,
       denom: routeDetails?.route?.destAssetDenom ?? gasRoute?.destAssetDenom,
     };
 
     if (!gasAsset) return;
 
     const asset = assets?.find(
-      (a) => a.chainId === gasAsset?.chainId && a.denom === gasAsset?.denom,
+      (a) => a.chainId === gasAsset?.chainId && a.denom === gasAsset?.denom
     );
     return asset;
   }, [
@@ -73,7 +77,9 @@ export const GasOnReceive = ({ routeDetails, hideContainer }: GasOnReceiveProps 
     const transferAssetRelease = routeDetails?.transferAssetRelease;
 
     const transferAssetReleaseDetails = assets?.find(
-      (a) => a.chainId === transferAssetRelease?.chainId && a.denom === transferAssetRelease?.denom,
+      (a) =>
+        a.chainId === transferAssetRelease?.chainId &&
+        a.denom === transferAssetRelease?.denom
     );
 
     switch (routeDetails?.status) {
@@ -102,7 +108,14 @@ export const GasOnReceive = ({ routeDetails, hideContainer }: GasOnReceiveProps 
           </Row>
         );
     }
-  }, [amountOut, amountUsd, assetSymbol, assets, gasOnReceiveAsset?.decimals, routeDetails]);
+  }, [
+    amountOut,
+    amountUsd,
+    assetSymbol,
+    assets,
+    gasOnReceiveAsset?.decimals,
+    routeDetails,
+  ]);
 
   const renderIcon = useMemo(() => {
     if (routeDetails?.status === "pending") {
@@ -128,18 +141,28 @@ export const GasOnReceive = ({ routeDetails, hideContainer }: GasOnReceiveProps 
     return (
       <GasIcon
         color={
-          routeDetails?.status === "failed" ? theme.warning.text : theme.primary.text.lowContrast
+          routeDetails?.status === "failed"
+            ? theme.warning.text
+            : theme.primary.text.lowContrast
         }
       />
     );
-  }, [routeDetails?.status, theme.primary.text.lowContrast, theme.warning.text]);
+  }, [
+    routeDetails?.status,
+    theme.primary.text.lowContrast,
+    theme.warning.text,
+  ]);
 
   if (!routeDetails && (!gasRoute || !gasOnReceiveAsset)) {
     return null;
   }
 
   return (
-    <GasOnReceiveContainer hideContainer={hideContainer} align="center" justify="space-between">
+    <GasOnReceiveContainer
+      hideContainer={hideContainer}
+      align="center"
+      justify="space-between"
+    >
       <Row gap={8} align="center">
         {renderIcon}
         {(isFetchingBalance || fetchingGasRoute) && !routeDetails ? (
@@ -182,5 +205,6 @@ const GasOnReceiveContainer = styled(Row)<{ hideContainer?: boolean }>`
       padding: 15px 20px;
       height: 40px;
     `}
-  border-radius: ${({ theme }) => convertToPxValue(theme.borderRadius?.selectionButton)};
+  border-radius: ${({ theme }) =>
+    convertToPxValue(theme.borderRadius?.selectionButton)};
 `;

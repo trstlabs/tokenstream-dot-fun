@@ -9,12 +9,7 @@ export interface QueryParamsRequestProtoMsg {
   typeUrl: "/ethermint.feemarket.v1.QueryParamsRequest";
   value: Uint8Array;
 }
-/**
- * QueryParamsRequest defines the request type for querying x/evm parameters.
- * @name QueryParamsRequestAmino
- * @package ethermint.feemarket.v1
- * @see proto type: ethermint.feemarket.v1.QueryParamsRequest
- */
+/** QueryParamsRequest defines the request type for querying x/evm parameters. */
 export interface QueryParamsRequestAmino {}
 export interface QueryParamsRequestAminoMsg {
   type: "feemarket/QueryParamsRequest";
@@ -31,16 +26,9 @@ export interface QueryParamsResponseProtoMsg {
   typeUrl: "/ethermint.feemarket.v1.QueryParamsResponse";
   value: Uint8Array;
 }
-/**
- * QueryParamsResponse defines the response type for querying x/evm parameters.
- * @name QueryParamsResponseAmino
- * @package ethermint.feemarket.v1
- * @see proto type: ethermint.feemarket.v1.QueryParamsResponse
- */
+/** QueryParamsResponse defines the response type for querying x/evm parameters. */
 export interface QueryParamsResponseAmino {
-  /**
-   * params define the evm module parameters.
-   */
+  /** params define the evm module parameters. */
   params?: ParamsAmino;
 }
 export interface QueryParamsResponseAminoMsg {
@@ -63,9 +51,6 @@ export interface QueryBaseFeeRequestProtoMsg {
 /**
  * QueryBaseFeeRequest defines the request type for querying the EIP1559 base
  * fee.
- * @name QueryBaseFeeRequestAmino
- * @package ethermint.feemarket.v1
- * @see proto type: ethermint.feemarket.v1.QueryBaseFeeRequest
  */
 export interface QueryBaseFeeRequestAmino {}
 export interface QueryBaseFeeRequestAminoMsg {
@@ -86,16 +71,9 @@ export interface QueryBaseFeeResponseProtoMsg {
   typeUrl: "/ethermint.feemarket.v1.QueryBaseFeeResponse";
   value: Uint8Array;
 }
-/**
- * QueryBaseFeeResponse returns the EIP1559 base fee.
- * @name QueryBaseFeeResponseAmino
- * @package ethermint.feemarket.v1
- * @see proto type: ethermint.feemarket.v1.QueryBaseFeeResponse
- */
+/** QueryBaseFeeResponse returns the EIP1559 base fee. */
 export interface QueryBaseFeeResponseAmino {
-  /**
-   * base_fee is the EIP1559 base fee
-   */
+  /** base_fee is the EIP1559 base fee */
   base_fee?: string;
 }
 export interface QueryBaseFeeResponseAminoMsg {
@@ -118,9 +96,6 @@ export interface QueryBlockGasRequestProtoMsg {
 /**
  * QueryBlockGasRequest defines the request type for querying the EIP1559 base
  * fee.
- * @name QueryBlockGasRequestAmino
- * @package ethermint.feemarket.v1
- * @see proto type: ethermint.feemarket.v1.QueryBlockGasRequest
  */
 export interface QueryBlockGasRequestAmino {}
 export interface QueryBlockGasRequestAminoMsg {
@@ -141,16 +116,9 @@ export interface QueryBlockGasResponseProtoMsg {
   typeUrl: "/ethermint.feemarket.v1.QueryBlockGasResponse";
   value: Uint8Array;
 }
-/**
- * QueryBlockGasResponse returns block gas used for a given height.
- * @name QueryBlockGasResponseAmino
- * @package ethermint.feemarket.v1
- * @see proto type: ethermint.feemarket.v1.QueryBlockGasResponse
- */
+/** QueryBlockGasResponse returns block gas used for a given height. */
 export interface QueryBlockGasResponseAmino {
-  /**
-   * gas is the returned block gas
-   */
+  /** gas is the returned block gas */
   gas?: string;
 }
 export interface QueryBlockGasResponseAminoMsg {
@@ -529,7 +497,7 @@ export const QueryBlockGasResponse = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.gas = reader.int64() as Long;
+          message.gas = (reader.int64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -562,7 +530,7 @@ export const QueryBlockGasResponse = {
   },
   toAmino(message: QueryBlockGasResponse): QueryBlockGasResponseAmino {
     const obj: any = {};
-    obj.gas = !message.gas.isZero() ? message.gas?.toString() : undefined;
+    obj.gas = !message.gas.isZero() ? message.gas.toString() : undefined;
     return obj;
   },
   fromAminoMsg(object: QueryBlockGasResponseAminoMsg): QueryBlockGasResponse {

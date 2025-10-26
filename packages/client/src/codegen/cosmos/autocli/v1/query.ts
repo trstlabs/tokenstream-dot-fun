@@ -9,12 +9,7 @@ export interface AppOptionsRequestProtoMsg {
   typeUrl: "/cosmos.autocli.v1.AppOptionsRequest";
   value: Uint8Array;
 }
-/**
- * AppOptionsRequest is the RemoteInfoService/AppOptions request type.
- * @name AppOptionsRequestAmino
- * @package cosmos.autocli.v1
- * @see proto type: cosmos.autocli.v1.AppOptionsRequest
- */
+/** AppOptionsRequest is the RemoteInfoService/AppOptions request type. */
 export interface AppOptionsRequestAmino {}
 export interface AppOptionsRequestAminoMsg {
   type: "cosmos-sdk/AppOptionsRequest";
@@ -30,11 +25,6 @@ export interface AppOptionsResponse_ModuleOptionsEntryProtoMsg {
   typeUrl: string;
   value: Uint8Array;
 }
-/**
- * @name AppOptionsResponse_ModuleOptionsEntryAmino
- * @package cosmos.autocli.v1
- * @see proto type: cosmos.autocli.v1.AppOptionsResponse_ModuleOptionsEntry
- */
 export interface AppOptionsResponse_ModuleOptionsEntryAmino {
   key?: string;
   value?: ModuleOptionsAmino;
@@ -58,16 +48,9 @@ export interface AppOptionsResponseProtoMsg {
   typeUrl: "/cosmos.autocli.v1.AppOptionsResponse";
   value: Uint8Array;
 }
-/**
- * AppOptionsResponse is the RemoteInfoService/AppOptions response type.
- * @name AppOptionsResponseAmino
- * @package cosmos.autocli.v1
- * @see proto type: cosmos.autocli.v1.AppOptionsResponse
- */
+/** AppOptionsResponse is the RemoteInfoService/AppOptions response type. */
 export interface AppOptionsResponseAmino {
-  /**
-   * module_options is a map of module name to autocli module options.
-   */
+  /** module_options is a map of module name to autocli module options. */
   module_options?: {
     [key: string]: ModuleOptionsAmino;
   };
@@ -235,7 +218,7 @@ export const AppOptionsResponse = {
   encode(message: AppOptionsResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     Object.entries(message.moduleOptions).forEach(([key, value]) => {
       AppOptionsResponse_ModuleOptionsEntry.encode({
-        key: key as any,
+        key: (key as any),
         value
       }, writer.uint32(10).fork()).ldelim();
     });

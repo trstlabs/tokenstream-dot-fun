@@ -15,12 +15,7 @@ export interface GenesisStateProtoMsg {
   typeUrl: "/cosmos.crisis.v1beta1.GenesisState";
   value: Uint8Array;
 }
-/**
- * GenesisState defines the crisis module's genesis state.
- * @name GenesisStateAmino
- * @package cosmos.crisis.v1beta1
- * @see proto type: cosmos.crisis.v1beta1.GenesisState
- */
+/** GenesisState defines the crisis module's genesis state. */
 export interface GenesisStateAmino {
   /**
    * constant_fee is the fee used to verify the invariant in the crisis

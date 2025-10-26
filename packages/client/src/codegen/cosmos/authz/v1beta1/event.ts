@@ -15,24 +15,13 @@ export interface EventGrantProtoMsg {
   typeUrl: "/cosmos.authz.v1beta1.EventGrant";
   value: Uint8Array;
 }
-/**
- * EventGrant is emitted on Msg/Grant
- * @name EventGrantAmino
- * @package cosmos.authz.v1beta1
- * @see proto type: cosmos.authz.v1beta1.EventGrant
- */
+/** EventGrant is emitted on Msg/Grant */
 export interface EventGrantAmino {
-  /**
-   * Msg type URL for which an autorization is granted
-   */
+  /** Msg type URL for which an autorization is granted */
   msg_type_url?: string;
-  /**
-   * Granter account address
-   */
+  /** Granter account address */
   granter?: string;
-  /**
-   * Grantee account address
-   */
+  /** Grantee account address */
   grantee?: string;
 }
 export interface EventGrantAminoMsg {
@@ -58,24 +47,13 @@ export interface EventRevokeProtoMsg {
   typeUrl: "/cosmos.authz.v1beta1.EventRevoke";
   value: Uint8Array;
 }
-/**
- * EventRevoke is emitted on Msg/Revoke
- * @name EventRevokeAmino
- * @package cosmos.authz.v1beta1
- * @see proto type: cosmos.authz.v1beta1.EventRevoke
- */
+/** EventRevoke is emitted on Msg/Revoke */
 export interface EventRevokeAmino {
-  /**
-   * Msg type URL for which an autorization is revoked
-   */
+  /** Msg type URL for which an autorization is revoked */
   msg_type_url?: string;
-  /**
-   * Granter account address
-   */
+  /** Granter account address */
   granter?: string;
-  /**
-   * Grantee account address
-   */
+  /** Grantee account address */
   grantee?: string;
 }
 export interface EventRevokeAminoMsg {

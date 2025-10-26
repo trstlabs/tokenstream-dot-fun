@@ -2,7 +2,6 @@
 import _m0 from "protobufjs/minimal.js";
 import { isSet } from "../../../helpers";
 import { JsonSafe } from "../../../json-safe";
-import { Decimal } from "@cosmjs/math";
 /**
  * Coin defines a token with a denomination and an amount.
  * 
@@ -22,9 +21,6 @@ export interface CoinProtoMsg {
  * 
  * NOTE: The amount field is an Int which implements the custom method
  * signatures required by gogoproto.
- * @name CoinAmino
- * @package cosmos.base.v1beta1
- * @see proto type: cosmos.base.v1beta1.Coin
  */
 export interface CoinAmino {
   denom?: string;
@@ -63,9 +59,6 @@ export interface DecCoinProtoMsg {
  * 
  * NOTE: The amount field is an Dec which implements the custom method
  * signatures required by gogoproto.
- * @name DecCoinAmino
- * @package cosmos.base.v1beta1
- * @see proto type: cosmos.base.v1beta1.DecCoin
  */
 export interface DecCoinAmino {
   denom?: string;
@@ -93,12 +86,7 @@ export interface IntProtoProtoMsg {
   typeUrl: "/cosmos.base.v1beta1.IntProto";
   value: Uint8Array;
 }
-/**
- * IntProto defines a Protobuf wrapper around an Int object.
- * @name IntProtoAmino
- * @package cosmos.base.v1beta1
- * @see proto type: cosmos.base.v1beta1.IntProto
- */
+/** IntProto defines a Protobuf wrapper around an Int object. */
 export interface IntProtoAmino {
   int?: string;
 }
@@ -118,12 +106,7 @@ export interface DecProtoProtoMsg {
   typeUrl: "/cosmos.base.v1beta1.DecProto";
   value: Uint8Array;
 }
-/**
- * DecProto defines a Protobuf wrapper around a Dec object.
- * @name DecProtoAmino
- * @package cosmos.base.v1beta1
- * @see proto type: cosmos.base.v1beta1.DecProto
- */
+/** DecProto defines a Protobuf wrapper around a Dec object. */
 export interface DecProtoAmino {
   dec?: string;
 }
@@ -241,7 +224,7 @@ export const DecCoin = {
       writer.uint32(10).string(message.denom);
     }
     if (message.amount !== "") {
-      writer.uint32(18).string(Decimal.fromUserInput(message.amount, 18).atomics);
+      writer.uint32(18).string(message.amount);
     }
     return writer;
   },
@@ -256,7 +239,7 @@ export const DecCoin = {
           message.denom = reader.string();
           break;
         case 2:
-          message.amount = Decimal.fromAtomics(reader.string(), 18).toString();
+          message.amount = reader.string();
           break;
         default:
           reader.skipType(tag & 7);
@@ -296,7 +279,7 @@ export const DecCoin = {
   toAmino(message: DecCoin): DecCoinAmino {
     const obj: any = {};
     obj.denom = message.denom === "" ? undefined : message.denom;
-    obj.amount = message.amount === "" ? undefined : Decimal.fromUserInput(message.amount, 18).atomics;
+    obj.amount = message.amount === "" ? undefined : message.amount;
     return obj;
   },
   fromAminoMsg(object: DecCoinAminoMsg): DecCoin {
@@ -409,7 +392,7 @@ export const DecProto = {
   typeUrl: "/cosmos.base.v1beta1.DecProto",
   encode(message: DecProto, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.dec !== "") {
-      writer.uint32(10).string(Decimal.fromUserInput(message.dec, 18).atomics);
+      writer.uint32(10).string(message.dec);
     }
     return writer;
   },
@@ -421,7 +404,7 @@ export const DecProto = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.dec = Decimal.fromAtomics(reader.string(), 18).toString();
+          message.dec = reader.string();
           break;
         default:
           reader.skipType(tag & 7);
@@ -454,7 +437,7 @@ export const DecProto = {
   },
   toAmino(message: DecProto): DecProtoAmino {
     const obj: any = {};
-    obj.dec = message.dec === "" ? undefined : Decimal.fromUserInput(message.dec, 18).atomics;
+    obj.dec = message.dec === "" ? undefined : message.dec;
     return obj;
   },
   fromAminoMsg(object: DecProtoAminoMsg): DecProto {

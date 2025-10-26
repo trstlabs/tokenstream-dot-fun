@@ -23,21 +23,14 @@ export interface EventRegisterRevenueProtoMsg {
   typeUrl: "/evmos.revenue.v1.EventRegisterRevenue";
   value: Uint8Array;
 }
-/**
- * EventRegisterRevenue is an event emitted when a contract is registered to receive a percentage of tx fees.
- * @name EventRegisterRevenueAmino
- * @package evmos.revenue.v1
- * @see proto type: evmos.revenue.v1.EventRegisterRevenue
- */
+/** EventRegisterRevenue is an event emitted when a contract is registered to receive a percentage of tx fees. */
 export interface EventRegisterRevenueAmino {
   /**
    * deployer_address is the bech32 address of message sender. It must be the same as the origin EOA
    * sending the transaction which deploys the contract
    */
   deployer_address?: string;
-  /**
-   * contract_address in hex format
-   */
+  /** contract_address in hex format */
   contract_address?: string;
   /**
    * effective_withdrawer is the withdrawer address that is stored after the
@@ -73,25 +66,16 @@ export interface EventUpdateRevenueProtoMsg {
   typeUrl: "/evmos.revenue.v1.EventUpdateRevenue";
   value: Uint8Array;
 }
-/**
- * EventUpdateRevenue is an event emitted when a withdrawer address is updated for a contract.
- * @name EventUpdateRevenueAmino
- * @package evmos.revenue.v1
- * @see proto type: evmos.revenue.v1.EventUpdateRevenue
- */
+/** EventUpdateRevenue is an event emitted when a withdrawer address is updated for a contract. */
 export interface EventUpdateRevenueAmino {
-  /**
-   * contract_address in hex format
-   */
+  /** contract_address in hex format */
   contract_address?: string;
   /**
    * deployer_address is the bech32 address of message sender. It must be the same as the origin EOA
    * sending the transaction which deploys the contract
    */
   deployer_address?: string;
-  /**
-   * withdrawer_address is the bech32 address of account receiving the transaction fees
-   */
+  /** withdrawer_address is the bech32 address of account receiving the transaction fees */
   withdrawer_address?: string;
 }
 export interface EventUpdateRevenueAminoMsg {
@@ -118,21 +102,14 @@ export interface EventCancelRevenueProtoMsg {
   typeUrl: "/evmos.revenue.v1.EventCancelRevenue";
   value: Uint8Array;
 }
-/**
- * EventCancelRevenue is an event emitted when a contract is unregistered from receiving tx fees.
- * @name EventCancelRevenueAmino
- * @package evmos.revenue.v1
- * @see proto type: evmos.revenue.v1.EventCancelRevenue
- */
+/** EventCancelRevenue is an event emitted when a contract is unregistered from receiving tx fees. */
 export interface EventCancelRevenueAmino {
   /**
    * deployer_address is the bech32 address of message sender. It must be the same as the origin EOA
    * sending the transaction which deploys the contract
    */
   deployer_address?: string;
-  /**
-   * contract_address in hex format
-   */
+  /** contract_address in hex format */
   contract_address?: string;
 }
 export interface EventCancelRevenueAminoMsg {
@@ -159,28 +136,15 @@ export interface EventDistributeRevenueProtoMsg {
   typeUrl: "/evmos.revenue.v1.EventDistributeRevenue";
   value: Uint8Array;
 }
-/**
- * EventDistributeRevenue is an event emitted when a contract receives a percentage of tx fees.
- * @name EventDistributeRevenueAmino
- * @package evmos.revenue.v1
- * @see proto type: evmos.revenue.v1.EventDistributeRevenue
- */
+/** EventDistributeRevenue is an event emitted when a contract receives a percentage of tx fees. */
 export interface EventDistributeRevenueAmino {
-  /**
-   * sender is the address of message sender.
-   */
+  /** sender is the address of message sender. */
   sender?: string;
-  /**
-   * contract address in hex format
-   */
+  /** contract address in hex format */
   contract?: string;
-  /**
-   * withdrawer_address is the bech32 address of account receiving the transaction fees
-   */
+  /** withdrawer_address is the bech32 address of account receiving the transaction fees */
   withdrawer_address?: string;
-  /**
-   * amount of revenue distributed
-   */
+  /** amount of revenue distributed */
   amount?: string;
 }
 export interface EventDistributeRevenueAminoMsg {

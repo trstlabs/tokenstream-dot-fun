@@ -1,8 +1,4 @@
-type IconProps = {
-  color?: string;
-  height?: number;
-  width?: number;
-};
+import { IconProps } from ".";
 
 export const WaveIcon = ({
   color = "currentColor",

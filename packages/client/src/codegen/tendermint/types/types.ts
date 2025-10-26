@@ -107,12 +107,7 @@ export interface PartSetHeaderProtoMsg {
   typeUrl: "/tendermint.types.PartSetHeader";
   value: Uint8Array;
 }
-/**
- * PartsetHeader
- * @name PartSetHeaderAmino
- * @package tendermint.types
- * @see proto type: tendermint.types.PartSetHeader
- */
+/** PartsetHeader */
 export interface PartSetHeaderAmino {
   total?: number;
   hash?: string;
@@ -135,11 +130,6 @@ export interface PartProtoMsg {
   typeUrl: "/tendermint.types.Part";
   value: Uint8Array;
 }
-/**
- * @name PartAmino
- * @package tendermint.types
- * @see proto type: tendermint.types.Part
- */
 export interface PartAmino {
   index?: number;
   bytes?: string;
@@ -163,12 +153,7 @@ export interface BlockIDProtoMsg {
   typeUrl: "/tendermint.types.BlockID";
   value: Uint8Array;
 }
-/**
- * BlockID
- * @name BlockIDAmino
- * @package tendermint.types
- * @see proto type: tendermint.types.BlockID
- */
+/** BlockID */
 export interface BlockIDAmino {
   hash?: string;
   part_set_header?: PartSetHeaderAmino;
@@ -214,59 +199,32 @@ export interface HeaderProtoMsg {
   typeUrl: "/tendermint.types.Header";
   value: Uint8Array;
 }
-/**
- * Header defines the structure of a block header.
- * @name HeaderAmino
- * @package tendermint.types
- * @see proto type: tendermint.types.Header
- */
+/** Header defines the structure of a block header. */
 export interface HeaderAmino {
-  /**
-   * basic block info
-   */
+  /** basic block info */
   version?: ConsensusAmino;
   chain_id?: string;
   height?: string;
   time?: string;
-  /**
-   * prev block info
-   */
+  /** prev block info */
   last_block_id?: BlockIDAmino;
-  /**
-   * hashes of block data
-   */
+  /** hashes of block data */
   last_commit_hash?: string;
-  /**
-   * transactions
-   */
+  /** transactions */
   data_hash?: string;
-  /**
-   * hashes from the app output from the prev block
-   */
+  /** hashes from the app output from the prev block */
   validators_hash?: string;
-  /**
-   * validators for the next block
-   */
+  /** validators for the next block */
   next_validators_hash?: string;
-  /**
-   * consensus params for current block
-   */
+  /** consensus params for current block */
   consensus_hash?: string;
-  /**
-   * state after txs from the previous block
-   */
+  /** state after txs from the previous block */
   app_hash?: string;
-  /**
-   * root hash of all results from the txs from the previous block
-   */
+  /** root hash of all results from the txs from the previous block */
   last_results_hash?: string;
-  /**
-   * consensus info
-   */
+  /** consensus info */
   evidence_hash?: string;
-  /**
-   * original proposer of the block
-   */
+  /** original proposer of the block */
   proposer_address?: string;
 }
 export interface HeaderAminoMsg {
@@ -303,12 +261,7 @@ export interface DataProtoMsg {
   typeUrl: "/tendermint.types.Data";
   value: Uint8Array;
 }
-/**
- * Data contains the set of transactions included in the block
- * @name DataAmino
- * @package tendermint.types
- * @see proto type: tendermint.types.Data
- */
+/** Data contains the set of transactions included in the block */
 export interface DataAmino {
   /**
    * Txs that will be applied by state @ block.Height+1.
@@ -346,9 +299,6 @@ export interface VoteProtoMsg {
 /**
  * Vote represents a prevote, precommit, or commit vote from validators for
  * consensus.
- * @name VoteAmino
- * @package tendermint.types
- * @see proto type: tendermint.types.Vote
  */
 export interface VoteAmino {
   type?: SignedMsgType;
@@ -389,12 +339,7 @@ export interface CommitProtoMsg {
   typeUrl: "/tendermint.types.Commit";
   value: Uint8Array;
 }
-/**
- * Commit contains the evidence that a block was committed by a set of validators.
- * @name CommitAmino
- * @package tendermint.types
- * @see proto type: tendermint.types.Commit
- */
+/** Commit contains the evidence that a block was committed by a set of validators. */
 export interface CommitAmino {
   height?: string;
   round?: number;
@@ -423,12 +368,7 @@ export interface CommitSigProtoMsg {
   typeUrl: "/tendermint.types.CommitSig";
   value: Uint8Array;
 }
-/**
- * CommitSig is a part of the Vote included in a Commit.
- * @name CommitSigAmino
- * @package tendermint.types
- * @see proto type: tendermint.types.CommitSig
- */
+/** CommitSig is a part of the Vote included in a Commit. */
 export interface CommitSigAmino {
   block_id_flag?: BlockIDFlag;
   validator_address?: string;
@@ -459,11 +399,6 @@ export interface ProposalProtoMsg {
   typeUrl: "/tendermint.types.Proposal";
   value: Uint8Array;
 }
-/**
- * @name ProposalAmino
- * @package tendermint.types
- * @see proto type: tendermint.types.Proposal
- */
 export interface ProposalAmino {
   type?: SignedMsgType;
   height?: string;
@@ -494,11 +429,6 @@ export interface SignedHeaderProtoMsg {
   typeUrl: "/tendermint.types.SignedHeader";
   value: Uint8Array;
 }
-/**
- * @name SignedHeaderAmino
- * @package tendermint.types
- * @see proto type: tendermint.types.SignedHeader
- */
 export interface SignedHeaderAmino {
   header?: HeaderAmino;
   commit?: CommitAmino;
@@ -519,11 +449,6 @@ export interface LightBlockProtoMsg {
   typeUrl: "/tendermint.types.LightBlock";
   value: Uint8Array;
 }
-/**
- * @name LightBlockAmino
- * @package tendermint.types
- * @see proto type: tendermint.types.LightBlock
- */
 export interface LightBlockAmino {
   signed_header?: SignedHeaderAmino;
   validator_set?: ValidatorSetAmino;
@@ -546,11 +471,6 @@ export interface BlockMetaProtoMsg {
   typeUrl: "/tendermint.types.BlockMeta";
   value: Uint8Array;
 }
-/**
- * @name BlockMetaAmino
- * @package tendermint.types
- * @see proto type: tendermint.types.BlockMeta
- */
 export interface BlockMetaAmino {
   block_id?: BlockIDAmino;
   block_size?: string;
@@ -577,12 +497,7 @@ export interface TxProofProtoMsg {
   typeUrl: "/tendermint.types.TxProof";
   value: Uint8Array;
 }
-/**
- * TxProof represents a Merkle proof of the presence of a transaction in the Merkle tree.
- * @name TxProofAmino
- * @package tendermint.types
- * @see proto type: tendermint.types.TxProof
- */
+/** TxProof represents a Merkle proof of the presence of a transaction in the Merkle tree. */
 export interface TxProofAmino {
   root_hash?: string;
   data?: string;
@@ -952,7 +867,7 @@ export const Header = {
           message.chainId = reader.string();
           break;
         case 3:
-          message.height = reader.int64() as Long;
+          message.height = (reader.int64() as Long);
           break;
         case 4:
           message.time = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
@@ -1098,7 +1013,7 @@ export const Header = {
     const obj: any = {};
     obj.version = message.version ? Consensus.toAmino(message.version) : undefined;
     obj.chain_id = message.chainId === "" ? undefined : message.chainId;
-    obj.height = !message.height.isZero() ? message.height?.toString() : undefined;
+    obj.height = !message.height.isZero() ? message.height.toString() : undefined;
     obj.time = message.time ? Timestamp.toAmino(toTimestamp(message.time)) : undefined;
     obj.last_block_id = message.lastBlockId ? BlockID.toAmino(message.lastBlockId) : undefined;
     obj.last_commit_hash = message.lastCommitHash ? base64FromBytes(message.lastCommitHash) : undefined;
@@ -1256,10 +1171,10 @@ export const Vote = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.type = reader.int32() as any;
+          message.type = (reader.int32() as any);
           break;
         case 2:
-          message.height = reader.int64() as Long;
+          message.height = (reader.int64() as Long);
           break;
         case 3:
           message.round = reader.int32();
@@ -1353,7 +1268,7 @@ export const Vote = {
   toAmino(message: Vote): VoteAmino {
     const obj: any = {};
     obj.type = message.type === 0 ? undefined : message.type;
-    obj.height = !message.height.isZero() ? message.height?.toString() : undefined;
+    obj.height = !message.height.isZero() ? message.height.toString() : undefined;
     obj.round = message.round === 0 ? undefined : message.round;
     obj.block_id = message.blockId ? BlockID.toAmino(message.blockId) : undefined;
     obj.timestamp = message.timestamp ? Timestamp.toAmino(toTimestamp(message.timestamp)) : undefined;
@@ -1411,7 +1326,7 @@ export const Commit = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.height = reader.int64() as Long;
+          message.height = (reader.int64() as Long);
           break;
         case 2:
           message.round = reader.int32();
@@ -1473,7 +1388,7 @@ export const Commit = {
   },
   toAmino(message: Commit): CommitAmino {
     const obj: any = {};
-    obj.height = !message.height.isZero() ? message.height?.toString() : undefined;
+    obj.height = !message.height.isZero() ? message.height.toString() : undefined;
     obj.round = message.round === 0 ? undefined : message.round;
     obj.block_id = message.blockId ? BlockID.toAmino(message.blockId) : undefined;
     if (message.signatures) {
@@ -1532,7 +1447,7 @@ export const CommitSig = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.blockIdFlag = reader.int32() as any;
+          message.blockIdFlag = (reader.int32() as any);
           break;
         case 2:
           message.validatorAddress = reader.bytes();
@@ -1659,10 +1574,10 @@ export const Proposal = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.type = reader.int32() as any;
+          message.type = (reader.int32() as any);
           break;
         case 2:
-          message.height = reader.int64() as Long;
+          message.height = (reader.int64() as Long);
           break;
         case 3:
           message.round = reader.int32();
@@ -1747,7 +1662,7 @@ export const Proposal = {
   toAmino(message: Proposal): ProposalAmino {
     const obj: any = {};
     obj.type = message.type === 0 ? undefined : message.type;
-    obj.height = !message.height.isZero() ? message.height?.toString() : undefined;
+    obj.height = !message.height.isZero() ? message.height.toString() : undefined;
     obj.round = message.round === 0 ? undefined : message.round;
     obj.pol_round = message.polRound === 0 ? undefined : message.polRound;
     obj.block_id = message.blockId ? BlockID.toAmino(message.blockId) : undefined;
@@ -1981,13 +1896,13 @@ export const BlockMeta = {
           message.blockId = BlockID.decode(reader, reader.uint32());
           break;
         case 2:
-          message.blockSize = reader.int64() as Long;
+          message.blockSize = (reader.int64() as Long);
           break;
         case 3:
           message.header = Header.decode(reader, reader.uint32());
           break;
         case 4:
-          message.numTxs = reader.int64() as Long;
+          message.numTxs = (reader.int64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -2039,9 +1954,9 @@ export const BlockMeta = {
   toAmino(message: BlockMeta): BlockMetaAmino {
     const obj: any = {};
     obj.block_id = message.blockId ? BlockID.toAmino(message.blockId) : undefined;
-    obj.block_size = !message.blockSize.isZero() ? message.blockSize?.toString() : undefined;
+    obj.block_size = !message.blockSize.isZero() ? message.blockSize.toString() : undefined;
     obj.header = message.header ? Header.toAmino(message.header) : undefined;
-    obj.num_txs = !message.numTxs.isZero() ? message.numTxs?.toString() : undefined;
+    obj.num_txs = !message.numTxs.isZero() ? message.numTxs.toString() : undefined;
     return obj;
   },
   fromAminoMsg(object: BlockMetaAminoMsg): BlockMeta {

@@ -23,17 +23,12 @@ export interface MsgCreateVestingAccountProtoMsg {
 /**
  * MsgCreateVestingAccount defines a message that enables creating a vesting
  * account.
- * @name MsgCreateVestingAccountAmino
- * @package cosmos.vesting.v1beta1
- * @see proto type: cosmos.vesting.v1beta1.MsgCreateVestingAccount
  */
 export interface MsgCreateVestingAccountAmino {
   from_address?: string;
   to_address?: string;
   amount: CoinAmino[];
-  /**
-   * end of vesting as unix time (in seconds).
-   */
+  /** end of vesting as unix time (in seconds). */
   end_time?: string;
   delayed?: boolean;
 }
@@ -58,12 +53,7 @@ export interface MsgCreateVestingAccountResponseProtoMsg {
   typeUrl: "/cosmos.vesting.v1beta1.MsgCreateVestingAccountResponse";
   value: Uint8Array;
 }
-/**
- * MsgCreateVestingAccountResponse defines the Msg/CreateVestingAccount response type.
- * @name MsgCreateVestingAccountResponseAmino
- * @package cosmos.vesting.v1beta1
- * @see proto type: cosmos.vesting.v1beta1.MsgCreateVestingAccountResponse
- */
+/** MsgCreateVestingAccountResponse defines the Msg/CreateVestingAccount response type. */
 export interface MsgCreateVestingAccountResponseAmino {}
 export interface MsgCreateVestingAccountResponseAminoMsg {
   type: "cosmos-sdk/MsgCreateVestingAccountResponse";
@@ -91,9 +81,6 @@ export interface MsgCreatePermanentLockedAccountProtoMsg {
  * locked account.
  * 
  * Since: cosmos-sdk 0.46
- * @name MsgCreatePermanentLockedAccountAmino
- * @package cosmos.vesting.v1beta1
- * @see proto type: cosmos.vesting.v1beta1.MsgCreatePermanentLockedAccount
  */
 export interface MsgCreatePermanentLockedAccountAmino {
   from_address?: string;
@@ -129,9 +116,6 @@ export interface MsgCreatePermanentLockedAccountResponseProtoMsg {
  * MsgCreatePermanentLockedAccountResponse defines the Msg/CreatePermanentLockedAccount response type.
  * 
  * Since: cosmos-sdk 0.46
- * @name MsgCreatePermanentLockedAccountResponseAmino
- * @package cosmos.vesting.v1beta1
- * @see proto type: cosmos.vesting.v1beta1.MsgCreatePermanentLockedAccountResponse
  */
 export interface MsgCreatePermanentLockedAccountResponseAmino {}
 export interface MsgCreatePermanentLockedAccountResponseAminoMsg {
@@ -166,16 +150,11 @@ export interface MsgCreatePeriodicVestingAccountProtoMsg {
  * account.
  * 
  * Since: cosmos-sdk 0.46
- * @name MsgCreatePeriodicVestingAccountAmino
- * @package cosmos.vesting.v1beta1
- * @see proto type: cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccount
  */
 export interface MsgCreatePeriodicVestingAccountAmino {
   from_address?: string;
   to_address?: string;
-  /**
-   * start of vesting as unix time (in seconds).
-   */
+  /** start of vesting as unix time (in seconds). */
   start_time?: string;
   vesting_periods: PeriodAmino[];
 }
@@ -211,9 +190,6 @@ export interface MsgCreatePeriodicVestingAccountResponseProtoMsg {
  * response type.
  * 
  * Since: cosmos-sdk 0.46
- * @name MsgCreatePeriodicVestingAccountResponseAmino
- * @package cosmos.vesting.v1beta1
- * @see proto type: cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccountResponse
  */
 export interface MsgCreatePeriodicVestingAccountResponseAmino {}
 export interface MsgCreatePeriodicVestingAccountResponseAminoMsg {
@@ -273,7 +249,7 @@ export const MsgCreateVestingAccount = {
           message.amount.push(Coin.decode(reader, reader.uint32()));
           break;
         case 4:
-          message.endTime = reader.int64() as Long;
+          message.endTime = (reader.int64() as Long);
           break;
         case 5:
           message.delayed = reader.bool();
@@ -342,7 +318,7 @@ export const MsgCreateVestingAccount = {
     } else {
       obj.amount = message.amount;
     }
-    obj.end_time = !message.endTime.isZero() ? message.endTime?.toString() : undefined;
+    obj.end_time = !message.endTime.isZero() ? message.endTime.toString() : undefined;
     obj.delayed = message.delayed === false ? undefined : message.delayed;
     return obj;
   },
@@ -646,7 +622,7 @@ export const MsgCreatePeriodicVestingAccount = {
           message.toAddress = reader.string();
           break;
         case 3:
-          message.startTime = reader.int64() as Long;
+          message.startTime = (reader.int64() as Long);
           break;
         case 4:
           message.vestingPeriods.push(Period.decode(reader, reader.uint32()));
@@ -704,7 +680,7 @@ export const MsgCreatePeriodicVestingAccount = {
     const obj: any = {};
     obj.from_address = message.fromAddress === "" ? undefined : message.fromAddress;
     obj.to_address = message.toAddress === "" ? undefined : message.toAddress;
-    obj.start_time = !message.startTime.isZero() ? message.startTime?.toString() : undefined;
+    obj.start_time = !message.startTime.isZero() ? message.startTime.toString() : undefined;
     if (message.vestingPeriods) {
       obj.vesting_periods = message.vestingPeriods.map(e => e ? Period.toAmino(e) : undefined);
     } else {

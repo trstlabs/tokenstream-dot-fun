@@ -14,20 +14,11 @@ export interface GenesisOwnersProtoMsg {
   typeUrl: "/cosmos.capability.v1beta1.GenesisOwners";
   value: Uint8Array;
 }
-/**
- * GenesisOwners defines the capability owners with their corresponding index.
- * @name GenesisOwnersAmino
- * @package cosmos.capability.v1beta1
- * @see proto type: cosmos.capability.v1beta1.GenesisOwners
- */
+/** GenesisOwners defines the capability owners with their corresponding index. */
 export interface GenesisOwnersAmino {
-  /**
-   * index is the index of the capability owner.
-   */
+  /** index is the index of the capability owner. */
   index?: string;
-  /**
-   * index_owners are the owners at the given index.
-   */
+  /** index_owners are the owners at the given index. */
   index_owners: CapabilityOwnersAmino;
 }
 export interface GenesisOwnersAminoMsg {
@@ -53,16 +44,9 @@ export interface GenesisStateProtoMsg {
   typeUrl: "/cosmos.capability.v1beta1.GenesisState";
   value: Uint8Array;
 }
-/**
- * GenesisState defines the capability module's genesis state.
- * @name GenesisStateAmino
- * @package cosmos.capability.v1beta1
- * @see proto type: cosmos.capability.v1beta1.GenesisState
- */
+/** GenesisState defines the capability module's genesis state. */
 export interface GenesisStateAmino {
-  /**
-   * index is the capability global index.
-   */
+  /** index is the capability global index. */
   index?: string;
   /**
    * owners represents a map from index to owners of the capability index
@@ -104,7 +88,7 @@ export const GenesisOwners = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.index = reader.uint64() as Long;
+          message.index = (reader.uint64() as Long);
           break;
         case 2:
           message.indexOwners = CapabilityOwners.decode(reader, reader.uint32());
@@ -146,7 +130,7 @@ export const GenesisOwners = {
   },
   toAmino(message: GenesisOwners): GenesisOwnersAmino {
     const obj: any = {};
-    obj.index = !message.index.isZero() ? message.index?.toString() : undefined;
+    obj.index = !message.index.isZero() ? message.index.toString() : undefined;
     obj.index_owners = message.indexOwners ? CapabilityOwners.toAmino(message.indexOwners) : CapabilityOwners.toAmino(CapabilityOwners.fromPartial({}));
     return obj;
   },
@@ -197,7 +181,7 @@ export const GenesisState = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.index = reader.uint64() as Long;
+          message.index = (reader.uint64() as Long);
           break;
         case 2:
           message.owners.push(GenesisOwners.decode(reader, reader.uint32()));
@@ -241,7 +225,7 @@ export const GenesisState = {
   },
   toAmino(message: GenesisState): GenesisStateAmino {
     const obj: any = {};
-    obj.index = !message.index.isZero() ? message.index?.toString() : undefined;
+    obj.index = !message.index.isZero() ? message.index.toString() : undefined;
     if (message.owners) {
       obj.owners = message.owners.map(e => e ? GenesisOwners.toAmino(e) : undefined);
     } else {

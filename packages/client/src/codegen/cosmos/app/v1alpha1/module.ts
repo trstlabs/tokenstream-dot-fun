@@ -32,12 +32,7 @@ export interface ModuleDescriptorProtoMsg {
   typeUrl: "/cosmos.app.v1alpha1.ModuleDescriptor";
   value: Uint8Array;
 }
-/**
- * ModuleDescriptor describes an app module.
- * @name ModuleDescriptorAmino
- * @package cosmos.app.v1alpha1
- * @see proto type: cosmos.app.v1alpha1.ModuleDescriptor
- */
+/** ModuleDescriptor describes an app module. */
 export interface ModuleDescriptorAmino {
   /**
    * go_import names the package that should be imported by an app to load the
@@ -120,16 +115,9 @@ export interface PackageReferenceProtoMsg {
   typeUrl: "/cosmos.app.v1alpha1.PackageReference";
   value: Uint8Array;
 }
-/**
- * PackageReference is a reference to a protobuf package used by a module.
- * @name PackageReferenceAmino
- * @package cosmos.app.v1alpha1
- * @see proto type: cosmos.app.v1alpha1.PackageReference
- */
+/** PackageReference is a reference to a protobuf package used by a module. */
 export interface PackageReferenceAmino {
-  /**
-   * name is the fully-qualified name of the package.
-   */
+  /** name is the fully-qualified name of the package. */
   name?: string;
   /**
    * revision is the optional revision of the package that is being used.
@@ -197,9 +185,6 @@ export interface MigrateFromInfoProtoMsg {
 /**
  * MigrateFromInfo is information on a module version that a newer module
  * can migrate from.
- * @name MigrateFromInfoAmino
- * @package cosmos.app.v1alpha1
- * @see proto type: cosmos.app.v1alpha1.MigrateFromInfo
  */
 export interface MigrateFromInfoAmino {
   /**

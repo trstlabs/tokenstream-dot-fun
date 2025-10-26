@@ -12,11 +12,6 @@ export interface ProofProtoMsg {
   typeUrl: "/tendermint.crypto.Proof";
   value: Uint8Array;
 }
-/**
- * @name ProofAmino
- * @package tendermint.crypto
- * @see proto type: tendermint.crypto.Proof
- */
 export interface ProofAmino {
   total?: string;
   index?: string;
@@ -43,19 +38,10 @@ export interface ValueOpProtoMsg {
   typeUrl: "/tendermint.crypto.ValueOp";
   value: Uint8Array;
 }
-/**
- * @name ValueOpAmino
- * @package tendermint.crypto
- * @see proto type: tendermint.crypto.ValueOp
- */
 export interface ValueOpAmino {
-  /**
-   * Encoded in ProofOp.Key.
-   */
+  /** Encoded in ProofOp.Key. */
   key?: string;
-  /**
-   * To encode in ProofOp.Data
-   */
+  /** To encode in ProofOp.Data */
   proof?: ProofAmino;
 }
 export interface ValueOpAminoMsg {
@@ -75,11 +61,6 @@ export interface DominoOpProtoMsg {
   typeUrl: "/tendermint.crypto.DominoOp";
   value: Uint8Array;
 }
-/**
- * @name DominoOpAmino
- * @package tendermint.crypto
- * @see proto type: tendermint.crypto.DominoOp
- */
 export interface DominoOpAmino {
   key?: string;
   input?: string;
@@ -112,9 +93,6 @@ export interface ProofOpProtoMsg {
  * ProofOp defines an operation used for calculating Merkle root
  * The data could be arbitrary format, providing nessecary data
  * for example neighbouring node hash
- * @name ProofOpAmino
- * @package tendermint.crypto
- * @see proto type: tendermint.crypto.ProofOp
  */
 export interface ProofOpAmino {
   type?: string;
@@ -143,12 +121,7 @@ export interface ProofOpsProtoMsg {
   typeUrl: "/tendermint.crypto.ProofOps";
   value: Uint8Array;
 }
-/**
- * ProofOps is Merkle proof defined by the list of ProofOps
- * @name ProofOpsAmino
- * @package tendermint.crypto
- * @see proto type: tendermint.crypto.ProofOps
- */
+/** ProofOps is Merkle proof defined by the list of ProofOps */
 export interface ProofOpsAmino {
   ops?: ProofOpAmino[];
 }
@@ -193,10 +166,10 @@ export const Proof = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.total = reader.int64() as Long;
+          message.total = (reader.int64() as Long);
           break;
         case 2:
-          message.index = reader.int64() as Long;
+          message.index = (reader.int64() as Long);
           break;
         case 3:
           message.leafHash = reader.bytes();
@@ -255,8 +228,8 @@ export const Proof = {
   },
   toAmino(message: Proof): ProofAmino {
     const obj: any = {};
-    obj.total = !message.total.isZero() ? message.total?.toString() : undefined;
-    obj.index = !message.index.isZero() ? message.index?.toString() : undefined;
+    obj.total = !message.total.isZero() ? message.total.toString() : undefined;
+    obj.index = !message.index.isZero() ? message.index.toString() : undefined;
     obj.leaf_hash = message.leafHash ? base64FromBytes(message.leafHash) : undefined;
     if (message.aunts) {
       obj.aunts = message.aunts.map(e => base64FromBytes(e));

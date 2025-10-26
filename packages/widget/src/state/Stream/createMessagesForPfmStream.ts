@@ -237,7 +237,7 @@ export async function createMessagesForPfmStream({
               : Math.floor(
                   Date.now() / 1000 + streamSettings.startAt
                 ).toString(),
-          stop_on_fail: "true",
+          save_responses: "true",
           update_disabled: "true",
           label: "tokenstream.fun",
           owner: intoAddress,

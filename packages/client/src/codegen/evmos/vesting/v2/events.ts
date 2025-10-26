@@ -19,18 +19,11 @@ export interface EventCreateClawbackVestingAccountProtoMsg {
 /**
  * EventCreateClawbackVestingAccount defines the event type
  * for creating a clawback vesting account
- * @name EventCreateClawbackVestingAccountAmino
- * @package evmos.vesting.v2
- * @see proto type: evmos.vesting.v2.EventCreateClawbackVestingAccount
  */
 export interface EventCreateClawbackVestingAccountAmino {
-  /**
-   * funder is the address of the funder
-   */
+  /** funder is the address of the funder */
   funder?: string;
-  /**
-   * vesting_account is the address of the created vesting account
-   */
+  /** vesting_account is the address of the created vesting account */
   vesting_account?: string;
 }
 export interface EventCreateClawbackVestingAccountAminoMsg {
@@ -60,28 +53,15 @@ export interface EventFundVestingAccountProtoMsg {
   typeUrl: "/evmos.vesting.v2.EventFundVestingAccount";
   value: Uint8Array;
 }
-/**
- * EventFundVestingAccount defines the event type for funding a vesting account
- * @name EventFundVestingAccountAmino
- * @package evmos.vesting.v2
- * @see proto type: evmos.vesting.v2.EventFundVestingAccount
- */
+/** EventFundVestingAccount defines the event type for funding a vesting account */
 export interface EventFundVestingAccountAmino {
-  /**
-   * funder is the address of the funder
-   */
+  /** funder is the address of the funder */
   funder?: string;
-  /**
-   * coins to be vested
-   */
+  /** coins to be vested */
   coins?: string;
-  /**
-   * start_time is the time when the coins start to vest
-   */
+  /** start_time is the time when the coins start to vest */
   start_time?: string;
-  /**
-   * vesting_account is the address of the recipient
-   */
+  /** vesting_account is the address of the recipient */
   vesting_account?: string;
 }
 export interface EventFundVestingAccountAminoMsg {
@@ -108,24 +88,13 @@ export interface EventClawbackProtoMsg {
   typeUrl: "/evmos.vesting.v2.EventClawback";
   value: Uint8Array;
 }
-/**
- * EventClawback defines the event type for clawback
- * @name EventClawbackAmino
- * @package evmos.vesting.v2
- * @see proto type: evmos.vesting.v2.EventClawback
- */
+/** EventClawback defines the event type for clawback */
 export interface EventClawbackAmino {
-  /**
-   * funder is the address of the funder
-   */
+  /** funder is the address of the funder */
   funder?: string;
-  /**
-   * account is the address of the account
-   */
+  /** account is the address of the account */
   account?: string;
-  /**
-   * destination is the address of the destination
-   */
+  /** destination is the address of the destination */
   destination?: string;
 }
 export interface EventClawbackAminoMsg {
@@ -151,24 +120,13 @@ export interface EventUpdateVestingFunderProtoMsg {
   typeUrl: "/evmos.vesting.v2.EventUpdateVestingFunder";
   value: Uint8Array;
 }
-/**
- * EventUpdateVestingFunder defines the event type for updating the vesting funder
- * @name EventUpdateVestingFunderAmino
- * @package evmos.vesting.v2
- * @see proto type: evmos.vesting.v2.EventUpdateVestingFunder
- */
+/** EventUpdateVestingFunder defines the event type for updating the vesting funder */
 export interface EventUpdateVestingFunderAmino {
-  /**
-   * funder is the address of the funder
-   */
+  /** funder is the address of the funder */
   funder?: string;
-  /**
-   * account is the address of the account
-   */
+  /** account is the address of the account */
   account?: string;
-  /**
-   * new_funder is the address of the new funder
-   */
+  /** new_funder is the address of the new funder */
   new_funder?: string;
 }
 export interface EventUpdateVestingFunderAminoMsg {

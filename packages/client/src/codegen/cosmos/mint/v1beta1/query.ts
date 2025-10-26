@@ -9,12 +9,7 @@ export interface QueryParamsRequestProtoMsg {
   typeUrl: "/cosmos.mint.v1beta1.QueryParamsRequest";
   value: Uint8Array;
 }
-/**
- * QueryParamsRequest is the request type for the Query/Params RPC method.
- * @name QueryParamsRequestAmino
- * @package cosmos.mint.v1beta1
- * @see proto type: cosmos.mint.v1beta1.QueryParamsRequest
- */
+/** QueryParamsRequest is the request type for the Query/Params RPC method. */
 export interface QueryParamsRequestAmino {}
 export interface QueryParamsRequestAminoMsg {
   type: "cosmos-sdk/QueryParamsRequest";
@@ -31,16 +26,9 @@ export interface QueryParamsResponseProtoMsg {
   typeUrl: "/cosmos.mint.v1beta1.QueryParamsResponse";
   value: Uint8Array;
 }
-/**
- * QueryParamsResponse is the response type for the Query/Params RPC method.
- * @name QueryParamsResponseAmino
- * @package cosmos.mint.v1beta1
- * @see proto type: cosmos.mint.v1beta1.QueryParamsResponse
- */
+/** QueryParamsResponse is the response type for the Query/Params RPC method. */
 export interface QueryParamsResponseAmino {
-  /**
-   * params defines the parameters of the module.
-   */
+  /** params defines the parameters of the module. */
   params: ParamsAmino;
 }
 export interface QueryParamsResponseAminoMsg {
@@ -57,12 +45,7 @@ export interface QueryInflationRequestProtoMsg {
   typeUrl: "/cosmos.mint.v1beta1.QueryInflationRequest";
   value: Uint8Array;
 }
-/**
- * QueryInflationRequest is the request type for the Query/Inflation RPC method.
- * @name QueryInflationRequestAmino
- * @package cosmos.mint.v1beta1
- * @see proto type: cosmos.mint.v1beta1.QueryInflationRequest
- */
+/** QueryInflationRequest is the request type for the Query/Inflation RPC method. */
 export interface QueryInflationRequestAmino {}
 export interface QueryInflationRequestAminoMsg {
   type: "cosmos-sdk/QueryInflationRequest";
@@ -85,14 +68,9 @@ export interface QueryInflationResponseProtoMsg {
 /**
  * QueryInflationResponse is the response type for the Query/Inflation RPC
  * method.
- * @name QueryInflationResponseAmino
- * @package cosmos.mint.v1beta1
- * @see proto type: cosmos.mint.v1beta1.QueryInflationResponse
  */
 export interface QueryInflationResponseAmino {
-  /**
-   * inflation is the current minting inflation value.
-   */
+  /** inflation is the current minting inflation value. */
   inflation: string;
 }
 export interface QueryInflationResponseAminoMsg {
@@ -118,9 +96,6 @@ export interface QueryAnnualProvisionsRequestProtoMsg {
 /**
  * QueryAnnualProvisionsRequest is the request type for the
  * Query/AnnualProvisions RPC method.
- * @name QueryAnnualProvisionsRequestAmino
- * @package cosmos.mint.v1beta1
- * @see proto type: cosmos.mint.v1beta1.QueryAnnualProvisionsRequest
  */
 export interface QueryAnnualProvisionsRequestAmino {}
 export interface QueryAnnualProvisionsRequestAminoMsg {
@@ -147,14 +122,9 @@ export interface QueryAnnualProvisionsResponseProtoMsg {
 /**
  * QueryAnnualProvisionsResponse is the response type for the
  * Query/AnnualProvisions RPC method.
- * @name QueryAnnualProvisionsResponseAmino
- * @package cosmos.mint.v1beta1
- * @see proto type: cosmos.mint.v1beta1.QueryAnnualProvisionsResponse
  */
 export interface QueryAnnualProvisionsResponseAmino {
-  /**
-   * annual_provisions is the current minting annual provisions value.
-   */
+  /** annual_provisions is the current minting annual provisions value. */
   annual_provisions: string;
 }
 export interface QueryAnnualProvisionsResponseAminoMsg {

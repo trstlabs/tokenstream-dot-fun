@@ -17,9 +17,6 @@ export interface RemoteTokenMessengerProtoMsg {
 /**
  * @param domain_id
  * @param address
- * @name RemoteTokenMessengerAmino
- * @package circle.cctp.v1
- * @see proto type: circle.cctp.v1.RemoteTokenMessenger
  */
 export interface RemoteTokenMessengerAmino {
   domain_id?: number;

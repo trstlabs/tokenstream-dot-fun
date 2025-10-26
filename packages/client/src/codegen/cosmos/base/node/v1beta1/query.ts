@@ -8,12 +8,7 @@ export interface ConfigRequestProtoMsg {
   typeUrl: "/cosmos.base.node.v1beta1.ConfigRequest";
   value: Uint8Array;
 }
-/**
- * ConfigRequest defines the request structure for the Config gRPC query.
- * @name ConfigRequestAmino
- * @package cosmos.base.node.v1beta1
- * @see proto type: cosmos.base.node.v1beta1.ConfigRequest
- */
+/** ConfigRequest defines the request structure for the Config gRPC query. */
 export interface ConfigRequestAmino {}
 export interface ConfigRequestAminoMsg {
   type: "cosmos-sdk/ConfigRequest";
@@ -29,12 +24,7 @@ export interface ConfigResponseProtoMsg {
   typeUrl: "/cosmos.base.node.v1beta1.ConfigResponse";
   value: Uint8Array;
 }
-/**
- * ConfigResponse defines the response structure for the Config gRPC query.
- * @name ConfigResponseAmino
- * @package cosmos.base.node.v1beta1
- * @see proto type: cosmos.base.node.v1beta1.ConfigResponse
- */
+/** ConfigResponse defines the response structure for the Config gRPC query. */
 export interface ConfigResponseAmino {
   minimum_gas_price?: string;
 }

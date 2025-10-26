@@ -14,12 +14,7 @@ export interface MsgSendProtoMsg {
   typeUrl: "/cosmos.bank.v1beta1.MsgSend";
   value: Uint8Array;
 }
-/**
- * MsgSend represents a message to send coins from one account to another.
- * @name MsgSendAmino
- * @package cosmos.bank.v1beta1
- * @see proto type: cosmos.bank.v1beta1.MsgSend
- */
+/** MsgSend represents a message to send coins from one account to another. */
 export interface MsgSendAmino {
   from_address?: string;
   to_address?: string;
@@ -41,12 +36,7 @@ export interface MsgSendResponseProtoMsg {
   typeUrl: "/cosmos.bank.v1beta1.MsgSendResponse";
   value: Uint8Array;
 }
-/**
- * MsgSendResponse defines the Msg/Send response type.
- * @name MsgSendResponseAmino
- * @package cosmos.bank.v1beta1
- * @see proto type: cosmos.bank.v1beta1.MsgSendResponse
- */
+/** MsgSendResponse defines the Msg/Send response type. */
 export interface MsgSendResponseAmino {}
 export interface MsgSendResponseAminoMsg {
   type: "cosmos-sdk/MsgSendResponse";
@@ -67,12 +57,7 @@ export interface MsgMultiSendProtoMsg {
   typeUrl: "/cosmos.bank.v1beta1.MsgMultiSend";
   value: Uint8Array;
 }
-/**
- * MsgMultiSend represents an arbitrary multi-in, multi-out send message.
- * @name MsgMultiSendAmino
- * @package cosmos.bank.v1beta1
- * @see proto type: cosmos.bank.v1beta1.MsgMultiSend
- */
+/** MsgMultiSend represents an arbitrary multi-in, multi-out send message. */
 export interface MsgMultiSendAmino {
   /**
    * Inputs, despite being `repeated`, only allows one sender input. This is
@@ -96,12 +81,7 @@ export interface MsgMultiSendResponseProtoMsg {
   typeUrl: "/cosmos.bank.v1beta1.MsgMultiSendResponse";
   value: Uint8Array;
 }
-/**
- * MsgMultiSendResponse defines the Msg/MultiSend response type.
- * @name MsgMultiSendResponseAmino
- * @package cosmos.bank.v1beta1
- * @see proto type: cosmos.bank.v1beta1.MsgMultiSendResponse
- */
+/** MsgMultiSendResponse defines the Msg/MultiSend response type. */
 export interface MsgMultiSendResponseAmino {}
 export interface MsgMultiSendResponseAminoMsg {
   type: "cosmos-sdk/MsgMultiSendResponse";
@@ -132,14 +112,9 @@ export interface MsgUpdateParamsProtoMsg {
  * MsgUpdateParams is the Msg/UpdateParams request type.
  * 
  * Since: cosmos-sdk 0.47
- * @name MsgUpdateParamsAmino
- * @package cosmos.bank.v1beta1
- * @see proto type: cosmos.bank.v1beta1.MsgUpdateParams
  */
 export interface MsgUpdateParamsAmino {
-  /**
-   * authority is the address that controls the module (defaults to x/gov unless overwritten).
-   */
+  /** authority is the address that controls the module (defaults to x/gov unless overwritten). */
   authority?: string;
   /**
    * params defines the x/bank parameters to update.
@@ -177,9 +152,6 @@ export interface MsgUpdateParamsResponseProtoMsg {
  * MsgUpdateParams message.
  * 
  * Since: cosmos-sdk 0.47
- * @name MsgUpdateParamsResponseAmino
- * @package cosmos.bank.v1beta1
- * @see proto type: cosmos.bank.v1beta1.MsgUpdateParamsResponse
  */
 export interface MsgUpdateParamsResponseAmino {}
 export interface MsgUpdateParamsResponseAminoMsg {
@@ -226,15 +198,10 @@ export interface MsgSetSendEnabledProtoMsg {
  * message are left unchanged.
  * 
  * Since: cosmos-sdk 0.47
- * @name MsgSetSendEnabledAmino
- * @package cosmos.bank.v1beta1
- * @see proto type: cosmos.bank.v1beta1.MsgSetSendEnabled
  */
 export interface MsgSetSendEnabledAmino {
   authority?: string;
-  /**
-   * send_enabled is the list of entries to add or update.
-   */
+  /** send_enabled is the list of entries to add or update. */
   send_enabled?: SendEnabledAmino[];
   /**
    * use_default_for is a list of denoms that should use the params.default_send_enabled value.
@@ -276,9 +243,6 @@ export interface MsgSetSendEnabledResponseProtoMsg {
  * MsgSetSendEnabledResponse defines the Msg/SetSendEnabled response type.
  * 
  * Since: cosmos-sdk 0.47
- * @name MsgSetSendEnabledResponseAmino
- * @package cosmos.bank.v1beta1
- * @see proto type: cosmos.bank.v1beta1.MsgSetSendEnabledResponse
  */
 export interface MsgSetSendEnabledResponseAmino {}
 export interface MsgSetSendEnabledResponseAminoMsg {
