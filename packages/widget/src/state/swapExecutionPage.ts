@@ -30,6 +30,8 @@ import {
   executeMultipleRoutes,
   SignerGetters,
   BaseSettings,
+  getSigningStargateClient,
+  getRecommendedGasPrice,
 } from "@skip-go/client";
 import { currentPageAtom, Routes } from "./router";
 import { LOCAL_STORAGE_KEYS } from "./localStorageKeys";
@@ -45,6 +47,12 @@ import {
   gasOnReceiveRouteAtom,
   isSomeDestinationFeeBalanceAvailableAtom,
 } from "./gasOnReceive";
+import {
+  IntentoStreamSettings,
+  streamMessagesAtom,
+  streamSettingsAtom,
+} from "./streamSettings";
+import { Uint64 } from "@cosmjs/math";
 
 type ValidatingGasBalanceData = {
   chainId?: string;
@@ -449,6 +457,9 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
     isSomeDestinationFeeBalanceAvailableAtom
   );
 
+  const streamSettings = get(streamSettingsAtom) as IntentoStreamSettings;
+  const streamMessages = get(streamMessagesAtom);
+
   const { timeoutSeconds } = get(routeConfigAtom);
   const { data: chains } = get(skipChainsAtom);
   const sourceAsset = get(sourceAssetAtom);
@@ -531,6 +542,115 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
       };
 
       try {
+        if (streamSettings.shouldStream) {
+          if (!streamMessages) throw new Error("stream messages not found");
+          const { chainID, signerAddress, messages, intoAddress } =
+            streamMessages;
+
+          console.log(signerAddress);
+          if (!sourceAsset?.chainId) return null;
+
+          const getOfflineSigner = async (chainId: string) => {
+            if (getSigners?.getCosmosSigner) {
+              return getSigners.getCosmosSigner(chainId);
+            }
+            if (!wallets.cosmos) {
+              throw new Error("getCosmosSigner error: no cosmos wallet");
+            }
+            const wallet = getWallet(wallets.cosmos.walletName as WalletType);
+            if (!wallet) {
+              throw new Error("getCosmosSigner error: wallet not found");
+            }
+            const key = await wallet.getKey(chainId);
+
+            return key.isNanoLedger
+              ? wallet.getOfflineSignerOnlyAmino(chainId)
+              : wallet.getOfflineSigner(chainId);
+          };
+
+          const { stargateClient } = await getSigningStargateClient({
+            chainId: sourceAsset.chainId,
+            getOfflineSigner,
+          });
+          console.log(stargateClient);
+          const gasPrice = await getRecommendedGasPrice({
+            chainId: sourceAsset.chainId,
+          });
+          const granularity = Uint64.fromNumber(1000000);
+
+          const amountInteger =
+            gasPrice?.amount.multiply(granularity).toString() || "";
+          const gasPriceStdFee = {
+            amount: [
+              {
+                amount: amountInteger,
+                denom: gasPrice?.denom || "",
+              },
+            ],
+            gas: "500000",
+          };
+          console.log("gasPrice", gasPriceStdFee);
+          const res = await stargateClient.signAndBroadcast(
+            signerAddress,
+            messages,
+            gasPriceStdFee
+          );
+
+          console.log("res", res);
+
+          if (res.code !== 0) {
+            throw new Error(
+              `Transaction failed with code ${res.code}${res.rawLog ? `: ${res.rawLog}` : ""}`
+            );
+          }
+
+          // Only call completion callback on successful transaction
+          submitSwapExecutionCallbacks?.onTransactionCompleted?.({
+            chainId: chainID,
+            txHash: res.transactionHash,
+            status: undefined,
+          });
+
+          const email = streamSettings.emailAddress?.trim();
+          const owner = intoAddress?.trim();
+
+          if (email && owner) {
+            fetch(
+              "https://portal.intento.zone/.netlify/functions/flow-alert?subscribe=true",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  owner,
+                  email,
+                  type: "triggered", // set to all to receive all alerts
+                }),
+              }
+            ).catch((err) => {
+              console.error("Flow alert subscription failed", err);
+            });
+            fetch(
+              "https://portal.intento.zone/.netlify/functions/flow-alert?subscribe=true",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  owner,
+                  email,
+                  type: "created", // set to all to receive all alerts
+                }),
+              }
+            ).catch((err) => {
+              console.error("Flow alert subscription failed", err);
+            });
+          }
+
+          return null;
+        }
         if (isGasRouteEnabled && mainRoute && gasRoute) {
           if (!gasRouteUserAddresses?.length) return;
 
