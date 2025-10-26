@@ -184,9 +184,7 @@ export const msgTransferAtomToIntentoAtom = createTransferAtom(false);
 export const msgSendToIntentoAtom = createTransferAtom(true);
 
 export const createStreamMessagesAtom = atom(null, async (get, set) => {
-  const { route, userAddresses, transactionDetailsArray, existingGrant } = get(
-    swapExecutionStateAtom
-  );
+  const { route, userAddresses, existingGrant } = get(swapExecutionStateAtom);
   const submitSwapExecutionCallbacks = get(submitSwapExecutionCallbacksAtom);
   const swapSettings = get(swapSettingsAtom);
   const streamSettings = get(streamSettingsAtom);
@@ -224,7 +222,7 @@ export const createStreamMessagesAtom = atom(null, async (get, set) => {
 
   if (!result) {
     const error = new Error("wasm contract not found");
-    submitSwapExecutionCallbacks?.onError?.(error, transactionDetailsArray);
+    submitSwapExecutionCallbacks?.onError?.(error);
     return;
   }
 

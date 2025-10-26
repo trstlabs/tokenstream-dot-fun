@@ -10,7 +10,6 @@ export class ApiState {
 
   static initialized = false;
   static apiCalled = false;
-
 }
 
 export type SkipApiOptions = {

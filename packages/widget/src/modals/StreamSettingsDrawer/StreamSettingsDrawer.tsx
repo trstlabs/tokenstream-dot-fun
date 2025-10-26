@@ -172,6 +172,6 @@ const StyledHelpText = styled(SmallText)`
   padding-left: 4px;
   padding-right: 4px;
   font-size: 11px;
-  color: ${(props) => props.theme.neutral?.text.secondary || "#888"};
+  color: ${(props) => props.theme.primary.text.normal || "#888"};
   line-height: 1.4;
 `;

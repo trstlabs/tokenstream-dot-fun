@@ -54,6 +54,7 @@ const widgetPropTypes: Required<PropDescriptors> = {
   onSourceAndDestinationSwapped: "any",
   batchSignTxs: "any",
   modalZIndex: "any",
+  allowOptionsUpdateAfterApiCall: "any",
 };
 
 const WebComponent = toWebComponent(Widget, {

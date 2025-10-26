@@ -90,7 +90,7 @@ const SliderLabel = styled.span<{ selected: boolean }>`
   color: ${({ selected, theme }) =>
     selected
       ? theme.brandColor || "#007aff"
-      : theme.neutral?.text.secondary || "#aaa"};
+      : theme.primary?.text.normal || "#aaa"};
   font-weight: ${({ selected }) => (selected ? 600 : 400)};
   transition: color 0.2s;
 `;

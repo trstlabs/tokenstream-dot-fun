@@ -15,18 +15,18 @@ import { useSettingsChanged } from "@/hooks/useSettingsChanged";
 import { useIsMobileScreenSize } from "@/hooks/useIsMobileScreenSize";
 import { useIsGoFast } from "@/hooks/useIsGoFast";
 
-import { convertSecondsToMinutesOrHours } from "@/utils/number";
+// import { convertSecondsToMinutesOrHours } from "@/utils/number";
 import { currentTransactionAtom } from "@/state/history";
 import { Routes, currentPageAtom } from "@/state/router";
 
-const EstimatedDuration = ({ seconds }: { seconds?: number }) => {
-  const formatted = seconds ? convertSecondsToMinutesOrHours(seconds) : null;
-  return formatted ? (
-    <Row gap={4} align="flex-end">
-      {formatted}
-    </Row>
-  ) : null;
-};
+// const EstimatedDuration = ({ seconds }: { seconds?: number }) => {
+//   const formatted = seconds ? convertSecondsToMinutesOrHours(seconds) : null;
+//   return formatted ? (
+//     <Row gap={4} align="flex-end">
+//       {formatted}
+//     </Row>
+//   ) : null;
+// };
 
 const SettingsButton = ({
   highlight,
@@ -86,7 +86,7 @@ export const SwapPageFooterItems: React.FC<SwapPageFooterItemsProps> = ({
   const isGoFast = useIsGoFast(route);
   const currentTransaction = useAtomValue(currentTransactionAtom);
 
-  const estimatedSeconds = route?.estimatedRouteDurationSeconds;
+  // const estimatedSeconds = route?.estimatedRouteDurationSeconds;
   const signaturesRequired = route
     ? currentPage === Routes.SwapPage
       ? route.txsRequired
