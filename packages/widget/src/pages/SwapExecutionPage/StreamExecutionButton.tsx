@@ -357,8 +357,7 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
           }
 
           if (isCheckingGrants) {
-            console.log("Checking for existing grants...");
-            return;
+            console.log("Checking for existing grants... proceeding without waiting");
           }
           if (existingGrant) {
             console.log("Found existing grant:", {
@@ -379,7 +378,7 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
             await triggerCreateStreamMessages();
 
             // Submit the route for execution
-            submitExecuteRouteMutation({
+            await submitExecuteRouteMutation({
               getSvmSigner: async () => {
                 const wallet = solanaWallets.find(
                   (w) => w.adapter.name === svmWallet?.walletName
@@ -390,6 +389,7 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
                 return wallet.adapter as Adapter;
               },
             });
+            setIsCreatingStream(false);
           } catch (error) {
             console.error("Error in stream creation:", error);
             setIsCreatingStream(false); // stop loading on failure
@@ -408,7 +408,7 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
           try {
             setIsCreatingStream(true);
             await triggerCreateStreamMessages();
-            submitExecuteRouteMutation({
+            await submitExecuteRouteMutation({
               getSvmSigner: async () => {
                 const wallet = solanaWallets.find(
                   (w) => w.adapter.name === svmWallet?.walletName
@@ -419,6 +419,7 @@ export const StreamExecutionButton: React.FC<SwapExecutionButtonProps> = ({
                 return wallet.adapter as Adapter;
               },
             });
+            setIsCreatingStream(false);
           } catch (fallbackError) {
             console.error("Fallback flow failed:", fallbackError);
             setIsCreatingStream(false);

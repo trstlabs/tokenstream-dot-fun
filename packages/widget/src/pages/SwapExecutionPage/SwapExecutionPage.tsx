@@ -89,7 +89,7 @@ export const SwapExecutionPage = () => {
   useAtom(gasRouteAddressesAtomEffect);
   useAtom(gasOnReceiveAtomEffect);
 
-  const { mutate: submitExecuteRouteMutation, error } = useAtomValue(
+  const { mutateAsync: submitExecuteRouteMutation, error } = useAtomValue(
     skipSubmitSwapExecutionAtom
   );
 

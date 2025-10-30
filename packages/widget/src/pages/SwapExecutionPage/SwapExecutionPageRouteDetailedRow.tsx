@@ -165,8 +165,8 @@ export const SwapExecutionPageRouteDetailedRow = ({
     );
   }, [explorerLink, isMobileScreenSize]);
 
-  const numberOfTransferEvents = statusData?.transferEvents.length;
-  const latestStatus = statusData?.transferEvents?.[statusData?.transferEvents.length - 1]?.status;
+  const numberOfTransferEvents = statusData?.transferEvents?.length ?? 0;
+  const latestStatus = statusData?.transferEvents?.[numberOfTransferEvents - 1]?.status;
 
   return (
     <Row gap={15} align="center" {...props}>

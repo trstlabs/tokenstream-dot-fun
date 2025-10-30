@@ -611,6 +611,23 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
             status: undefined,
           });
 
+          // Also push a completed transaction into history via route status update
+          const now = Date.now();
+          submitSwapExecutionCallbacks?.onRouteStatusUpdated?.({
+            id: `${now}`,
+            timestamp: now,
+            status: "completed",
+            txsRequired: 1,
+            txsSigned: 1,
+            transactionDetails: [
+              {
+                chainId: chainID,
+                txHash: res.transactionHash,
+                status: "completed",
+              },
+            ],
+          } as any);
+
           const email = streamSettings.emailAddress?.trim();
           const owner = intoAddress?.trim();
 
