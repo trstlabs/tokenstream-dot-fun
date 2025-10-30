@@ -626,6 +626,19 @@ export const skipSubmitSwapExecutionAtom = atomWithMutation((get) => {
                 status: "completed",
               },
             ],
+            // Minimal route fields used by history UI
+            route: route
+              ? {
+                  amountIn: route.amountIn,
+                  amountOut: route.amountOut,
+                  sourceAssetDenom: route.sourceAssetDenom,
+                  sourceAssetChainId: route.sourceAssetChainId,
+                  destAssetDenom: route.destAssetDenom,
+                  destAssetChainId: route.destAssetChainId,
+                }
+              : undefined,
+            // Provide addresses for sender/receiver rendering
+            userAddresses: userAddresses,
           } as any);
 
           const email = streamSettings.emailAddress?.trim();
