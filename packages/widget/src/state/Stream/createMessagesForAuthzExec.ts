@@ -187,11 +187,6 @@ export async function createMessagesForAuthzExec({
       if (cosmosMsgObject.msg) {
         console.log("Wasm msg");
 
-        // if (cosmosMsgObject.timeout_timestamp) {
-        //   cosmosMsgObject.timeoutTimestamp =
-        //     BigInt(streamEndSec) + 3600n * 1_000_000_000n;
-        // }
-
         let wasmMsg = constructWasmMsgSkipContract(
           cosmosMsgObject.msg,
           recurrences,
@@ -211,6 +206,13 @@ export async function createMessagesForAuthzExec({
         cosmosMsgObject.msg = wasmMsg;
         cosmosMsgObject.funds[0].amount = streamAmount;
         msg.msg = JSON.stringify(cosmosMsgObject);
+      } else if (msg.msgTypeUrl === "/ibc.applications.transfer.v1.MsgTransfer") {
+        console.log("MsgTransfer message");
+        // Update the token amount for MsgTransfer
+        if (cosmosMsgObject.token) {
+          cosmosMsgObject.token.amount = streamAmount;
+          msg.msg = JSON.stringify(cosmosMsgObject);
+        }
       }
       if (cosmosMsgObject.timeout_timestamp) {
         // Convert stream end time to nanoseconds and add 1 hour buffer
@@ -413,12 +415,13 @@ export async function createMessagesForAuthzExec({
     typeUrl: "/ibc.applications.transfer.v1.MsgTransfer",
     value: msgTransfer,
   };
-
+  const messagesToSign = [...msgGrants, msgTransferEncodeObject];
+  console.log("messagesToSign", messagesToSign);
   // 7. Return result
   return {
     chainID: route.sourceAssetChainId,
     signerAddress: userAddresses[0].address,
-    messages: [...msgGrants, msgTransferEncodeObject],
+    messages: messagesToSign,
     intoAddress,
   };
 }
