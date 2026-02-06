@@ -39,6 +39,8 @@ import {
 import { GasOnReceive } from "@/components/GasOnReceive";
 import { useGasRouteAutoSetAddress } from "@/hooks/useGasRouteAutoSetAddress";
 import { useTheme } from "styled-components";
+import { skipChainsAtom } from "@/state/skipClient";
+import { ChainType } from "@skip-go/client";
 
 export enum SwapExecutionState {
   recoveryAddressUnset,
@@ -168,6 +170,15 @@ export const SwapExecutionPage = () => {
     ];
 
     if (loadingStates.includes(swapExecutionState)) {
+      return undefined;
+    }
+
+    // Hide edit button for EVM same-chain swaps - the DEX contract returns tokens to msg.sender
+    const isSameChainSwap = route?.sourceAssetChainId === route?.destAssetChainId;
+    const sourceChain = chains?.find((c) => c.chainId === route?.sourceAssetChainId);
+    const isEvmChain = sourceChain?.chainType === ChainType.Evm;
+
+    if (isSameChainSwap && isEvmChain) {
       return undefined;
     }
 

@@ -1,5 +1,45 @@
 ## 0.0.15
 
+## 3.14.20
+
+### Patch Changes
+
+- 12f2603: add explorer loading state
+
+## 3.14.19
+
+### Patch Changes
+
+- 6aafa55: fix webcomponent
+
+## 3.14.18
+
+### Patch Changes
+
+- ae6abc9: update deps and support cosmos mevm
+- Updated dependencies [ae6abc9]
+  - @skip-go/client@1.5.11
+
+## 3.14.17
+
+### Patch Changes
+
+- 69fda94: override asset image
+- Updated dependencies [69fda94]
+  - @skip-go/client@1.5.10
+
+## 3.14.16
+
+### Patch Changes
+
+- 20c9059: Add blocking acknowledgement warning for manual address entry on cross-chain swaps. Users must explicitly acknowledge the risk before entering a manual address when performing cross-chain transactions to prevent accidental fund loss to centralized exchange addresses.
+
+## 3.14.15
+
+### Patch Changes
+
+- 92f4c14: Hide edit destination button for EVM same-chain swaps. EVM DEX contracts return tokens to msg.sender, so editing the destination address has no effect on same-chain swaps.
+
 ## 3.14.14
 
 ### Patch Changes
