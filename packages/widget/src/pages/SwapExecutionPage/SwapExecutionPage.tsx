@@ -74,7 +74,7 @@ export const SwapExecutionPage = () => {
     connectRequiredChains: connectGasRouteRequiredChains,
     isLoading: isGettingGasRouteAddressesLoading,
   } = useGasRouteAutoSetAddress();
-
+  const { data: chains } = useAtomValue(skipChainsAtom);
   const [simpleRoute, _setSimpleRoute] = useState(true);
   const streamSettings = useAtomValue(streamSettingsAtom);
   const isSomeDestinationFeeBalanceAvailable = useAtomValue(

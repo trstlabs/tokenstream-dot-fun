@@ -12,7 +12,6 @@ export const CHAIN_IDS_SORTED_TO_TOP = [
   "dydx-mainnet-1",
   "dymension_1100-1",
   "42161",
-  "omniflixhub-1",
   "akashnet-2",
   "pryzm-1",
   "8453"

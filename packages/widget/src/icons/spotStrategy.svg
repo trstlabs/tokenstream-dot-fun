@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 220">
+  <defs>
+    <style>
+      .axis{stroke:#5BA8FF;stroke-width:3;stroke-linecap:round;fill:none;}
+      .orange{stroke:#F4B544;stroke-width:4;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+      .threshold{stroke:#5BA8FF;stroke-width:2.5;stroke-linecap:round;stroke-dasharray:6 6;fill:none;}
+    </style>
+  </defs>
+
+  <!-- axes -->
+  <path class="axis" d="M50 30 V190 H290" />
+
+  <!-- favorable threshold -->
+  <path class="threshold" d="M60 140 H290" />
+
+  <!-- spot price curve (mostly above threshold, dips near arrows) -->
+  <path class="orange"
+        d="M60 150
+           C90 130,120 130,140 145
+           S175 165,195 145
+           S225 130,250 125
+           S270 115,290 110" />
+
+  <!-- arrows on dips -->
+  <g stroke="#F4B544" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- dip 1 -->
+    <line x1="120" y1="160" x2="120" y2="176" />
+    <polyline points="112,169 120,179 128,169" />
+    <!-- dip 2 -->
+    <line x1="185" y1="165" x2="185" y2="181" />
+    <polyline points="177,174 185,184 193,174" />
+    <!-- dip 3 -->
+    <line x1="245" y1="150" x2="245" y2="166" />
+    <polyline points="237,159 245,169 253,159" />
+  </g>
+</svg>

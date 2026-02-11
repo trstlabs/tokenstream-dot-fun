@@ -5,6 +5,7 @@ export enum Routes {
   SwapExecutionPage,
   TransactionHistoryPage,
   StreamPage,
+  StrategyPage,
 }
 
 export const currentPageAtom = atom<Routes>(Routes.SwapPage);

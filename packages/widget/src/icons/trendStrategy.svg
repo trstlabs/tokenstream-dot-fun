@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 220">
+  <defs>
+    <style>
+      .axis{stroke:#5BA8FF;stroke-width:3;stroke-linecap:round;fill:none;}
+      .blue{stroke:#4A8CFF;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+      .orange{stroke:#F4B544;stroke-width:4;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+    </style>
+  </defs>
+
+  <!-- axes -->
+  <path class="axis" d="M50 30 V190 H290" />
+  <path class="axis" d="M50 190 H290" />
+
+  <!-- blue trend lines -->
+  <path class="blue"
+        d="M60 174
+           C90 162,115 157,135 152
+           S175 140,200 132
+           S240 120,280 108" />
+
+  <path class="blue"
+        d="M60 166
+           C90 154,115 149,140 144
+           S180 132,205 124
+           S245 112,280 100" />
+
+  <!-- orange leading trend line -->
+  <path class="orange"
+        d="M60 182
+           C90 168,120 160,145 154
+           S185 142,210 134
+           S250 120,285 104" />
+
+  <!-- big up arrow in orange, slightly offset -->
+  <g stroke="#F4B544" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="275" y1="88" x2="275" y2="46" />
+    <polyline points="267,56 275,44 283,56" />
+  </g>
+</svg>

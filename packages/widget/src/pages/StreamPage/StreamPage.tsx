@@ -27,6 +27,7 @@ import NiceModal from "@ebay/nice-modal-react";
 import { Modals } from "@/modals/registerModals";
 import { settingsDrawerAtom } from "@/state/settingsDrawer";
 import { currentTransactionAtom } from "@/state/history";
+import { selectedStrategyAtom } from "@/state/strategy";
 
 export type StreamPageProps = {};
 
@@ -128,6 +129,7 @@ export const StreamPage = ({}: StreamPageProps) => {
   };
 
   const currentTransaction = useAtomValue(currentTransactionAtom);
+  const selectedStrategy = useAtomValue(selectedStrategyAtom);
 
   // Update expected fees when calculation changes
   useEffect(() => {
@@ -182,7 +184,7 @@ export const StreamPage = ({}: StreamPageProps) => {
         align="center"
         onClick={openStreamSettingsDrawer}
       >
-        <WaveIcon width={77} height={77} color={theme.primary.text.normal} />
+        <WaveIcon width={44} height={44} color={theme.primary.text.normal} />
         <Row justify="center" align="center" gap={5}>
           <div>
             <SmallText textAlign="center" color={theme.primary.text.normal}>
@@ -256,9 +258,9 @@ export const StreamPage = ({}: StreamPageProps) => {
                   );
                 })}
               </SmallText>
-              <SmallText color={theme.brandColor} textAlign="center">
+              {/* <SmallText color={theme.brandColor} textAlign="center">
                 Do you want to go once or stream?
-              </SmallText>
+              </SmallText> */}
             </div>
           ) : (
             <SmallText style={{ marginTop: "5px" }} textAlign="center">
@@ -266,6 +268,23 @@ export const StreamPage = ({}: StreamPageProps) => {
             </SmallText>
           )}
         </div>
+      </StyledStreamPageRoute>
+      <StyledStreamPageRoute
+        style={{ cursor: "pointer" }}
+        justify="space-between"
+        align="center"
+        onClick={() => setCurrentPage(Routes.StrategyPage)}
+      >
+        <Row justify="center" align="center" gap={5}>
+          <div>
+            <SmallText textAlign="center" color={theme.primary.text.normal}>
+              Strategy
+            </SmallText>
+            <SmallText textAlign="center">
+              {selectedStrategy ? selectedStrategy.title : "Select a strategy"}
+            </SmallText>
+          </div>
+        </Row>
       </StyledStreamPageRoute>
       {expectedStreamFees && (
         <>

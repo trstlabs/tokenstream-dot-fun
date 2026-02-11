@@ -70,57 +70,46 @@ export const IntervalSetting = () => {
 
   return (
     <Column gap={10}>
-      <SwapDetailText>Interval</SwapDetailText>
-      <Column gap={10}>
-        <Row justify="space-between" align="center" gap={10}>
-          <SmallText>each</SmallText>
-          <StyledInput
-            type="text"
-            inputMode="numeric"
-            value={displayValue}
-            onChange={handleIntervalChange}
-            $hasError={!isDurationValid}
-          />
-          <SmallText>{unit}</SmallText>
+      <Row justify="space-between" align="center" gap={10}>
+        <SmallText>each</SmallText>
+        <StyledInput
+          type="text"
+          inputMode="numeric"
+          value={displayValue}
+          onChange={handleIntervalChange}
+          $hasError={!isDurationValid}
+        />
+        <SmallText>{unit}</SmallText>
 
-          <SmallTextButton
-            onClick={() => setSettings((s) => ({ ...s, interval: 600 }))}
-          >
-            10 min
-          </SmallTextButton>
-          <SmallTextButton
-            onClick={() => setSettings((s) => ({ ...s, interval: 1800 }))}
-          >
-            30 min
-          </SmallTextButton>
-          <SmallTextButton
-            onClick={() => setSettings((s) => ({ ...s, interval: 3600 }))}
-          >
-            1 hour
-          </SmallTextButton>
-          <SmallTextButton
-            onClick={() => setSettings((s) => ({ ...s, interval: 86400 }))}
-          >
-            1 day
-          </SmallTextButton>
-          <SmallTextButton
-            onClick={() => setSettings((s) => ({ ...s, interval: 604800 }))}
-          >
-            1 week
-          </SmallTextButton>
-        </Row>
-      </Column>
+        <SmallTextButton
+          onClick={() => setSettings((s) => ({ ...s, interval: 600 }))}
+        >
+          10 min
+        </SmallTextButton>
+        <SmallTextButton
+          onClick={() => setSettings((s) => ({ ...s, interval: 1800 }))}
+        >
+          30 min
+        </SmallTextButton>
+        <SmallTextButton
+          onClick={() => setSettings((s) => ({ ...s, interval: 3600 }))}
+        >
+          1 hour
+        </SmallTextButton>
+        <SmallTextButton
+          onClick={() => setSettings((s) => ({ ...s, interval: 86400 }))}
+        >
+          1 day
+        </SmallTextButton>
+        <SmallTextButton
+          onClick={() => setSettings((s) => ({ ...s, interval: 604800 }))}
+        >
+          1 week
+        </SmallTextButton>
+      </Row>
     </Column>
   );
 };
-
-const SwapDetailText = styled(Row).attrs({
-  as: SmallText,
-  normalTextColor: true,
-})`
-  position: relative;
-  letter-spacing: 0.26px;
-`;
 
 const StyledInput = styled.input<{ $hasError?: boolean }>`
   font-size: 14px;

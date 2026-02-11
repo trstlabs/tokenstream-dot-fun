@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 220">
+  <defs>
+    <style>
+      .axis{stroke:#5BA8FF;stroke-width:3;stroke-linecap:round;fill:none;}
+      .blue{stroke:#4A8CFF;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+      .orange{stroke:#F4B544;stroke-width:4;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+    </style>
+  </defs>
+
+  <!-- axes -->
+  <path class="axis" d="M50 30 V190 H290" />
+  <path class="axis" d="M50 190 H290" />
+
+  <!-- TWAP / DCA blue curve -->
+  <path class="blue"
+        d="M60 176
+           C80 172,100 170,120 167
+           S160 162,180 159
+           S220 154,240 150
+           S270 144,285 140" />
+
+  <!-- DCA dots along the TWAP line -->
+  <g fill="#4A8CFF" stroke="none">
+    <circle cx="75"  cy="173" r="4" />
+    <circle cx="95"  cy="171" r="4" />
+    <circle cx="115" cy="168" r="4" />
+    <circle cx="135" cy="165" r="4" />
+    <circle cx="155" cy="162" r="4" />
+    <circle cx="175" cy="160" r="4" />
+    <circle cx="195" cy="157" r="4" />
+    <circle cx="215" cy="154" r="4" />
+    <circle cx="235" cy="151" r="4" />
+    <circle cx="255" cy="147" r="4" />
+  </g>
+
+  <!-- Orange price curve trending above -->
+  <path class="orange"
+        d="M60 166
+           C85 157,110 152,135 147
+           S185 138,215 128
+           S250 118,285 102" />
+
+  <!-- Up arrow at end of orange curve -->
+  <g stroke="#F4B544" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="285" y1="102" x2="300" y2="82" />
+    <polyline points="292,84 300,76 302,86" />
+  </g>
+</svg>

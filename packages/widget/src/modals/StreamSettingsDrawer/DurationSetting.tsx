@@ -69,57 +69,46 @@ export const DurationSetting = () => {
 
   return (
     <Column gap={10}>
-      <SwapDetailText>Duration</SwapDetailText>
-      <Column gap={10}>
-        <Row justify="space-between" align="center" gap={10}>
-          <SmallText>for</SmallText>
-          <StyledInput
-            type="text"
-            inputMode="numeric"
-            value={displayValue}
-            onChange={handleDurationChange}
-            $hasError={!isDurationValid}
-          />
-          <SmallText>{unit}</SmallText>
-          <SmallTextButton
-            onClick={() => setSettings((s) => ({ ...s, duration: 3600 }))} // 1 hour
-          >
-            1 hour
-          </SmallTextButton>
+      <Row justify="space-between" align="center" gap={10}>
+        <SmallText>for</SmallText>
+        <StyledInput
+          type="text"
+          inputMode="numeric"
+          value={displayValue}
+          onChange={handleDurationChange}
+          $hasError={!isDurationValid}
+        />
+        <SmallText>{unit}</SmallText>
+        <SmallTextButton
+          onClick={() => setSettings((s) => ({ ...s, duration: 3600 }))} // 1 hour
+        >
+          1 hour
+        </SmallTextButton>
 
-          <SmallTextButton
-            onClick={() => setSettings((s) => ({ ...s, duration: 86400 }))} // 1 day
-          >
-            1 day
-          </SmallTextButton>
-          <SmallTextButton
-            onClick={() => setSettings((s) => ({ ...s, duration: 604800 }))} // 1 week
-          >
-            1 week
-          </SmallTextButton>
-          <SmallTextButton
-            onClick={() => setSettings((s) => ({ ...s, duration: 1209600 }))} // 2 weeks
-          >
-            2 weeks
-          </SmallTextButton>
-          <SmallTextButton
-            onClick={() => setSettings((s) => ({ ...s, duration: 2592000 }))} // 30 days
-          >
-            30 days
-          </SmallTextButton>
-        </Row>
-      </Column>
+        <SmallTextButton
+          onClick={() => setSettings((s) => ({ ...s, duration: 86400 }))} // 1 day
+        >
+          1 day
+        </SmallTextButton>
+        <SmallTextButton
+          onClick={() => setSettings((s) => ({ ...s, duration: 604800 }))} // 1 week
+        >
+          1 week
+        </SmallTextButton>
+        <SmallTextButton
+          onClick={() => setSettings((s) => ({ ...s, duration: 1209600 }))} // 2 weeks
+        >
+          2 weeks
+        </SmallTextButton>
+        <SmallTextButton
+          onClick={() => setSettings((s) => ({ ...s, duration: 2592000 }))} // 30 days
+        >
+          30 days
+        </SmallTextButton>
+      </Row>
     </Column>
   );
 };
-
-const SwapDetailText = styled(Row).attrs({
-  as: SmallText,
-  normalTextColor: true,
-})`
-  position: relative;
-  letter-spacing: 0.26px;
-`;
 
 const StyledInput = styled.input<{ $hasError?: boolean }>`
   font-size: 14px;
@@ -127,18 +116,21 @@ const StyledInput = styled.input<{ $hasError?: boolean }>`
   height: 32px;
   width: 80px;
   text-align: right;
-  border: 1px solid ${({ theme, $hasError }) => 
-    $hasError ? theme.error.text : theme.primary.text.ultraLowContrast};
+  border: 1px solid
+    ${({ theme, $hasError }) =>
+      $hasError ? theme.error.text : theme.primary.text.ultraLowContrast};
   border-radius: 6px;
   padding: 0 8px;
-  background: ${({ theme, $hasError }) => 
+  background: ${({ theme, $hasError }) =>
     $hasError ? theme.error.background : theme.secondary.background.normal};
   color: ${({ theme }) => theme.primary.text.normal};
   outline: none;
-  transition: border-color 0.2s, background-color 0.2s;
+  transition:
+    border-color 0.2s,
+    background-color 0.2s;
 
   &:focus {
-    border-color: ${({ theme, $hasError }) => 
+    border-color: ${({ theme, $hasError }) =>
       $hasError ? theme.error.text : theme.primary.text.lowContrast};
   }
 `;

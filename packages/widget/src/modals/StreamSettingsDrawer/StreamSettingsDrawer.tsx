@@ -52,17 +52,15 @@ export const StreamSettingsDrawer = createModal(() => {
             <SectionBody>
               <StartAtSetting />
               <StyledHelpText>
-                Start is when to start token streaming, 0 uses the first
-                interval.
+                When to start token streaming, 0 uses the first interval.
               </StyledHelpText>
               <IntervalSetting />
               <StyledHelpText>
-                Interval is how much time between stream executions, or 0 for
-                one time.
+                How much time between stream executions, or 0 for one time.
               </StyledHelpText>
               <DurationSetting />
               <StyledHelpText>
-                Duration is how long to stream after starting.
+                How long to stream after starting.
               </StyledHelpText>
             </SectionBody>
           )}

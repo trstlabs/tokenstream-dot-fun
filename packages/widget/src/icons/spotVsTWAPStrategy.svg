@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 220">
+  <defs>
+    <style>
+      .axis{stroke:#5BA8FF;stroke-width:3;stroke-linecap:round;fill:none;}
+      .blue{stroke:#4A8CFF;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+      .orange{stroke:#F4B544;stroke-width:4;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+    </style>
+  </defs>
+
+  <!-- axes -->
+  <path class="axis" d="M50 30 V190 H290" />
+  <path class="axis" d="M50 190 H290" />
+
+  <!-- arbitrage window -->
+  <rect x="110" y="90" width="130" height="70"
+        fill="#4A8CFF" fill-opacity="0.16" stroke="none" />
+
+  <!-- TWAP (smooth fair value) -->
+  <path class="blue"
+        d="M60 155
+           C90 150,115 146,140 143
+           S185 138,215 134
+           S255 130,290 126" />
+
+  <!-- Spot price (noisier, clearly below in window) -->
+  <path class="orange"
+        d="M60 160
+           C80 146,95 138,110 168
+           S130 205,145 160
+           S170 125,190 168
+           S215 195,235 150
+           S260 137,290 130" />
+</svg>

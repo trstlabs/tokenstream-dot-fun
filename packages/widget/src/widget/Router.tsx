@@ -10,6 +10,7 @@ import { useKeepWalletStateSynced } from "@/hooks/useKeepWalletStateSynced";
 import { track } from "@amplitude/analytics-browser";
 import { StreamPage } from "@/pages/StreamPage/StreamPage";
 import { Suspense } from "react";
+import { StrategyPage } from "@/pages/StrategyPage/StrategyPage";
 
 export const Router = () => {
   useKeepWalletStateSynced();
@@ -97,6 +98,25 @@ export const Router = () => {
         >
           <StreamPage />
         </ErrorBoundary>
+      );
+    case Routes.StrategyPage:
+      return (
+        <Suspense fallback={null}>
+          <ErrorBoundary
+            fallback={null}
+            onError={(error) => {
+              track("unexpected error page: unexpected error from strategy page", {
+                error,
+              });
+              setErrorWarning({
+                errorWarningType: ErrorWarningType.Unexpected,
+                error,
+              });
+            }}
+          >
+            <StrategyPage />
+          </ErrorBoundary>
+        </Suspense>
       );
   }
 };
